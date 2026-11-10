@@ -30,7 +30,7 @@ deps:  ## Install the Python packages the tooling needs
 # ----------------------------------------------------------------------- gates
 
 .PHONY: check
-check: lint tools-test core-test companion-test  ## Everything provable without Unity. Run before every push.
+check: lint tools-test core-test mock-test companion-test  ## Everything provable without Unity. Run before every push.
 	@echo
 	@echo "check: all local gates passed"
 
@@ -88,6 +88,22 @@ companion-test:  ## Web converter and relay tests (level L1/L3)
 	else \
 	  echo "companion-test: the companion does not exist yet (work packages I-04, I-05)"; \
 	fi
+
+.PHONY: mock-test
+mock-test:  ## The mock StreamBox gateway matches contract/streambox (level L1/L3)
+	@if [ -d tools/mock-streambox/node_modules ]; then \
+	  npm --prefix tools/mock-streambox test --silent; \
+	else \
+	  echo "mock-test: run 'make mock-install' first"; exit 1; \
+	fi
+
+.PHONY: mock-install
+mock-install:  ## Install the mock gateway's one dependency
+	@npm --prefix tools/mock-streambox install --silent --no-audit --no-fund
+
+.PHONY: mock
+mock:  ## Run the mock StreamBox gateway on http://localhost:8787
+	@npm --prefix tools/mock-streambox start
 
 # ------------------------------------------------------------------- utilities
 

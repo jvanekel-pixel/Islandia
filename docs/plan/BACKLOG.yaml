@@ -522,18 +522,30 @@ packages:
     - "Ambient bed from CC0 loops recorded in the licence ledger; volume settings saved [L3]"
   status: todo
 
-- id: SB-01
-  title: StreamBox contract snapshot, mock gateway and C# client
+- id: SB-01a
+  title: StreamBox contract snapshot and mock gateway
   ms: M4
   risk: high
   deps: [F-08]
   refs: [07-STREAMBOX.md, adr ADR-23]
   accept:
-    - "contract/streambox/ holds a versioned JSON description of exactly the endpoints and messages in 07-STREAMBOX.md §3, with the StreamBox commit it was taken from [L0]"
-    - "A mock gateway (Node) implements the snapshot: pairing, catalogue fixtures, play, a generated H.264/AAC HLS test stream, signed audio, progress, Connect socket [L3]"
-    - "Island.Core client covers pairing, catalogue, play, stop, progress, music and Connect messages behind an injectable HTTP and socket transport; every response is validated; contract tests run against the mock [L1]"
-    - "Unknown fields are tolerated and unknown enum values degrade gracefully, so a newer server does not break an older build [L1]"
+    - "contract/streambox/v1.json describes the endpoints and messages in 07-STREAMBOX.md §3 and records the StreamBox commit it was read from [L0]"
+    - "A mock gateway implements the snapshot: pairing, catalogue fixtures, play, a real H.264/AAC HLS stream, signed audio with range support, progress, Connect socket [L3]"
+    - "Contract tests check the mock against the snapshot rather than against itself [L3]"
     - "No server address, token or account detail appears anywhere in the repository; a scan enforces it [L0]"
+  status: done
+
+- id: SB-01b
+  title: StreamBox client in Island.Core
+  ms: M4
+  risk: high
+  deps: [SB-01a]
+  refs: [07-STREAMBOX.md, adr ADR-23, adr ADR-07]
+  accept:
+    - "Island.Core client covers pairing, catalogue, play, stop, progress, music and Connect messages behind an injectable HTTP and socket transport; every response is validated [L1]"
+    - "Unknown fields are tolerated and unknown enum values degrade gracefully, so a newer server does not break an older build [L1]"
+    - "Contract tests run the client against the mock gateway end to end [L3]"
+    - "The JSON approach is chosen and recorded in DECISIONS.md: Island.Core must stay engine-free, so it may not use Unity's JSON utility [L0]"
   status: todo
 
 - id: SB-02
@@ -567,7 +579,7 @@ packages:
   title: Pairing and sign-in
   ms: M4
   risk: med
-  deps: [SB-01, V-11]
+  deps: [SB-01b, V-11]
   refs: [07-STREAMBOX.md §3.1]
   accept:
     - "Server address is entered once (in-world keyboard) or supplied by a build-time variable; it is stored on the device, never in the repository [L3][L0]"

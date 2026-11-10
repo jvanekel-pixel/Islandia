@@ -16,6 +16,10 @@ REPO = Path(__file__).resolve().parent.parent.parent
 #: Reference-only material: carried over verbatim, so its links are not ours to fix.
 EXCLUDE = ("docs/blueprint/", "reference/drafts/")
 
+#: Path segments we never own. Vendored dependencies and build output have their own broken
+#: links and are nobody's business here.
+NOT_OURS = ("node_modules", ".git", "bin", "obj", ".media", "Library", "Temp")
+
 LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 #: Backticked paths that look like repository paths, e.g. `docs/plan/STATE.md`.
 BACKTICK_PATH = re.compile(r"`((?:docs|tools|contract|content|Assets|Packages|releases|infra)/[A-Za-z0-9_./*-]+)`")
@@ -35,7 +39,9 @@ def main() -> int:
 
     for markdown in sorted(REPO.rglob("*.md")):
         relative = markdown.relative_to(REPO).as_posix()
-        if relative.startswith(EXCLUDE) or "/.git/" in relative:
+        if relative.startswith(EXCLUDE):
+            continue
+        if any(part in NOT_OURS for part in markdown.relative_to(REPO).parts):
             continue
         text = markdown.read_text(encoding="utf-8")
         checked += 1

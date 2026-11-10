@@ -20,7 +20,7 @@
 
 If `F-02` fails because `UNITY_LICENSE`, `UNITY_EMAIL` or `UNITY_PASSWORD` is missing, that is the
 tail of HG-0, not a new problem: open a `human-gate` issue pointing at `00-START-HERE.md` §2 step 4
-and carry on with packages that do not need Unity (`F-01`, `F-08`, `SB-01`, `I-01`, `I-04`).
+and carry on with packages that do not need Unity (`F-01`, `F-08`, `SB-01a`, `I-01`, `I-04`).
 
 ## Blocked
 
@@ -54,14 +54,16 @@ Collected here as packages merge; they become the checklist for the next human g
 
 ## Next up
 
-`F-02` (needs the licence secrets) → `F-03` → `F-04`. Non-Unity work still available if the
-licence is not ready: `SB-01`, `I-01`, `I-04`, `I-05`.
+`SB-01b` (the StreamBox client) → `I-01` (the model-import gatekeeper) → `I-04`.
+
+**The Unity track is parked**, waiting on issue #4: the licence secrets are not set, so `F-02`
+cannot pass and `F-03` to `F-07` cannot start. Nothing else is blocked by it.
 
 The owner hit trouble activating a Unity Personal licence in Unity Hub on 2026-11-10 — a known
 flaky area, and the only route, since manual `.alf` activation does not cover Personal. `F-08` was
 moved ahead of `F-02` so the build keeps moving meanwhile. If the secrets are still absent when
 `F-02` comes up, follow its note: open a `human-gate` issue, set it `needs-human`, and carry on.
-Packages that need no Unity at all: `F-08`, `SB-01`, `I-01`, `I-04`, `I-05`.
+Packages that need no Unity at all: `F-08`, `SB-01a`, `I-01`, `I-04`, `I-05`.
 
 **Note on `F-10` (cloud environment):** the kickoff session did not propose one. Its own container
 had a second, unrelated repository attached, and an environment proposed from there would have
@@ -71,6 +73,8 @@ cost is reinstalling the .NET SDK and the companion toolchain each session.
 
 ## Recently merged
 
+- `SB-01a` StreamBox contract snapshot and mock gateway (2026-11-10)
+- `F-02` Unity licence workflow — built and merged; cannot pass until the secrets exist (2026-11-10, PR #3)
 - `F-08` Island.Core package and dotnet test harness (2026-11-10, PR #2)
 - `F-01` Repository skeleton, Makefile, lint, meta generator (2026-11-10, PR #1)
 - Planning bundle, driver prompt and kickoff state (2026-11-10)
@@ -83,6 +87,9 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 | :-- | :-- | :-- |
 | Local gate `make check` | 5 lint checks, 22 tooling tests, 15 core tests — about 3 s | F-01, F-08 |
 | .NET SDK in a cloud session | not present; installs to `~/.dotnet` in ~40 s | F-08 |
+| Unity editor pinned | `6000.3.28f1` — the newest 6000.3 tag with an Android module | F-02 |
+| Unity licence secrets | **not set**; the workflow fails in ~30 s and says so. Issue #4 | F-02 |
+| ffmpeg in a cloud session | present, so the mock serves a genuinely decodable stream | SB-01a |
 | GitHub REST from a session | runs, check-runs, status, pulls, issues all readable; `actions/secrets` blocked | F-01 |
 | Driver self-merge | **Refused** by the permission classifier unless `.claude/settings.json` allows it. See `05-OPERATIONS.md` §7 step 4 | F-01 |
 | Unity editor version pinned | — | F-03 |
