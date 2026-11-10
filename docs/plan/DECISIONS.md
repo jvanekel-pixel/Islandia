@@ -88,6 +88,36 @@ Two constraints on how it is used:
 
 `F-03` adds `com.unity.nuget.newtonsoft-json` to the Unity manifest when it creates the project.
 
+## 2026-11-10 — Unity is activated by seat request, not by a licence file
+
+**Decided by:** work package `F-02`, from evidence rather than documentation.
+
+The widely-published way to use Unity Personal in CI — activate in Unity Hub, paste the resulting
+`.ulf` into a `UNITY_LICENSE` secret, drop the file into the container — does not work for Unity 6
+on a cloud runner. Both halves of why were proven in CI:
+
+| Route | What happened |
+| :-- | :-- |
+| `.ulf` from Unity Hub, placed on disk | `[Licensing::Client] Error: Code 400 (status: Machine bindings don't match)`, then `Found 0 entitlement groups`, editor exit 198. The file is bound to the Windows machine that activated it |
+| `.ulf` via the `.alf` exchange | Closed. Unity no longer supports manual activation of Personal licences, so no container-bound file can be produced |
+| Editor flag `-manualLicenseFile` | Loads the file, then the same machine-binding rejection |
+| **`Unity.Licensing.Client --activate-all --include-personal --username --password`** | **`Status: [200] ASSIGN_SEAT`, editor exit 0, version 6000.3.28f1, 104 s** |
+
+So: **no licence file is involved.** `UNITY_EMAIL` and `UNITY_PASSWORD` are the only secrets, and
+`UNITY_LICENSE` is neither needed nor read.
+
+Two consequences worth remembering:
+
+- **The seat must be returned.** Each activation takes one of the account's few Personal seats and
+  the runner is destroyed minutes later. Every Unity workflow therefore ends with
+  `--deactivate-all` in a step that runs even on failure or cancellation. Leaked seats would
+  eventually fail every run with an error that looks nothing like its cause.
+- **Activations are serialised.** The workflow takes a concurrency group so two runs cannot take
+  two seats at once, and `cancel-in-progress` is off so a cancelled run still gets to give its
+  seat back.
+
+**Evidence:** runs on `claude/wp-F-02b-licence-activation`, 2026-11-10.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

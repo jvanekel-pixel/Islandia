@@ -1,118 +1,169 @@
-# Does the Unity licence actually work in CI?
+# Does the Unity licence work in CI?
 #
-# Work package F-02. This is deliberately the smallest thing that can answer that question, and it
-# runs on its own so a licence problem is never mistaken for a code problem. Everything else that
-# needs Unity depends on this passing first.
+# Work package F-02. Deliberately the smallest thing that can answer that, and on its own so a
+# licence problem is never mistaken for a code problem. Everything else needing Unity depends on
+# this passing.
 #
 # Run it by hand: Actions -> "Unity licence" -> "Run workflow".
+#
+# How this works, and why it is not what most guides say
+# ------------------------------------------------------
+# Older guides (and GameCI's own, in places) tell you to activate a Personal licence in Unity Hub,
+# paste the resulting .ulf into a UNITY_LICENSE secret, and drop that file into place in the
+# container. For Unity 6 that cannot work, and we proved both halves of it on 2026-11-10:
+#
+#   * a .ulf from Unity Hub is bound to the machine that made it, so the editor rejects it with
+#     "[Licensing::Client] Error: Code 400 ... Machine bindings don't match", and
+#   * Unity no longer supports manual activation of Personal licences at all, so the old
+#     .alf-upload route that would have produced a container-bound file is closed too.
+#
+# What does work is asking Unity's licensing service for a seat with the account's own
+# credentials. No licence file is involved, so UNITY_LICENSE is not needed.
+#
+# The seat must be given back
+# ---------------------------
+# Each activation assigns one of the account's few Personal seats to that runner, and the runner
+# is destroyed minutes later. Leak them and every later run fails for want of a seat, with an
+# error that looks nothing like its cause. The release step therefore runs even when the job
+# fails or is cancelled.
 
 name: Unity licence
 
 on:
   workflow_dispatch:
+  workflow_call:
+    outputs:
+      editor-version:
+        description: The editor version that reported itself after activation.
+        value: ${{ jobs.licence.outputs.editor-version }}
 
 concurrency:
+  # Two runs activating at once would take two of the account's handful of seats.
   group: unity-licence
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   licence:
     name: Activate, then report the editor version
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    outputs:
+      editor-version: ${{ steps.report.outputs.editor-version }}
     container:
-      # Pinned in docs/plan/DECISIONS.md. The base image carries no Android module, which this
-      # check does not need; the build workflow uses the -android- image of the same version.
+      # Pinned in docs/plan/DECISIONS.md. The base image has no Android module, which this check
+      # does not need; the build workflow uses the -android- image of the same version.
       image: unityci/editor:ubuntu-6000.3.28f1-base-3
       options: --user root
 
+    env:
+      LICENSING_CLIENT: /opt/unity/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client
+
     steps:
-      - name: The three secrets are present
+      - name: The credentials are present
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         run: |
           missing=""
-          [ -n "${UNITY_LICENSE:-}" ]  || missing="$missing UNITY_LICENSE"
           [ -n "${UNITY_EMAIL:-}" ]    || missing="$missing UNITY_EMAIL"
           [ -n "${UNITY_PASSWORD:-}" ] || missing="$missing UNITY_PASSWORD"
           if [ -n "$missing" ]; then
-            echo "::error title=Unity secrets missing::Not set on this repository:$missing"
+            echo "::error title=Unity credentials missing::Not set on this repository:$missing"
             echo
-            echo "Add them under Settings -> Secrets and variables -> Actions -> New repository secret."
-            echo "docs/plan/00-START-HERE.md section 2 step 3 has where each value comes from."
-            echo "UNITY_LICENSE is the whole contents of C:\\ProgramData\\Unity\\Unity_lic.ulf."
-            echo "UNITY_PASSWORD needs a real Unity password; a Google-only account has none until"
-            echo "one is set through the password reset at https://login.unity.com."
+            echo "Add them under Settings -> Secrets and variables -> Actions."
+            echo "A UNITY_LICENSE secret is NOT needed and is not read by this workflow."
+            echo "An account that signs in with Google has no password until one is set"
+            echo "through the password reset at https://login.unity.com."
             exit 1
           fi
-          # Values are never printed. Length alone tells us a paste was not truncated.
-          echo "All three secrets are set. UNITY_LICENSE is ${#UNITY_LICENSE} characters."
-          case "$UNITY_LICENSE" in
-            *"<License"*) echo "It looks like a .ulf licence file." ;;
-            *) echo "::warning title=Unexpected licence contents::UNITY_LICENSE does not contain '<License'. Did the whole .ulf file get pasted?" ;;
-          esac
+          echo "Both credentials are set."
 
-      - name: Install the licence
+      - name: Take a Personal seat
+        id: activate
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-        run: |
-          install -d /root/.local/share/unity3d/Unity
-          printf '%s' "$UNITY_LICENSE" > /root/.local/share/unity3d/Unity/Unity_lic.ulf
-          echo "Licence written to /root/.local/share/unity3d/Unity/Unity_lic.ulf"
-
-      - name: Open the editor on a throwaway project
-        id: probe
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         run: |
           set +e
-          # -createProject makes the editor open, licence itself and write a project, which is the
-          # cheapest thing that genuinely needs a valid licence. -nographics keeps it headless.
-          unity-editor \
-            -batchmode -nographics -quit \
-            -createProject /tmp/licence-probe \
-            -logFile /tmp/unity.log
+          # --include-personal falls back to Personal when the account has no paid seat assigned.
+          output="$("$LICENSING_CLIENT" --activate-all --include-personal \
+                      --username "$UNITY_EMAIL" --password "$UNITY_PASSWORD" 2>&1)"
+          status=$?
+          # The output names the seat but carries no credential; it is safe to show, and it is
+          # the first thing worth reading when this fails.
+          echo "$output" | grep -viE 'password|token'
+          echo "activated=true" >> "$GITHUB_OUTPUT"
+
+          # The service reports more than one flavour of success: ASSIGN_SEAT when it hands out
+          # a fresh seat, SameMachine when this identity already holds one. Both are fine, so key
+          # on the sentence they share rather than on a particular status code.
+          if [ $status -ne 0 ] || ! echo "$output" | grep -q 'Activation processed successfully'; then
+            cause="the licensing service did not assign a seat"
+            if   echo "$output" | grep -qi 'invalid.*credential\|unauthorized\|401'; then
+              cause="the account credentials were rejected. An account that signs in with Google has no password until one is set at https://login.unity.com"
+            elif echo "$output" | grep -qi 'two.factor\|2FA\|verification code'; then
+              cause="the account asks for a two-factor code, which CI cannot answer"
+            elif echo "$output" | grep -qi 'no seat\|seat.*unavailable\|exhausted'; then
+              cause="no Personal seat was free. A previous run may have failed to give its seat back; seats free themselves after a while, so try again shortly"
+            fi
+            echo "## Unity licence failed" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Cause: $cause" >> "$GITHUB_STEP_SUMMARY"
+            echo "::error title=Unity licence failed::$cause"
+            exit 1
+          fi
+          echo "Seat held: $(echo "$output" | grep -oE 'Status: \[[0-9]+\] [A-Za-z_]+' | head -1)"
+
+      - name: Open the editor on a throwaway project
+        id: report
+        run: |
+          set +e
+          # The cheapest operation that genuinely needs a licence: the editor has to start,
+          # licence itself and write a project.
+          unity-editor -batchmode -nographics -quit \
+            -createProject /tmp/licence-probe -logFile /tmp/unity.log
           status=$?
           set -e
-          echo "exit-code=$status" >> "$GITHUB_OUTPUT"
-          echo "::group::Unity log"
-          cat /tmp/unity.log || true
-          echo "::endgroup::"
-          exit 0
 
-      - name: Say what happened
-        run: |
-          log=/tmp/unity.log
-          status="${{ steps.probe.outputs.exit-code }}"
+          # Read it from the editor that just ran, not from the image tag: the point of this
+          # check is to find out what actually started, and those two could disagree.
+          version="$(grep -m1 -oE 'Initialize engine version: [0-9]+\.[0-9]+\.[0-9]+[a-z0-9]*' /tmp/unity.log \
+                     | sed 's/.*version: //')"
+          [ -n "$version" ] || version="$(grep -m1 -oE '^Version is [0-9]+\.[0-9]+\.[0-9]+[a-z0-9]*' /tmp/unity.log \
+                     | sed 's/Version is //')"
+          [ -n "$version" ] || version="$(unity-editor -version 2>/dev/null | tr -d '\r' | head -1)"
+          echo "editor-version=${version:-unknown}" >> "$GITHUB_OUTPUT"
 
-          version="$(grep -m1 -oE 'Version is .[0-9]+\.[0-9]+\.[0-9]+[a-z0-9]*' "$log" 2>/dev/null | sed 's/Version is .//')"
-          [ -n "$version" ] || version="$(unity-editor -version 2>/dev/null | head -1)"
-
-          if [ "$status" = "0" ] && [ -d /tmp/licence-probe ]; then
-            echo "## Unity licence works" >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "Editor version: \`${version:-unknown}\`" >> "$GITHUB_STEP_SUMMARY"
-            echo "Image: \`unityci/editor:ubuntu-6000.3.28f1-base-3\`" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$status" -eq 0 ] && [ -d /tmp/licence-probe ]; then
+            {
+              echo "## Unity licence works"
+              echo ""
+              echo "| | |"
+              echo "| :-- | :-- |"
+              echo "| Editor | \`${version:-unknown}\` |"
+              echo "| Image | \`unityci/editor:ubuntu-6000.3.28f1-base-3\` |"
+              echo "| Activation | Personal seat from Unity's licensing service |"
+            } >> "$GITHUB_STEP_SUMMARY"
             echo "Editor version: ${version:-unknown}"
             exit 0
           fi
 
-          # Name the cause rather than make someone read a 2,000-line Unity log.
-          cause="the editor exited $status"
-          if   grep -qi 'License has expired\|license is not valid\|Licence expired' "$log" 2>/dev/null; then
-            cause="the licence has expired — re-issue it in Unity Hub and update UNITY_LICENSE"
-          elif grep -qi 'No valid Unity Editor license\|Unable to find a valid license\|LICENSE SYSTEM.*FAILED' "$log" 2>/dev/null; then
-            cause="Unity did not accept the licence file — check UNITY_LICENSE holds the entire .ulf, including the closing tag"
-          elif grep -qi 'two.factor\|2FA\|verification code' "$log" 2>/dev/null; then
-            cause="the account wants a two-factor code, which CI cannot answer — a licence file avoids the sign-in path, so make sure UNITY_LICENSE is set"
-          elif grep -qi 'Invalid credentials\|wrong password\|Unauthorized' "$log" 2>/dev/null; then
-            cause="the account credentials were rejected — set a real Unity password at https://login.unity.com (a Google-only account has none)"
-          fi
-
-          echo "## Unity licence failed" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Cause: $cause" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "The full editor log is in the previous step, under \"Unity log\"." >> "$GITHUB_STEP_SUMMARY"
-          echo "::error title=Unity licence failed::$cause"
+          echo "::group::Unity log"
+          cat /tmp/unity.log || true
+          echo "::endgroup::"
+          echo "::error title=Unity licence failed::a seat was assigned but the editor still would not start (exit $status)"
           exit 1
+
+      - name: Give the seat back
+        # Always. A leaked seat is one fewer for every later run, and the failure it eventually
+        # causes looks nothing like its cause.
+        if: always() && steps.activate.outputs.activated == 'true'
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set +e
+          "$LICENSING_CLIENT" --deactivate-all \
+            --username "$UNITY_EMAIL" --password "$UNITY_PASSWORD" 2>&1 \
+            | grep -viE 'password|token' | tail -10
+          echo "Seat returned (exit $?)."
