@@ -189,6 +189,36 @@ namespace Island.Core.Terrain
             _weights[at + channel] = (byte)(target + taken);
         }
 
+        /// <summary>
+        /// Writes all four weights at a sample directly.
+        /// </summary>
+        /// <remarks>
+        /// For loading a save, where the weights are already known exactly and must come back
+        /// exactly. Blending them in one at a time cannot do that: the first blend finds the
+        /// channel already at its starting value and has nothing to take from, so a restored
+        /// island would come back as the flat sand it started as.
+        /// <para>
+        /// Sculpting must not use this — <see cref="BlendWeight"/> is what keeps a brush stroke
+        /// adding up.
+        /// </para>
+        /// </remarks>
+        public void SetWeights(int gridX, int gridZ, byte sand, byte grass, byte rock, byte path)
+        {
+            if (!InRange(gridX, gridZ))
+                throw new ArgumentOutOfRangeException(nameof(gridX), $"({gridX}, {gridZ}) is off the island");
+            var total = sand + grass + rock + path;
+            if (total != 255)
+            {
+                throw new ArgumentException(
+                    $"Surface weights must sum to 255; {sand}+{grass}+{rock}+{path} is {total}.", nameof(sand));
+            }
+            var at = Index(gridX, gridZ) * Channels;
+            _weights[at + IslandConstants.SurfaceChannelSand] = sand;
+            _weights[at + IslandConstants.SurfaceChannelGrass] = grass;
+            _weights[at + IslandConstants.SurfaceChannelRock] = rock;
+            _weights[at + IslandConstants.SurfaceChannelPath] = path;
+        }
+
         /// <summary>The four weights at a sample. Always sums to 255.</summary>
         public int WeightSumAt(int gridX, int gridZ)
         {
