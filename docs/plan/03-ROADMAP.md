@@ -25,8 +25,8 @@ How the classic SDLC phases map:
 | Design | `02-ARCHITECTURE.md`; the vertical slice (M2) freezes the patterns |
 | Implementation | Work packages |
 | Verification | Continuous (L0–L5); device and human gates at stage boundaries |
-| Deployment | Release workflow at every milestone; store submission at M11 |
-| Maintenance | M12 runbook and a monthly scheduled maintenance task |
+| Deployment | Release workflow at every milestone; a signed APK installed on the headset at M11 |
+| Maintenance | M11 runbook and a monthly scheduled maintenance task |
 
 Why not the blueprint's twelve phases as they stand: they are a waterfall by subsystem with all
 verification at the end, they order persistence last although everything depends on it, and they
@@ -49,8 +49,7 @@ Every milestone ships a tagged GitHub Release with an installable APK and a repo
 | | **M8 Island companions** | Adopt, customise and live with pets | Pets, navigation, behaviour, hand interaction | — |
 | 4 Alpha | **M9 Feature complete** | Use every feature on a stress island without breaking a budget in simulation | Scaler, stress suite, robustness, onboarding, security and licence review | **HG-3** full device pass |
 | 5 Beta | **M10 Content complete** | See the full catalogue; device findings fixed | Catalogue targets met; device-driven optimisation; soak; polish | **HG-4** art, comfort and soak review |
-| 6 Release | **M11 Release candidate** | Install from a Meta release channel | Compliance validator, signed pipeline, privacy policy, relay in production | **HG-5** go / no-go and submission |
-| 7 Live | **M12 Launched** | — | Review feedback handled; maintenance task running | As needed |
+| 6 Finished | **M11 On the headset** | Give it to them | Signed installable build, hand-over notes, maintenance task running | — |
 
 Media is fourth, ahead of the garden and the building kit, for two reasons: the owner called it
 imperative, and it carries the largest risk that only a headset can retire.
@@ -65,8 +64,7 @@ Everything the owner does, in one place. Detail and copy-paste commands are in `
 | **HG-1** | After M2 | 30–45 min first time, 10 after | One-time headset developer setup; run the device script; look around for five minutes. Includes the video probe | **No.** Strongly recommended: it is the earliest proof the app renders in a headset, and it decides how video will be played |
 | **HG-2** | After M4 | 20–30 min | Pair the headset with your StreamBox; watch something; play an album; try the phone remote | **No.** Recommended: it is the feature you called imperative |
 | **HG-3** | After M9 | 60–90 min | Run the device script; play every feature against a checklist; decide on relay hosting | Blocks M10's device-driven work only |
-| **HG-4** | After M10 | 60–90 min + an unattended hour | Review art and comfort; start the soak run | Blocks M11 |
-| **HG-5** | After M11 | 1–2 hours | Keystore, store listing, privacy sign-off, submit | Blocks launch |
+| **HG-4** | After M10 | 60–90 min + an unattended hour | Review art and comfort; start the soak run. **The last gate** | Blocks M11 |
 
 Between gates the driver never waits for you unless every remaining package depends on your answer.
 
@@ -97,7 +95,7 @@ so a blocked track does not stall the others.
 
 Honest constraints rather than a calendar:
 
-- **About 108 work packages** to M12, each sized for one session.
+- **About 108 work packages** to M11, each sized for one session.
 - **CI is free but not instant.** The repository is public, so GitHub-hosted runner minutes cost
   nothing. A Unity test run takes roughly ten to fifteen minutes and an Android build twenty-five
   to forty-five, so a Unity-touching package still spends most of its wall-clock time waiting.

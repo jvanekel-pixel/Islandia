@@ -8,6 +8,16 @@ Decisions marked **(owner)** are the owner's to change; those dated were made by
 
 ---
 
+## What this is
+
+**Islandia is a gift.** The owner is making it for their partner, who will be the one wearing the
+headset. It is not going to a store and is not for sale, and that shapes real decisions rather
+than being a footnote: breadth matters less than delight, the first five minutes matter more than
+the feature list, and judgement calls go to *what makes this a nice thing to be given* rather than
+to what a catalogue page would need.
+
+The person playing it is not a developer and will not be reading instructions.
+
 ## Product in one paragraph
 
 **Islandia** — a single-player Meta Quest sandbox. The player stands on a one-acre island, sculpts
@@ -41,9 +51,8 @@ precise *studio* mode, and two scales, life-size and tabletop.
 - `DeviceTier` is decided by **one pure function** over (device model string, GPU string, eye-buffer
   size), table-driven and unit-tested. Quest 2 is the baseline; unknown devices map to it. The
   table is confirmed with strings captured at the first device gate.
-- Meta ended feature development for Quest 2 in November 2026 and has said it will accept new
-  Quest 2 submissions through December 2027. If a store release is wanted, that date is a real
-  deadline; re-check it at `R-01`.
+- Meta's December 2027 cut-off for new Quest 2 store submissions does not apply: this is never
+  submitted to a store (ADR-20). The headset keeps working regardless.
 
 ## ADR-03 — Rendering baseline (kept from the blueprint)
 
@@ -177,12 +186,19 @@ The inventory is a **data-driven catalogue**, not code.
   unification); (2) parametric generators for families that vary by parameter (flowers, hedges,
   walls, roofs, fences); (3) nothing else without a decision record.
 - A **licence ledger** is generated from the catalogue and shipped as the in-app notices screen.
-  Only CC0 or equivalently unrestricted assets are admitted. CC-BY needs a decision record.
+  CC0 and attribution-licensed assets are both admitted, because this is never distributed
+  commercially — which roughly triples the usable art. Attribution is honoured in the notices
+  screen, not treated as optional. Anything forbidding redistribution in a built application is
+  still refused, and a non-commercial licence is recorded as such so the position stays honest if
+  the project's purpose ever changes.
 - A **validator** fails CI if any item exceeds its triangle, LOD, texture or bounds budget, lacks a
   collider or thumbnail, or has open or single-sided geometry where the camera can get behind it.
 - **Counting is honest.** Reports state distinct meshes and palette variants separately.
-- Targets **(owner, D5)**: Alpha ≥ 120 distinct meshes across every category. Beta ≥ 250 distinct
-  meshes and ≥ 400 catalogue entries. The blueprint's 631 is a stretch goal, not a gate.
+- Target **(owner, 2026-11-10)**: **≈ 120 distinct meshes**, final rather than a waypoint — enough
+  that a building sandbox feels generous without a catalogue's worth of grinding. Palette variants
+  on top are free and counted separately. The blueprint's 631 is not a goal.
+- Coherence beats count. Twenty things that look like they belong together are worth more than
+  sixty that do not, and the validator's style checks matter more than its totals.
 
 ## ADR-12 — Importing the player's own models
 
@@ -271,17 +287,29 @@ passes. No automatic trigger.
   Required status checks protect `main`.
 - No Git LFS until a decision record adds it; meshes are small.
 
-## ADR-20 — Store and distribution
+## ADR-20 — How it gets onto the headset **(owner, 2026-11-10)**
 
-Target SDK 34, minimum SDK 32, 64-bit only. Distribution to the owner and testers through Meta
-release channels once the owner supplies an app id and upload credential; `adb` side-loading until
-then. The store compliance checklist is mapped to evidence in `R-01`.
+Not through a store. This is a gift for one person, so distribution is: CI builds a signed APK,
+the owner installs it over USB with `adb`, and that is the whole of it.
+
+Target SDK 34, minimum SDK 32, 64-bit only — not for compliance, but because they are what the
+device and toolchain expect. No store compliance validator, no listing media, no submission.
+
+A signing key is still needed, because Android will not install an unsigned build and because an
+upgrade must be signed by the same key or it installs as a separate app and loses its saves. The
+key is generated once and kept by the owner.
+
+If this ever did go further, the work removed here is recoverable from `DECISIONS.md`.
 
 ## ADR-21 — Privacy
 
-No Islandia accounts, analytics, advertising or telemetry in v1. The only sign-in is to the owner's
-own StreamBox server, whose address and token stay on the device. The relay keeps uploads for at most 24
-hours and logs no content. Diagnostics stay on the device unless the player exports them.
+No accounts, analytics, advertising or telemetry. The only sign-in is to the owner's own StreamBox
+server, whose address and token stay on the device.
+
+There is no public privacy policy to write, because there is no public. But the care is unchanged
+where it actually matters: this app talks to a private media server holding a household's library,
+and nothing about that may leak into a public repository, a log, or a crash report. That is
+enforced by the privacy check on every change, not by a document.
 
 ## ADR-22 — Identity
 

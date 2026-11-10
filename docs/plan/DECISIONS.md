@@ -146,6 +146,40 @@ The escape hatch is a label: adding `do-not-merge` to a pull request parks it fo
 The workflow that introduced this was **not** auto-merged. The change that removes review should
 not be the first thing to skip it.
 
+## 2026-11-10 — This is a gift, not a product
+
+**Decided by:** the owner, unprompted, after a progress estimate.
+
+Islandia is being made for the owner's partner, who will be the one wearing the headset. It is
+never going to a store and is never for sale. Three things follow, and they are recorded here
+because they change judgement calls rather than just paperwork.
+
+**The release track is cut** (ADR-20). No store compliance validator, no listing media, no
+submission, no public privacy policy. Seven packages removed; `M12` is gone and `M11` becomes a
+signed APK, a page of hand-over notes, and installing it. `HG-5` no longer exists, so `HG-4` is
+the last gate. Meta's December 2027 cut-off for new Quest 2 submissions stops mattering.
+
+**Attribution-licensed assets become usable** (ADR-11). The CC0-only rule existed because
+commercial distribution demands it; for a personal gift, attribution is fine, which roughly
+triples the available art. The licence ledger stays and attribution is honoured in the notices
+screen — not treated as optional because nobody would check. Anything forbidding redistribution in
+a built application is still refused, and a non-commercial licence is recorded as such, so the
+position stays honest if the purpose ever changes.
+
+**Content settles at about 120 distinct models**, final rather than a waypoint, with coherence
+explicitly worth more than count.
+
+**Onboarding went up in risk, not down.** The person playing this is not a developer, will not
+read instructions, and nobody will be standing next to them explaining it. The first five minutes
+now carry the whole thing, so `Q-04` is a high-risk package and its criteria ask for the opening
+to be designed rather than inherited.
+
+What does *not* relax: the security review of the import path and the relay. The app talks to a
+private media server holding a household's library, and that is true whether or not anything is
+published.
+
+**No deadline.** Prioritise on quality and risk, not on a date.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

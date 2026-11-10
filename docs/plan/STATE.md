@@ -10,7 +10,7 @@
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | **Paused 2026-11-10.** Scheduled task exists but is misconfigured — see below |
 | **Last updated** | 2026-11-10 (planning bundle, revised for the owner's decisions) |
-| **Target** | Quest 2 · public repository · StreamBox native in-world |
+| **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## Open human gates
 
