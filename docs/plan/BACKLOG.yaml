@@ -1180,13 +1180,14 @@ packages:
 - id: Q-04
   title: Onboarding, settings, accessibility
   ms: M9
-  risk: med
+  risk: high
   deps: [U-11, U-02]
   refs: [bp phase-03.md]
   accept:
     - "First-run flow teaches moving, sculpting, planting, building and saving; skippable and replayable [L3]"
     - "Settings cover comfort, handedness, audio, text size and seated play; all saved [L3]"
-    - "A first-time player gets through onboarding without help [L7]"
+    - "A first-time player gets through onboarding without help, and without being told anything beforehand [L7]"
+    - "The first five minutes are designed, not inherited: what the player sees on opening it, what they are invited to do first, and how they find out they can sculpt the ground at all [L7]"
   status: todo
 
 - id: Q-05
@@ -1196,8 +1197,8 @@ packages:
   deps: [M7-RETRO]
   refs: [adr ADR-21, au phase-06-companion.md]
   accept:
-    - "Independent security review of the relay, converter and on-device import path; every finding fixed or accepted with a decision record [L0]"
-    - "Dependency audit clean or exceptions recorded; third-party notices screen generated from the licence ledger [L0]"
+    - "Independent security review of the relay, converter and on-device import path; every finding fixed or accepted with a decision record. This matters whether or not anything is published: the app talks to a private media server holding a household's library [L0]"
+    - "Dependency audit clean or exceptions recorded; third-party notices screen generated from the licence ledger, honouring attribution for every asset that asks for it [L0]"
     - "A data-flow statement lists every network request the app can make and why [L0]"
   status: todo
 
@@ -1208,7 +1209,7 @@ packages:
   deps: [Q-02, Q-03, Q-04, Q-05]
   refs: [00-START-HERE.md §5]
   accept:
-    - "Alpha report lists every needs-device and needs-human criterion still open since M2 as the HG-3 checklist [L0]"
+    - "Report lists every needs-device and needs-human criterion still open since M2 as the HG-3 checklist [L0]"
     - "HG-3 issue opened; release cut [L0]"
   status: todo
 
@@ -1244,7 +1245,8 @@ packages:
   deps: [C-04]
   refs: [adr ADR-11]
   accept:
-    - "Trees, bushes and flowers reach the Beta targets in ADR-11; every item passes the validator; contact sheets attached [L0]"
+    - "Trees, bushes and flowers reach the ADR-11 target; every item passes the validator; contact sheets attached [L0]"
+    - "Style coherence is judged, not just counted: a contact sheet of everything together looks like one game [L7]"
   status: todo
 
 - id: C-11
@@ -1254,7 +1256,7 @@ packages:
   deps: [C-05]
   refs: [adr ADR-11, bp phase-05.md §5.2]
   accept:
-    - "Two further complete themes tile and assemble under the same tests as theme 1 [L0][L2]"
+    - "One further complete theme tiles and assembles under the same tests as theme 1. A second only if the first two still feel thin — coherence beats count (ADR-11) [L0][L2]"
   status: todo
 
 - id: C-12
@@ -1264,7 +1266,7 @@ packages:
   deps: [C-05]
   refs: [adr ADR-11]
   accept:
-    - "Category counts reach the Beta targets; every prop that the player can sit on, light or switch has its interaction [L0][L3]"
+    - "Category counts reach the ADR-11 target; every prop that the player can sit on, light or switch has its interaction [L0][L3]"
   status: todo
 
 - id: Q-10
@@ -1308,84 +1310,57 @@ packages:
   refs: [00-START-HERE.md §5]
   accept:
     - "All D-* packages from HG-3 are done or consciously deferred with a decision record [L0]"
-    - "HG-4 issue opened; release cut [L0]"
+    - "HG-4 issue opened; release cut. This is the last gate — there is no store submission after it [L0]"
   status: todo
 
-# ───────────────────────────── M11  RELEASE CANDIDATE ─────────────────────────────
+# ───────────────────────────── M11  FINISHED — ON THE HEADSET ─────────────────────────────
+# Not a store release. This is a gift for one person: a signed build that installs, and enough
+# written down that it can be looked after. See 02-ARCHITECTURE.md ADR-20.
 
 - id: R-01
-  title: Store compliance validator and evidence map
+  title: Signed, installable build
   ms: M11
   risk: med
   deps: [M10-RETRO]
   refs: [adr ADR-20]
   accept:
-    - "A CI check validates the built APK: SDK levels, 64-bit only, permissions, features, version code [L4]"
-    - "Every current store technical requirement is listed with the test, report or gate that evidences it; requirements re-read from the primary source at this point, not from this plan [L0]"
+    - "CI produces a signed APK from a key the owner supplies as secrets; the key never enters the repository or a session [L4]"
+    - "A CI check asserts the build is 64-bit only, targets the SDK levels ADR-20 states, and requests no permission the app does not use [L4]"
+    - "Upgrading over a previous install keeps the islands: a test asserts the save directory is untouched by reinstalling, and the signing key is recorded as the thing that must never change [L0]"
+    - "One command on the owner's PC installs the current release to a connected headset [L0]"
   status: todo
-
-- id: R-02
-  title: Signed release pipeline and release-channel upload
-  ms: M11
-  risk: med
-  deps: [R-01]
-  refs: [adr ADR-20, adr ADR-22]
-  accept:
-    - "Release builds are signed in CI from secrets the owner adds; the keystore never enters the repository or a session [L4]"
-    - "Upload to a Meta release channel is automated once the owner supplies an app id and credential [L4]"
-  status: needs-human
 
 - id: R-03
-  title: Privacy policy, data safety, relay production readiness
-  ms: M11
-  risk: med
-  deps: [Q-05, I-07]
-  refs: [adr ADR-21]
-  accept:
-    - "Draft privacy policy and data-safety answers generated from the data-flow statement for the owner to approve [L0]"
-    - "Relay has health checks, alerts, a cost cap and a documented shutdown procedure [L3]"
-  status: todo
-
-- id: R-04
-  title: Store listing kit
+  title: Relay readiness, only if the relay is used
   ms: M11
   risk: low
-  deps: [Q-10]
-  refs: []
+  deps: [I-07]
+  refs: [adr ADR-13, adr ADR-21]
   accept:
-    - "Description drafts, a capture shot-list with the in-app photo mode or script that sets up each shot, and a checklist of required asset sizes re-read from the primary source [L0]"
+    - "If the owner deployed the relay: it has a health check, a cost ceiling and a documented way to turn it off [L3]"
+    - "If they did not: the imports folder is the documented path and this package is closed as not needed [L0]"
+    - "A data-flow note lists every network request the app can make and why; there is no public privacy policy to write because there is no public [L0]"
+  status: todo
+
+- id: R-11
+  title: Hand-over notes and monthly upkeep
+  ms: M11
+  risk: low
+  deps: [R-01]
+  refs: [05-OPERATIONS.md]
+  accept:
+    - "docs/runbook/ covers: installing a new build, where saves live and how to back them up, renewing the Unity credentials, what to do when a dependency advisory appears, and how to turn the build automation off [L0]"
+    - "A page written for the person playing it, not the person who built it: what the island is, what the controllers do, how to reach their own media [L0]"
+    - "The build driver is replaced by a monthly maintenance task [L0]"
   status: todo
 
 - id: M11-RETRO
-  title: Release-candidate report, go/no-go pack and HG-5 issue
+  title: It is finished — report, retro, release
   ms: M11
   risk: low
-  deps: [R-02, R-03, R-04]
-  refs: [00-START-HERE.md §5]
+  deps: [R-01, R-03, R-11]
+  refs: [05-OPERATIONS.md §9]
   accept:
-    - "Full suite green on the candidate; a one-page go/no-go summary lists every open risk and every unverified claim [L0]"
-    - "HG-5 issue opened [L0]"
-  status: todo
-
-# ───────────────────────────── M12  LAUNCH AND LIVE ─────────────────────────────
-
-- id: R-10
-  title: Submission support
-  ms: M12
-  risk: med
-  deps: [M11-RETRO]
-  refs: []
-  accept:
-    - "Review feedback pasted into an issue by the owner is triaged into packages within one driver session [L0]"
-  status: needs-human
-
-- id: R-11
-  title: Live-operations runbook and maintenance task
-  ms: M12
-  risk: low
-  deps: [M11-RETRO]
-  refs: [05-OPERATIONS.md]
-  accept:
-    - "Runbook covers: editor patch updates, licence renewal, dependency audit, station-directory health, relay cost review, save-format migration policy [L0]"
-    - "The build driver is replaced by a monthly maintenance scheduled task [L0]"
+    - "A final report: what it does, what it does not, what is known to be rough, and what someone would need to know to pick it up later [L0]"
+    - "Release cut, APK attached, installed on the owner's headset [L6]"
   status: todo

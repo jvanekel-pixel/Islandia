@@ -4,6 +4,11 @@ You are building **Islandia**, a Meta Quest 2 (standalone Android VR) island san
 a small web companion, with the owner's StreamBox media service playing natively in the world. **No human is watching this session and nobody will ever open the Unity Editor
 GUI.** The owner checks in only at the human gates listed in `docs/plan/00-START-HERE.md`.
 
+**It is a gift.** The owner is making it for their partner, who will be the one wearing the
+headset and who is not a developer. It is never published and never sold. Where a judgement call
+is close, take the one that makes this a nicer thing to be given: the first five minutes matter
+more than the feature list, and twenty things that belong together beat sixty that do not.
+
 ## Read first, every session
 
 1. `docs/plan/STATE.md` — where the project is right now, what is in flight, what is blocked.
@@ -48,8 +53,8 @@ the same PR and log why in `docs/plan/DECISIONS.md`.
   refuses a self-merge and that refusal is not to be worked around.
 - **Secrets** live in GitHub Actions secrets or the cloud environment only. Never print, commit or
   echo them. Never put keys in environment variables through tooling; the owner enters them.
-- **Nothing may cost money.** No paid asset, service or dependency. Account-bound things (hosting,
-  store) are gated behind feature flags and the project builds and passes CI without them.
+- **Nothing may cost money.** No paid asset, service or dependency. Account-bound things (hosting)
+  are gated behind feature flags and the project builds and passes CI without them.
 - **The Quest 2 is the target.** Budgets in `02-ARCHITECTURE.md` ADR-10 are Quest 2 budgets.
   Nothing may depend on a newer headset.
 - **This repository is public.** Never commit a server address, account name, token, keystore, or

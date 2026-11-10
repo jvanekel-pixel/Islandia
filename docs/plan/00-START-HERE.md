@@ -120,16 +120,15 @@ Defaults chosen for you — change any of them by saying so:
 | # | Decision | Default | Change it if… |
 | :-- | :-- | :-- | :-- |
 | **D3** | Name and package id | *Islandia*, `dev.islandia.app` (placeholder) | You want a different package id. It must be final before the first upload to Meta and cannot change after |
-| **D5** | Content targets | Alpha ≥ 120 distinct models; Beta ≥ 250 distinct models and ≥ 400 catalogue entries; 631 is a stretch | You want fewer, more coherent items. The blueprint's 631 were about six shapes; these are real models from CC0 packs and generators |
+| **D5** | Content | **≈ 120 distinct models**, final. Coherence beats count | You want more or fewer. Settled 2026-11-10 |
 | **D6** | Model relay hosting | Built and tested locally; deployed to a scale-to-zero free tier only if you create an account | You want no hosted service at all. The imports folder works without one |
 | **D7** | Other cuts | No `.blend` upload, no hosted Blender converter, SpaceWarp off, internet radio not built unless you ask | See `01-AUDIT.md` |
-| **D8** | Release intent | Planned as if for the Meta store, decided for real at HG-5 | You only ever want it on your own headset. Then M11 shrinks to a signed build |
+| **D8** | Who it is for | **A gift for your partner.** Never published, never sold | Settled 2026-11-10. The store track is cut; M11 is a signed build you install over USB |
 
 Three things you should know about your own decisions:
 
 - **D1 — the Quest 2 is the tightest target.** Roughly half the draw calls and triangles of a
   Quest 3, one video screen at a time, four active pets. The plan budgets for that from the start.
-  Meta has also said it will stop accepting *new* Quest 2 store submissions after December 2027.
 - **D2 — public means public.** The source is visible to anyone. It will include a description of
   how StreamBox's client API works (`07-STREAMBOX.md` §3) — no address, no secrets, nothing from
   your library, but a public description of a private service. If you would rather not publish
@@ -188,15 +187,13 @@ through two speakers, and drive it from the StreamBox phone app. Note anything t
 Run the script again. Play every feature against the checklist in the issue. Decide whether to
 deploy the model relay.
 
-### HG-4 — Beta review (after M10) · 60–90 min, plus an unattended hour
+### HG-4 — The last gate (after M10) · 60–90 min, plus an unattended hour
 
-Judge the art, comfort and sound. Start the soak run (the headset sits on a stand for an hour).
+Judge the art, comfort and sound — is this a nice thing to be given? Start the soak run (the
+headset sits on a stand for an hour).
 
-### HG-5 — Release (after M11) · 1–2 hours
-
-Create the signing keystore and add it as a secret, create the app in the Meta dashboard and add
-the upload credential, approve the privacy policy draft, capture store media from the shot-list,
-submit. Or, if this is only ever for you, just install the signed build.
+After this there is no submission and no review board. Milestone 11 is a signed build, a page of
+notes written for whoever is going to play it, and handing it over.
 
 ## 6. What this costs
 
@@ -207,7 +204,7 @@ submit. Or, if this is only ever for you, just install the signed build.
 | 3D content | Free (CC0 packs and generators) |
 | StreamBox integration | Free; adds nothing to StreamBox's running cost |
 | Model relay hosting | Free tier if you want it; nothing if you do not |
-| Meta developer account | No fee expected; verify when you create it |
+| Meta developer account | No fee. Needed only for developer mode on the headset, not for publishing |
 | Claude | Your existing plan's usage. This is the one real cost: long Opus sessions, many of them |
 
 Nothing in the plan requires a purchase. If the driver ever concludes one would help, it asks in a
