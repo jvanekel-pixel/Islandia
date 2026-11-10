@@ -1,0 +1,322 @@
+[
+ {
+  "phase": "phase-01",
+  "path": "Assets/Scripts/Editor/Phase1ProjectConfigurator.cs",
+  "lines": 184
+ },
+ {
+  "phase": "phase-01",
+  "path": "Assets/Scripts/Core/QuestHardwareProfileManager.cs",
+  "lines": 182
+ },
+ {
+  "phase": "phase-01",
+  "path": "Assets/Scripts/Core/DynamicSpaceWarpController.cs",
+  "lines": 134
+ },
+ {
+  "phase": "phase-01",
+  "path": "Assets/Scripts/Core/Phase1PerformanceGateMonitor.cs",
+  "lines": 133
+ },
+ {
+  "phase": "phase-01",
+  "path": "Assets/Scripts/Core/Phase1BaselineIslandSpawner.cs",
+  "lines": 137
+ },
+ {
+  "phase": "phase-01",
+  "path": "Assets/Shaders/Phase1BaselineVertexColor.shader",
+  "lines": 100
+ },
+ {
+  "phase": "phase-02",
+  "path": "Assets/Scripts/Terrain/TerrainSculptJobs.cs",
+  "lines": 248
+ },
+ {
+  "phase": "phase-02",
+  "path": "Assets/Scripts/Terrain/IslandTerrainChunk.cs",
+  "lines": 147
+ },
+ {
+  "phase": "phase-02",
+  "path": "Assets/Scripts/Terrain/IslandTerrainManager.cs",
+  "lines": 496
+ },
+ {
+  "phase": "phase-02",
+  "path": "Assets/Scripts/Terrain/VRTerraformingBrushController.cs",
+  "lines": 184
+ },
+ {
+  "phase": "phase-02",
+  "path": "Assets/Shaders/IslandTerrainUber.shader",
+  "lines": 153
+ },
+ {
+  "phase": "phase-02",
+  "path": "Assets/Shaders/VulkanWaterDepthFoam.shader",
+  "lines": 138
+ },
+ {
+  "phase": "phase-02",
+  "path": "Assets/Scripts/Editor/Phase2SetupWizard.cs",
+  "lines": 163
+ },
+ {
+  "phase": "phase-03",
+  "path": "Assets/Scripts/UX/DualScaleWorldRigController.cs",
+  "lines": 240
+ },
+ {
+  "phase": "phase-03",
+  "path": "Assets/Scripts/UX/UndoRedoCommandStack.cs",
+  "lines": 170
+ },
+ {
+  "phase": "phase-03",
+  "path": "Assets/Scripts/UX/ToyboxInteractionController.cs",
+  "lines": 280
+ },
+ {
+  "phase": "phase-03",
+  "path": "Assets/Scripts/UX/ArtistStudioGridGizmoController.cs",
+  "lines": 294
+ },
+ {
+  "phase": "phase-03",
+  "path": "Assets/Scripts/UX/WristCompositorHudController.cs",
+  "lines": 224
+ },
+ {
+  "phase": "phase-03",
+  "path": "Assets/Shaders/AppSWCompliantWorldUI.shader",
+  "lines": 93
+ },
+ {
+  "phase": "phase-03",
+  "path": "Assets/Scripts/Editor/Phase3SetupWizard.cs",
+  "lines": 125
+ },
+ {
+  "phase": "phase-04",
+  "path": "Assets/Shaders/BotanicalVertexLUT.shader",
+  "lines": 136
+ },
+ {
+  "phase": "phase-04",
+  "path": "Assets/Scripts/Foliage/BotanicalCatalogDatabase.cs",
+  "lines": 156
+ },
+ {
+  "phase": "phase-04",
+  "path": "Assets/Scripts/Foliage/BotanicalCullingJob.cs",
+  "lines": 92
+ },
+ {
+  "phase": "phase-04",
+  "path": "Assets/Scripts/Foliage/FoliageInstancingManager.cs",
+  "lines": 364
+ },
+ {
+  "phase": "phase-04",
+  "path": "Assets/Scripts/Editor/Phase4SetupWizard.cs",
+  "lines": 514
+ },
+ {
+  "phase": "phase-05",
+  "path": "Assets/Shaders/ArchitecturalAtlasUber.shader",
+  "lines": 143
+ },
+ {
+  "phase": "phase-05",
+  "path": "Assets/Scripts/Architecture/ArchitecturalCatalogDatabase.cs",
+  "lines": 139
+ },
+ {
+  "phase": "phase-05",
+  "path": "Assets/Scripts/Architecture/MagneticSocketSnapper.cs",
+  "lines": 144
+ },
+ {
+  "phase": "phase-05",
+  "path": "Assets/Scripts/Architecture/RuntimeMeshWelder.cs",
+  "lines": 220
+ },
+ {
+  "phase": "phase-05",
+  "path": "Assets/Scripts/Architecture/IslandGltfExporter.cs",
+  "lines": 141
+ },
+ {
+  "phase": "phase-05",
+  "path": "Assets/Scripts/Editor/Phase5SetupWizard.cs",
+  "lines": 475
+ },
+ {
+  "phase": "phase-06",
+  "path": "Assets/Scripts/Core/IslandRemediationCore.cs",
+  "lines": 218
+ },
+ {
+  "phase": "phase-06",
+  "path": "CompanionCloud/package.json",
+  "lines": 20
+ },
+ {
+  "phase": "phase-06",
+  "path": "CompanionCloud/blender_safe_convert.py",
+  "lines": 79
+ },
+ {
+  "phase": "phase-06",
+  "path": "CompanionCloud/server.js",
+  "lines": 264
+ },
+ {
+  "phase": "phase-06",
+  "path": "CompanionWeb/src/CompanionScalePortal.jsx",
+  "lines": 242
+ },
+ {
+  "phase": "phase-06",
+  "path": "Assets/Scripts/Cloud/CompanionPairingAndQuotaClient.cs",
+  "lines": 163
+ },
+ {
+  "phase": "phase-07",
+  "path": "Assets/link.xml",
+  "lines": 7
+ },
+ {
+  "phase": "phase-07",
+  "path": "Assets/Shaders/GltfSinglePassLit.shader",
+  "lines": 153
+ },
+ {
+  "phase": "phase-07",
+  "path": "Assets/Scripts/Cloud/GltfPersistentDiskCache.cs",
+  "lines": 149
+ },
+ {
+  "phase": "phase-07",
+  "path": "Assets/Scripts/Cloud/GltfMaterialRemapperAndLogger.cs",
+  "lines": 175
+ },
+ {
+  "phase": "phase-07",
+  "path": "Assets/Scripts/Cloud/IslandGltfLoader.cs",
+  "lines": 427
+ },
+ {
+  "phase": "phase-07",
+  "path": "Assets/Scripts/Editor/Phase7SetupWizard.cs",
+  "lines": 121
+ },
+ {
+  "phase": "phase-08",
+  "path": "Assets/Shaders/CompositorVideoScreenPunchThrough.shader",
+  "lines": 96
+ },
+ {
+  "phase": "phase-08",
+  "path": "Assets/Scripts/Media/VuplexWidevineDrmBootstrapper.cs",
+  "lines": 139
+ },
+ {
+  "phase": "phase-08",
+  "path": "Assets/Scripts/Media/VirtualCinemaManager.cs",
+  "lines": 181
+ },
+ {
+  "phase": "phase-08",
+  "path": "Assets/Scripts/Media/VirtualCinemaScreenController.cs",
+  "lines": 240
+ },
+ {
+  "phase": "phase-08",
+  "path": "Assets/Scripts/Media/OpenXrCinemaQuadLayerRouter.cs",
+  "lines": 55
+ },
+ {
+  "phase": "phase-08",
+  "path": "Assets/Scripts/Editor/Phase8SetupWizard.cs",
+  "lines": 137
+ },
+ {
+  "phase": "phase-09",
+  "path": "Assets/Shaders/BoxRadioVuMeter.shader",
+  "lines": 119
+ },
+ {
+  "phase": "phase-09",
+  "path": "Assets/Scripts/Audio/PrimaryAudioCatalogAndScanner.cs",
+  "lines": 244
+ },
+ {
+  "phase": "phase-09",
+  "path": "Assets/Scripts/Audio/SpatialRadioNetworkManager.cs",
+  "lines": 307
+ },
+ {
+  "phase": "phase-09",
+  "path": "Assets/Scripts/Audio/SpatialBoxRadioController.cs",
+  "lines": 168
+ },
+ {
+  "phase": "phase-09",
+  "path": "Assets/Scripts/Editor/Phase9SetupWizard.cs",
+  "lines": 138
+ },
+ {
+  "phase": "phase-10",
+  "path": "Assets/Shaders/PetCoatPatternLut.shader",
+  "lines": 166
+ },
+ {
+  "phase": "phase-10",
+  "path": "Assets/Scripts/Pets/PetArchetypeDatabase.cs",
+  "lines": 75
+ },
+ {
+  "phase": "phase-10",
+  "path": "Assets/Scripts/Pets/IslandPetController.cs",
+  "lines": 233
+ },
+ {
+  "phase": "phase-10",
+  "path": "Assets/Scripts/Pets/IslandPetSanctuaryManager.cs",
+  "lines": 209
+ },
+ {
+  "phase": "phase-10",
+  "path": "Assets/Scripts/Editor/Phase10SetupWizard.cs",
+  "lines": 375
+ },
+ {
+  "phase": "phase-11",
+  "path": "Assets/Scripts/AI/ChunkedDynamicNavMeshManager.cs",
+  "lines": 186
+ },
+ {
+  "phase": "phase-11",
+  "path": "Assets/Scripts/AI/PetFetchableToy.cs",
+  "lines": 79
+ },
+ {
+  "phase": "phase-11",
+  "path": "Assets/Scripts/AI/PetHarmonyCoordinator.cs",
+  "lines": 480
+ },
+ {
+  "phase": "phase-11",
+  "path": "Assets/Scripts/UX/VRComfortAndHandTrackingManager.cs",
+  "lines": 210
+ },
+ {
+  "phase": "phase-11",
+  "path": "Assets/Scripts/Editor/Phase11SetupWizard.cs",
+  "lines": 84
+ }
+]

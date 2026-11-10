@@ -1,0 +1,7 @@
+<linker>
+  <assembly fullname="glTFast" preserve="all" />
+  <assembly fullname="glTFast.Export" preserve="all" />
+  <assembly fullname="Ktx" preserve="all" />
+  <assembly fullname="Draco" preserve="all" />
+  <assembly fullname="MeshoptDecompress" preserve="all" />
+</linker>
