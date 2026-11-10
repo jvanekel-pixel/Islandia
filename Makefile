@@ -35,7 +35,7 @@ check: lint tools-test core-test mock-test companion-test  ## Everything provabl
 	@echo "check: all local gates passed"
 
 .PHONY: lint
-lint: lint-plan lint-privacy lint-markdown lint-meta lint-layering  ## Static checks (verification level L0)
+lint: lint-plan lint-privacy lint-markdown lint-meta lint-layering lint-content  ## Static checks (verification level L0)
 
 .PHONY: lint-plan
 lint-plan:  ## The backlog and plan are internally consistent
@@ -57,6 +57,10 @@ lint-meta:  ## Every generated Unity .meta is present and current
 .PHONY: lint-layering
 lint-layering:  ## Island.Core stays engine-free, so the fast tests keep working
 	@$(PY) tools/lint/check_layering.py
+
+.PHONY: lint-content
+lint-content:  ## The catalogue is valid and its generated ids are current
+	@$(PY) tools/content/generate_ids.py --check
 
 # ------------------------------------------------------------------- the tests
 
@@ -106,6 +110,10 @@ mock:  ## Run the mock StreamBox gateway on http://localhost:8787
 	@npm --prefix tools/mock-streambox start
 
 # ------------------------------------------------------------------- utilities
+
+.PHONY: content
+content:  ## Regenerate what the catalogue derives — run after editing content/catalogue
+	@$(PY) tools/content/generate_ids.py
 
 .PHONY: meta
 meta:  ## Write any missing or stale Unity .meta files

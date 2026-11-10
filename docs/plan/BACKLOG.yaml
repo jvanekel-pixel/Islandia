@@ -121,14 +121,26 @@ packages:
     - "Decision recorded: which generated asset types are committed versus rebuilt in CI [L0]"
   status: todo
 
+- id: F-07a
+  title: Run the non-Unity checks in CI on every push
+  ms: M1
+  risk: low
+  deps: [F-01]
+  refs: [04-VERIFICATION.md §1]
+  accept:
+    - "A workflow runs make lint, tools-test, core-test, core-build and mock-test on every push and pull request, concurrency-cancelled per ref [L1]"
+    - "The toolchain the tests need is installed on the runner, so nothing passes only because a session container happened to have it [L1]"
+    - "The run summary reports test counts per suite, so a count that drops between runs is visible (RK-07) [L0]"
+  status: todo
+
 - id: F-07
-  title: Full CI pipeline with caching, path filters and package-source artefact
+  title: The Unity half of the CI pipeline — caching, path filters, package-source artefact
   ms: M1
   risk: med
   deps: [F-06]
   refs: [adr ADR-19, 04-VERIFICATION.md §1]
   accept:
-    - "Workflows: core, lint, unity-tests (EditMode + PlayMode), android-build (merge to main and on demand), each path-filtered and concurrency-cancelled [L4]"
+    - "Workflows: unity-tests (EditMode + PlayMode) and android-build (merge to main and on demand), each path-filtered and concurrency-cancelled [L4]"
     - "Runner pinned to ubuntu-24.04; free-disk-space step; Library cached by lockfile hash; warm test run under 15 minutes [L4]"
     - "CI fails if import leaves uncommitted .meta or settings changes [L2]"
     - "An artefact contains the C# and shader sources of the resolved XR, URP and glTFast packages so sessions can check real APIs [L4]"
@@ -721,24 +733,37 @@ packages:
 
 # ───────────────────────────── M5  LIVING GARDEN ─────────────────────────────
 
-- id: C-01
-  title: Catalogue schema, id generation, licence ledger, validator
+- id: C-01a
+  title: Catalogue schema, loader and deterministic id generation
   ms: M5
   risk: med
-  deps: [M3-RETRO]
+  deps: [F-01]
   refs: [adr ADR-11, au phase-04-05-07-foliage-architecture-import.md]
   accept:
-    - "content/catalogue/*.yaml schema documented and validated; C# ids generated deterministically; ids are stable across additions [L1]"
+    - "content/catalogue/*.yaml schema documented and validated; every way of getting an entry wrong is covered by a test that proves the loader refuses it [L1]"
+    - "C# ids generated deterministically from the catalogue; ids are stable across additions; collisions, zero and duplicate C# names all fail the build [L1]"
+    - "The generated file is committed and CI fails when it is stale [L0]"
+    - "Python and C# derive the same number for the same id, asserted from values computed independently of both [L1]"
+  status: done
+
+- id: C-01b
+  title: Catalogue validator, licence ledger and honest count
+  ms: M5
+  risk: med
+  deps: [C-01a]
+  refs: [adr ADR-11, au phase-04-05-07-foliage-architecture-import.md]
+  accept:
     - "Validator checks triangle and LOD budgets, texture sizes, bounds, closed geometry, collider and thumbnail presence, and fails CI [L0]"
-    - "Licence ledger generated from the catalogue; non-CC0 entries fail without a decision record [L0]"
-    - "Report prints distinct meshes and palette variants separately [L0]"
+    - "Per-item budgets live in content/budgets.yaml as data; an LOD chain that does not actually reduce fails [L0]"
+    - "Licence ledger generated from the catalogue; a licence outside the allowlist fails, the allowlist cites the decision record that admits it, and the tool checks that record exists [L0]"
+    - "Report counts distinct meshes by asset checksum, not by catalogue entry, so two entries sharing a mesh count as one mesh and two variants [L0]"
   status: todo
 
 - id: C-02
   title: CC0 ingestion pipeline
   ms: M5
   risk: high
-  deps: [C-01]
+  deps: [C-01b]
   refs: [adr ADR-11]
   accept:
     - "Selected packs are fetched by pinned URL and checksum in CI; licences verified against the source page text and archived [L0]"
@@ -751,7 +776,7 @@ packages:
   title: Parametric generators — flowers, hedges, grass
   ms: M5
   risk: med
-  deps: [C-01]
+  deps: [C-01b]
   refs: [adr ADR-11, bp phase-04.md §4.2]
   accept:
     - "Generators produce closed or deliberately double-sided geometry within budget for at least 16 flower forms, 6 hedge and topiary forms and grass tufts [L0]"
@@ -823,7 +848,7 @@ packages:
   title: Inventory browser
   ms: M5
   risk: med
-  deps: [C-01, V-11]
+  deps: [C-01b, V-11]
   refs: [bp phase-03.md §3.1]
   accept:
     - "Categories, thumbnails, paging and favourites; built in code from the catalogue; selection feeds placement and scatter tools [L3]"
