@@ -70,7 +70,18 @@ and finish the first slice.
 ## 6. Working with CI
 
 - Open PRs and read check results with the session's built-in GitHub tools, or `gh api` REST calls.
-  `gh pr …` and `gh issue …` do not work in cloud sessions (GraphQL is blocked).
+  `gh pr …` and `gh issue …` do not work in cloud sessions (GraphQL is blocked). Measured on
+  2026-11-10, these REST paths work from a session and are what the loop runs on:
+
+  | Path | For |
+  | :-- | :-- |
+  | `actions/runs`, `actions/workflows` | Has CI started, and did it finish |
+  | `commits/<sha>/check-runs`, `commits/<sha>/status` | Whether this commit is green |
+  | `pulls`, `pulls/<n>`, `pulls/<n>/files`, `pulls/<n>/merge` | Open, review and merge |
+  | `issues`, `issues/<n>/labels`, `labels` | Human gates and blocked work |
+
+  `actions/secrets` is blocked by the proxy and always will be. A session cannot tell whether a
+  secret exists; it finds out when a workflow runs. Do not treat that 403 as a fault.
 - Subscribe to the PR's activity if the tool is available so check results wake the session. If
   not, poll at intervals matched to the job (Unity jobs take 20–45 minutes; do not poll every
   minute). Ending the session while CI runs is fine — the lease protocol resumes it.

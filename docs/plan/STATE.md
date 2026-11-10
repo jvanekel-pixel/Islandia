@@ -56,6 +56,7 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 | Fact | Value | Source |
 | :-- | :-- | :-- |
 | Local gate `make check` | 4 lint checks + 22 tooling tests, under 1 s | F-01 |
+| GitHub REST from a session | runs, check-runs, status, pulls, issues all readable; `actions/secrets` blocked | F-01 |
 | Unity editor version pinned | — | F-03 |
 | CI: warm test run / Android build | — | S-05 |
 | Runner minutes per Unity package | — | S-05 |
