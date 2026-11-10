@@ -64,7 +64,8 @@ pause the scheduled task if you are able to, record that in `STATE.md`, and stop
 5. **Push** and let CI do the Unity work.
 
 Keep packages small. If one grows past roughly 800 changed lines of hand-written code, split it:
-add the new entries to the backlog with a suffix (`W-03a`, `W-03b`) and finish the first slice.
+add the new entries to the backlog with a letter suffix on the original id, in the original's place,
+and finish the first slice.
 
 ## 6. Working with CI
 

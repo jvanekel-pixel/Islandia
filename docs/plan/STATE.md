@@ -4,8 +4,8 @@
 
 | | |
 | :-- | :-- |
-| **Stage** | 0 — Orientation |
-| **Current milestone** | M0 Keys handed over → next M1 Factory online |
+| **Stage** | 1 — Inception |
+| **Current milestone** | M1 Factory online |
 | **In flight** | — |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | Scheduled: *Islandia build driver*, every 2 hours, new session per run, Opus |
@@ -30,11 +30,13 @@ and carry on with packages that do not need Unity (`F-01`, `F-08`, `SB-01`, `I-0
 
 Collected here as packages merge; they become the checklist for the next human gate.
 
-*(none yet)*
+| What | From | Why it needs a person |
+| :-- | :-- | :-- |
+| Add `.claude/settings.json` with the allow rules listed in `F-01` | `F-01` | A session's permission classifier refuses to let a session write its own permission file, which is right. Not a blocker: auto mode already permits these commands, and the only cost is the occasional prompt. The owner can add the file, or leave it |
 
 ## Next up
 
-`F-01` → `F-02` → `F-08` (F-08 does not need Unity and can proceed if F-02 is waiting on secrets).
+`F-02` → `F-08` (F-08 does not need Unity and can proceed if F-02 is waiting on secrets).
 
 **Note on `F-10` (cloud environment):** the kickoff session did not propose one. Its own container
 had a second, unrelated repository attached, and an environment proposed from there would have
@@ -44,7 +46,8 @@ cost is reinstalling the .NET SDK and the companion toolchain each session.
 
 ## Recently merged
 
-- `c30cdda` Planning bundle (2026-11-10, kickoff session)
+- `F-01` Repository skeleton, Makefile, lint, meta generator (2026-11-10)
+- Planning bundle, driver prompt and kickoff state (2026-11-10)
 
 ## Measured facts
 
@@ -52,6 +55,7 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 
 | Fact | Value | Source |
 | :-- | :-- | :-- |
+| Local gate `make check` | 4 lint checks + 22 tooling tests, under 1 s | F-01 |
 | Unity editor version pinned | — | F-03 |
 | CI: warm test run / Android build | — | S-05 |
 | Runner minutes per Unity package | — | S-05 |

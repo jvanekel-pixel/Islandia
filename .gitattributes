@@ -1,0 +1,40 @@
+# Normalise line endings; the repo is worked on from Windows and Linux.
+* text=auto eol=lf
+
+# Unity serialised assets are text, but must never be auto-merged: a three-way
+# merge of YAML with GUID references produces a file that opens but is wrong.
+*.unity        -merge
+*.prefab       -merge
+*.asset        -merge
+*.mat          -merge
+*.anim         -merge
+*.controller   -merge
+*.physicMaterial -merge
+*.meta         -merge
+
+# Keep diffs readable for the formats we hand-write.
+*.cs      text diff=csharp
+*.shader  text
+*.hlsl    text
+*.asmdef  text
+*.json    text
+*.yaml    text
+*.yml     text
+*.md      text
+
+# Binary: never try to diff or merge these.
+*.png  binary
+*.jpg  binary
+*.tga  binary
+*.psd  binary
+*.fbx  binary
+*.glb  binary
+*.wav  binary
+*.ogg  binary
+*.mp4  binary
+*.ttf  binary
+*.otf  binary
+*.dll  binary
+*.so   binary
+*.aar  binary
+*.apk  binary

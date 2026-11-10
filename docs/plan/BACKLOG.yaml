@@ -30,14 +30,19 @@ packages:
     - ".gitignore/.gitattributes are correct for Unity (Library, Temp, Logs, UserSettings ignored; YAML merge off) [L0]"
     - "Issue labels exist: human-gate, blocked, infra, needs-device, device-report [L0]"
     - ".claude/settings.json carries allow rules for the project's routine commands (make, dotnet, npm, docker, git, python) so sessions are not stopped by prompts [L0]"
-  status: todo
+  note: >-
+    Done except the .claude/settings.json criterion: a session's permission
+    classifier refuses to let a session write its own permission file, which is
+    correct. It is listed under needs-human in STATE.md and is not a blocker —
+    auto mode already allows these commands.
+  status: done
 
 - id: F-02
   title: Unity licence activation smoke test in CI
   ms: M1
   risk: med
   deps: [F-01]
-  refs: [au 01-AUDIT.md §6]
+  refs: [01-AUDIT.md §6]
   accept:
     - "A manually dispatchable workflow activates the licence from the three secrets, prints the editor version and returns it [L4]"
     - "On failure the workflow output names the cause (missing secret, expired licence, two-factor) and the driver opens a human-gate issue with exact steps [L0]"
@@ -136,7 +141,7 @@ packages:
   ms: M1
   risk: low
   deps: [F-08]
-  refs: [au 01-AUDIT.md §5]
+  refs: [01-AUDIT.md §5]
   accept:
     - "A dedicated cloud environment is proposed to the owner with a setup script that installs the .NET SDK and companion toolchain in under five minutes [L0]"
     - "A fresh session can run `make core-test` and `make companion-test` with no manual installation [L1]"
@@ -160,7 +165,7 @@ packages:
   ms: M1
   risk: med
   deps: [F-07]
-  refs: [au 01-AUDIT.md §5]
+  refs: [01-AUDIT.md §5]
   accept:
     - "Time-boxed to one session. Answer recorded: can the editor image be pulled via the registry mirror, which hosts must be allowed, how long does a cold compile take [L0]"
     - "If viable, a human-gate issue offers it to the owner as an optional accelerator, stating that it needs their licence in the environment. Not adopted without their yes [L0]"
@@ -393,7 +398,7 @@ packages:
   refs: [07-STREAMBOX.md §4, adr ADR-15]
   accept:
     - "A tiny H.264/AAC HLS stream (MPEG-TS and fMP4 variants) and a progressive MP4 are generated in CI and bundled; the app serves them to itself over a loopback HTTP server [L4]"
-    - "A benchmark scenario plays each variant on a quad through Unity's video player and records: started or not, time to first frame, dropped frames, audio present [L3 for the harness]"
+    - "A benchmark scenario plays each variant on a quad through Unity's video player and records: started or not, time to first frame, dropped frames, audio present; the harness itself is proven against a fake backend [L3]"
     - "The same scenario is prepared for a native player backend so both can be compared on device [L3]"
     - "Device result recorded and the backend chosen by decision record: Unity player with HLS, native player, or progressive fallback (07-STREAMBOX.md §4) [L6]"
   status: todo
