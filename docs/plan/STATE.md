@@ -4,12 +4,12 @@
 
 | | |
 | :-- | :-- |
-| **Stage** | 1 — Inception |
-| **Current milestone** | M1 Factory online |
-| **In flight** | `F-01` is built, green and reviewed — [PR #1](https://github.com/jvanekel-pixel/Islandia/pull/1), labelled `awaiting-merge`. Merge it when convenient; nothing waits on it |
+| **Stage** | 2 — Construction |
+| **Current milestone** | M1 Factory online · M2 started on the engine-free track |
+| **In flight** | **One merge unblocks everything: [PR #10](https://github.com/jvanekel-pixel/Islandia/pull/10).** It carries `F-13` (auto-merge), the gift re-plan and `F-03` (the Unity-project workflow), because #11 and #12 were both merged into its branch rather than into `main`. Until it lands, auto-merge is not on `main`, so nothing merges itself |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
-| **Driver** | **Paused 2026-11-10.** Scheduled task exists but is misconfigured — see below |
-| **Last updated** | 2026-11-10 (planning bundle, revised for the owner's decisions) |
+| **Driver** | Paused. Being driven by an interactive session for now |
+| **Last updated** | 2026-11-10 (`V-07a` — budget ledger and tier classifier) |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## Open human gates
@@ -54,11 +54,20 @@ Collected here as packages merge; they become the checklist for the next human g
 
 ## Next up
 
-`F-03` (create the Unity project headlessly) → `F-04` → `F-05`. **The Unity track is open:**
-activation works, so the whole M1 chain can proceed.
+**Merge PR #10.** Then the `unity-create-project` workflow can be dispatched to finish `F-03`'s
+second half (generate the project, commit `ProjectSettings` and the manifest), and `F-04` → `F-05`
+follow.
 
-Also unblocked and needing no Unity: `V-06` (save system), `V-07` (budget ledger and device
-tiers), `SB-01c` (StreamBox client), `I-01` (model-import gatekeeper).
+Done so far: `F-01`, `F-02`, `F-08`, `F-13`, `SB-01a`, `SB-01b`, `V-02`, `V-06`, `V-07a`.
+Test counts: **141 core · 27 tooling · 30 StreamBox contract.**
+
+Unblocked and needing no Unity: `SB-01c` (StreamBox client), `I-01` (model-import gatekeeper),
+`V-08` (undo/redo core). `V-07b` waits on the Unity project.
+
+**Open question from the owner, 2026-11-10:** whether to spend a small budget on asset production
+(a rented GPU, generated assets, or bought base meshes). This cuts across ADR-11, ADR-24 and the
+"nothing may cost money" rule, which currently forbids all three. Nothing is decided and no money
+has been spent; see the assessment recorded in `DECISIONS.md` when it lands.
 
 `F-10` stays `needs-human`: it needs an environment card only the owner can approve, and nothing
 waits on it.

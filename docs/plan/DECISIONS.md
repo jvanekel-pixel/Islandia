@@ -180,6 +180,37 @@ published.
 
 **No deadline.** Prioritise on quality and risk, not on a date.
 
+## 2026-11-10 — ADR-10's budgets leave no headroom, and the ledger now says so
+
+**Found while building `V-07a`.** Adding up ADR-10's per-subsystem allowances for a Quest 2 gives
+140 draws against a 200 hard cap (70%), 711,072 triangles against 750,000 (95%), and 368 MB
+against a memory figure which *is* 368 MB (100%). For Quest 3 the same sums come to 97% and 99%.
+So the comfortable-sounding phrase "busy-scene total" describes a scene that is already at the
+limit on two of the three measures, and the planning numbers contain no slack to absorb a busy
+moment. None of them has been near the hardware.
+
+Two things changed as a result.
+
+**The ledger now measures all three against stated caps.** It had compared draw calls and
+triangles against the hard caps but memory against the sum of the allowances, so one reported
+number meant two different things depending on which measure was tightest. `DeviceBudget` carries
+an explicit `HardBytes`, which for a Quest 2 is ADR-10's 368 MB — the figure from the document, not
+an invented one.
+
+**The numbers are pinned by a test that explains itself**
+(`TheQuest2AllowancesLeaveNoMeaningfulHeadroom`). It asserts the 70% / 95% / 100% shape, so that
+anyone adjusting the tables without a device reading in hand breaks a test that tells them what
+they are doing. An island with every subsystem at its allowance reads **red**, which is honest:
+a build in that state has nothing left.
+
+Nothing was weakened to get green. The failing test that started this was correct about the
+inconsistency and wrong in the reason it gave for it, and both were fixed.
+
+**Consequence for `HG-1`.** The first headset check should measure memory first. It is the measure
+with zero slack and the one most likely to bind, and `RK-08` already names budget calibration as
+the project's largest technical risk. The numbers in ADR-10 stay as they are until device readings
+replace them — guessing a different guess would not be an improvement.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

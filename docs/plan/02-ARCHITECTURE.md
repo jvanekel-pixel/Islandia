@@ -162,13 +162,20 @@ and by tests.
 | Architecture and props | 35 draws · 180K tris · 64 MB | |
 | Imported models | 25 draws · 120K tris · 128 MB | 15 MB per file |
 | Pets, media, UI | 18 draws · 60K tris · 96 MB | |
-| **Busy-scene total** | **≤ 140 draws · ≤ 711K tris · 368 MB** | Hard caps: 200 draws, 750K triangles |
+| **Busy-scene total** | **≤ 140 draws · ≤ 711K tris · 368 MB** | Hard caps: 200 draws, 750K triangles, 368 MB |
 
 Hard caps: **4 active pets, 1 active video screen, 1 audio decoder.**
 Per-frame managed allocation in steady state: 0 bytes, asserted in PlayMode tests.
 
 A playing 1080p video is one hardware decode plus one texture; its cost on a busy island is
 measured at the first device gate and the media row adjusted from the result.
+
+**These allowances leave almost no slack.** Their sums come to 70% of the draw-call cap, 95% of
+the triangle cap and 100% of the memory figure, so an island with every subsystem at its allowance
+is at the limit rather than merely busy, and the ledger reports it as red. The figures are kept as
+written because replacing one guess with another would not be an improvement, but **memory is the
+measure to take first at `HG-1`**: it is the one with no slack at all. Pinned by
+`TheQuest2AllowancesLeaveNoMeaningfulHeadroom`; see `DECISIONS.md`, 2026-11-10.
 
 The wrist gauge shows ledger usage: green below 80%, yellow to 95%, red above.
 

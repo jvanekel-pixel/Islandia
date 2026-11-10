@@ -339,8 +339,8 @@ packages:
     - "Stable 64-bit instance id allocator, persisted [L1]"
   status: done
 
-- id: V-07
-  title: Budget ledger and device tier classifier
+- id: V-07a
+  title: Budget ledger and device tier classifier (engine-free)
   ms: M2
   risk: med
   deps: [F-08]
@@ -348,8 +348,18 @@ packages:
   accept:
     - "Ledger accepts registrations per subsystem and computes zone per ADR-10 from data, not code [L1]"
     - "Tier classifier is a pure function with a table; Quest 2 is the baseline tier and unknown inputs map to it; the Quest 3 / 3S ambiguity case is covered by a test [L1]"
+    - "All three measures are judged against stated device caps, and the absence of headroom in ADR-10's numbers is pinned by a test [L1]"
+  status: done
+
+- id: V-07b
+  title: Apply the tier settings at runtime
+  ms: M2
+  risk: med
+  deps: [V-07a, F-03]
+  refs: [adr ADR-02, adr ADR-10]
+  accept:
     - "Runtime applies foveation level, refresh rate and render scale for the tier through public APIs [L2]"
-    - "Device strings captured and the table confirmed [L6]"
+    - "Device strings captured and the table confirmed; memory measured first, per DECISIONS.md 2026-11-10 [L6]"
   status: todo
 
 - id: V-08
@@ -392,7 +402,7 @@ packages:
   title: Wrist panel v1
   ms: M2
   risk: low
-  deps: [V-07, V-09]
+  deps: [V-07a, V-09]
   refs: [dr Assets/Scripts/UX/WristCompositorHudController.cs, au phase-01-03-engine-terrain-ux.md]
   accept:
     - "World-space panel on the off hand shows the ledger gauge, tool selection, save and load; built in code [L3]"
