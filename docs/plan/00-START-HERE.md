@@ -253,8 +253,9 @@ GraphQL call, and GraphQL is blocked in cloud sessions.
 So you have a choice, and either is fine:
 
 **A. Leave it as is.** The driver builds each work package, proves it, opens a green pull request
-with the evidence in the body, and moves on. You merge them whenever you like — one click each,
-and they batch up happily. You keep a look at everything before it lands.
+with the evidence in the body, labels it `awaiting-merge`, and moves on. You merge them whenever
+you like — one click each, and they batch up happily. Nothing stalls while they wait, and you get
+a look at everything before it lands.
 
 **B. Let the driver merge.** Create `.claude/settings.json` in the repository with the content
 below and commit it. The driver then merges its own pull requests once their checks are green, and

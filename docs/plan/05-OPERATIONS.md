@@ -34,12 +34,13 @@ start
 The lease is an **open pull request whose head branch starts with `claude/wp-`**.
 
 1. List open PRs. If none has a `claude/wp-` head, the lease is free.
-2. If one exists and its newest commit or comment is **under 90 minutes old**, another driver is
-   alive. Stop. Do not start a second work package. A branch named `claude/done-…` is finished
-   work waiting for the owner to merge, not a lease: ignore it.
-3. If one exists and is **older than 90 minutes**, it is stale. Adopt it: check out the branch, read
-   the PR description and its progress comments, continue the work. Do not restart from scratch.
-4. While you hold a lease, leave a heartbeat (a push or a one-line PR comment) at least hourly.
+2. **Ignore any pull request labelled `awaiting-merge`.** That is finished work waiting for the
+   owner, not a lease. It can sit there for days and must never stop the build.
+3. Of the rest, if one's newest commit or comment is **under 90 minutes old**, another driver is
+   alive. Stop. Do not start a second work package.
+4. If one is **older than 90 minutes**, it is stale. Adopt it: check out the branch, read the PR
+   description and its progress comments, continue the work. Do not restart from scratch.
+5. While you hold a lease, leave a heartbeat (a push or a one-line PR comment) at least hourly.
 
 ## 4. Picking work
 
@@ -109,10 +110,10 @@ All required checks green on the head commit, then:
      sessions.
    - **If `.claude/settings.json` allows the merge call** (see `F-01`, and `00-START-HERE.md` §9),
      squash-merge through the REST API as the last step of the package.
-   - **If it does not**, stop at a green, reviewed pull request: label it `work-package`, put the
-     evidence in the body, leave it open, and move on to the next package. The branch prefix
-     becomes `claude/done-` so the lease check in §3 does not read it as work in flight. The owner
-     merges in batches.
+   - **If it does not**, stop at a green, reviewed pull request: put the evidence in the body,
+     label it `work-package` **and `awaiting-merge`**, leave it open, and move on to the next
+     package. The owner merges in batches. Do not rename the branch to signal this — deleting a
+     head branch closes its pull request.
 
    Either way: delete nothing by force, and never rewrite `main`.
 

@@ -6,7 +6,7 @@
 | :-- | :-- |
 | **Stage** | 1 — Inception |
 | **Current milestone** | M1 Factory online |
-| **In flight** | — |
+| **In flight** | `F-01` is built, green and reviewed — [PR #1](https://github.com/jvanekel-pixel/Islandia/pull/1), labelled `awaiting-merge`. Merge it when convenient; nothing waits on it |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | Scheduled: *Islandia build driver*, every 2 hours, new session per run, Opus |
 | **Last updated** | 2026-11-10 (planning bundle, revised for the owner's decisions) |
