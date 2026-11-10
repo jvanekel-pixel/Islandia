@@ -9,7 +9,7 @@
 | **In flight** | **One merge unblocks everything: [PR #10](https://github.com/jvanekel-pixel/Islandia/pull/10).** It carries `F-13` (auto-merge), the gift re-plan and `F-03` (the Unity-project workflow), because #11 and #12 were both merged into its branch rather than into `main`. Until it lands, auto-merge is not on `main`, so nothing merges itself |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | Paused. Being driven by an interactive session for now |
-| **Last updated** | 2026-11-10 (`V-07a` — budget ledger and tier classifier) |
+| **Last updated** | 2026-11-10 (`C-01a` — catalogue schema and ids) |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## Open human gates
@@ -58,11 +58,16 @@ Collected here as packages merge; they become the checklist for the next human g
 second half (generate the project, commit `ProjectSettings` and the manifest), and `F-04` → `F-05`
 follow.
 
-Done so far: `F-01`, `F-02`, `F-08`, `F-13`, `SB-01a`, `SB-01b`, `V-02`, `V-06`, `V-07a`.
-Test counts: **141 core · 27 tooling · 30 StreamBox contract.**
+Done so far: `F-01`, `F-02`, `F-08`, `F-13`, `SB-01a`, `SB-01b`, `V-02`, `V-06`, `V-07a`, `C-01a`.
+Test counts: **147 core · 64 tooling · 30 StreamBox contract.**
 
-Unblocked and needing no Unity: `SB-01c` (StreamBox client), `I-01` (model-import gatekeeper),
-`V-08` (undo/redo core). `V-07b` waits on the Unity project.
+**CI now runs the non-Unity checks** (`F-07a`, PR #16) — before this, nothing did, and `F-13`'s
+auto-merge would have merged on zero verification. Its first run went red on a real portability bug
+(issue #15), which is the best argument for it there is.
+
+Unblocked and needing no Unity: `C-01b` (catalogue validator and licence ledger), `SB-01c`
+(StreamBox client), `I-01` (model-import gatekeeper), `V-08` (undo/redo core). `V-07b` waits on the
+Unity project.
 
 **Open question from the owner, 2026-11-10:** whether to spend a small budget on asset production
 (a rented GPU, generated assets, or bought base meshes). This cuts across ADR-11, ADR-24 and the

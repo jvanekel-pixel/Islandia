@@ -211,6 +211,63 @@ with zero slack and the one most likely to bind, and `RK-08` already names budge
 the project's largest technical risk. The numbers in ADR-10 stay as they are until device readings
 replace them — guessing a different guess would not be an improvement.
 
+## 2026-11-10 — Nothing was running in CI, and F-07 is split so that it does
+
+**Found while starting the content track.** `main` carried three workflows — activate a Unity seat,
+create the Unity project, merge labelled pull requests — and not one of them ran a linter or a test.
+Every package merged so far was proven by a session running `make` in its own container and pasting
+the output into a pull request. That is not what `CLAUDE.md` means by *"a work package is done when
+its acceptance tests pass in CI on the merge commit"*, and it means the evidence in those pull
+request bodies rests on my word rather than on a run anyone can click.
+
+Worse, `F-13`'s auto-merge waits for all checks to complete and pass. With no checks configured that
+is a wait for nothing: on landing, the first thing it would have done is merge whatever carried the
+label, unverified. `F-07a` lands the checks before that can happen.
+
+**`F-07` is split.** Its L0 and L1 half needs no Unity project and exists now (`F-07a`: the linters,
+the tooling tests, `Island.Core`, the netstandard2.1 compile, the mock gateway's contract tests, on
+every push, concurrency-cancelled). `F-07` keeps EditMode, PlayMode, the Android build, the Library
+cache and the package-source artefact, all of which need the project that is still in PR #10.
+Waiting for that had meant nothing was checked at all.
+
+**It failed on its first run, which is the whole argument for it.** Two of the mock gateway's
+contract tests pass in a session container and fail on a GitHub runner: the mock builds its HLS
+stream with ffmpeg and the runner image has none. The workflow now installs it, which also un-skips
+two tests that had been skipping silently — including the one asserting a segment really is
+MPEG-TS. That stream is what `V-14` will try to decode on the headset, and it was being generated
+nowhere in CI. A related defect in the mock's no-ffmpeg fallback is issue #15.
+
+The run summary prints test counts per suite. `RK-07` — a session weakening a gate to get green — is
+the risk this project is least able to notice on its own, and a count that drops between two runs is
+the cheapest possible signal.
+
+## 2026-11-10 — Catalogue ids are hashes, not sequence numbers
+
+**`C-01a`.** An item's numeric id is CRC-32 of its id string. The blueprint used sequential integers
+(398 of them), which cannot survive the catalogue growing: inserting an item renumbers everything
+after it, and since a saved island stores these numbers, every island anyone had built would quietly
+come back with the wrong contents. A hash is stable across additions by construction.
+
+It is also derivable by both toolchains — Python at build time for the generated constants, C# at
+runtime when a save file hands over an id string — and a test asserts the two agree against values
+computed from neither. The cost is that collisions are possible rather than impossible; the
+validator fails the build on one, on a zero hash (zero means "no item"), and on two ids that would
+generate the same C# name.
+
+**The honest-count rule.** The blueprint's catalogue claimed 631 items and resolved to about six
+distinct geometries: 95 architecture modules all pointed at one wall box. So a mesh is identified by
+**the checksum of its asset file**, not by the catalogue entry that references it, and the report
+counts distinct meshes and palette variants separately (`C-01b`). Two entries sharing a mesh are one
+mesh and two variants, and claiming otherwise is not possible rather than merely discouraged.
+
+**Brought forward, and split.** The catalogue package was one entry parked behind `M3-RETRO`. It
+needs no Unity, no GPU and no spending decision, and `05-OPERATIONS.md` §4 allows taking
+later-milestone work while the current milestone waits on a human gate — which M1 is doing, on
+PR #10. It is also the real prerequisite for any asset work at all: until the catalogue, the
+validator and the ingest pipeline exist, generated or downloaded meshes have nowhere to go. It is
+now `C-01a` (schema, loader, ids — done) and `C-01b` (validator, licence ledger, honest count), and
+the packages that depended on the whole of it depend on `C-01b`.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced
