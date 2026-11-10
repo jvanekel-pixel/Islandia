@@ -125,8 +125,13 @@ jobs:
           status=$?
           set -e
 
-          version="$(grep -m1 -oE 'Version is .[0-9]+\.[0-9]+\.[0-9]+[a-z0-9]*' /tmp/unity.log \
-                     | sed 's/Version is .//')"
+          # Read it from the editor that just ran, not from the image tag: the point of this
+          # check is to find out what actually started, and those two could disagree.
+          version="$(grep -m1 -oE 'Initialize engine version: [0-9]+\.[0-9]+\.[0-9]+[a-z0-9]*' /tmp/unity.log \
+                     | sed 's/.*version: //')"
+          [ -n "$version" ] || version="$(grep -m1 -oE '^Version is [0-9]+\.[0-9]+\.[0-9]+[a-z0-9]*' /tmp/unity.log \
+                     | sed 's/Version is //')"
+          [ -n "$version" ] || version="$(unity-editor -version 2>/dev/null | tr -d '\r' | head -1)"
           echo "editor-version=${version:-unknown}" >> "$GITHUB_OUTPUT"
 
           if [ "$status" -eq 0 ] && [ -d /tmp/licence-probe ]; then
