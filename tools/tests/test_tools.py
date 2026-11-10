@@ -144,7 +144,8 @@ def _planted() -> dict[str, str]:
         "Slack token": "xo" + "xb-" + "1234567890-abcdef",
         "bearer literal": 'Authorization: "Bearer ' + "C" * 24 + '"',
         "assigned secret": 'api_key = "' + "D" * 24 + '"',
-        "Unity licence": "<License id=" + '"x"',
+        # Split so the literal does not appear here: check_privacy scans this file.
+        "Unity licence": "<Lic" + "ense id=" + '"x"',
     }
 
 

@@ -32,7 +32,7 @@ Collected here as packages merge; they become the checklist for the next human g
 
 | What | From | Why it needs a person |
 | :-- | :-- | :-- |
-| Add `.claude/settings.json` with the allow rules listed in `F-01` | `F-01` | A session's permission classifier refuses to let a session write its own permission file, which is right. Not a blocker: auto mode already permits these commands, and the only cost is the occasional prompt. The owner can add the file, or leave it |
+| Add `.claude/settings.json` | `F-01` | A session cannot write its own permission file, which is right. **This now matters more than it looked:** without it the driver also cannot merge its own pull requests, so every work package stops at a green PR for the owner to merge. `00-START-HERE.md` §9 has the file and both choices |
 
 ## Next up
 
@@ -57,6 +57,7 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 | :-- | :-- | :-- |
 | Local gate `make check` | 4 lint checks + 22 tooling tests, under 1 s | F-01 |
 | GitHub REST from a session | runs, check-runs, status, pulls, issues all readable; `actions/secrets` blocked | F-01 |
+| Driver self-merge | **Refused** by the permission classifier unless `.claude/settings.json` allows it. See `05-OPERATIONS.md` §7 step 4 | F-01 |
 | Unity editor version pinned | — | F-03 |
 | CI: warm test run / Android build | — | S-05 |
 | Runner minutes per Unity package | — | S-05 |

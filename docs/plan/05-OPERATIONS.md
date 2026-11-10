@@ -35,7 +35,8 @@ The lease is an **open pull request whose head branch starts with `claude/wp-`**
 
 1. List open PRs. If none has a `claude/wp-` head, the lease is free.
 2. If one exists and its newest commit or comment is **under 90 minutes old**, another driver is
-   alive. Stop. Do not start a second work package.
+   alive. Stop. Do not start a second work package. A branch named `claude/done-…` is finished
+   work waiting for the owner to merge, not a lease: ignore it.
 3. If one exists and is **older than 90 minutes**, it is stale. Adopt it: check out the branch, read
    the PR description and its progress comments, continue the work. Do not restart from scratch.
 4. While you hold a lease, leave a heartbeat (a push or a one-line PR comment) at least hourly.
@@ -100,7 +101,20 @@ All required checks green on the head commit, then:
 2. For packages marked `risk: high`, get an independent read: hand the diff — not your reasoning —
    to a fresh subagent and ask for correctness defects only. Fix what is real.
 3. Confirm the Definition of Done in `04-VERIFICATION.md` §6.
-4. Squash-merge through the REST API. Delete nothing by force; never rewrite `main`.
+4. Merge. **How depends on a setting the owner controls** (measured 2026-11-10):
+
+   - A session's permission classifier refuses a self-merge — "Merge Without Review" — so by
+     default the driver cannot merge its own pull request. GitHub's auto-merge is not a way round
+     it either: enabling auto-merge is a GraphQL mutation, and GraphQL is blocked in cloud
+     sessions.
+   - **If `.claude/settings.json` allows the merge call** (see `F-01`, and `00-START-HERE.md` §9),
+     squash-merge through the REST API as the last step of the package.
+   - **If it does not**, stop at a green, reviewed pull request: label it `work-package`, put the
+     evidence in the body, leave it open, and move on to the next package. The branch prefix
+     becomes `claude/done-` so the lease check in §3 does not read it as work in flight. The owner
+     merges in batches.
+
+   Either way: delete nothing by force, and never rewrite `main`.
 
 ## 8. Stop the line
 
