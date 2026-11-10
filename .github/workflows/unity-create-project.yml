@@ -1,0 +1,184 @@
+# Creates the Unity project, once, and commits what it generates.
+#
+# Work package F-03. Nobody will ever open the Unity Editor by hand on this project
+# (CLAUDE.md), so the project itself has to come into existence from a command. This is that
+# command.
+#
+# Run it by hand: Actions -> "Create Unity project" -> "Run workflow", choosing the branch to
+# commit to. It is deliberately not automatic: it writes to the repository, and a workflow that
+# commits should be one a person asked for.
+#
+# What it produces, and why each part is generated rather than written:
+#
+#   ProjectSettings/       Unity's own YAML. Hand-writing it is forbidden (ADR-06) because a
+#                          hand-made settings file opens fine and is subtly wrong in ways that
+#                          only show up on a device.
+#   Packages/manifest.json Added to by name, never by version — the resolver picks what suits
+#                          this editor and packages-lock.json records it. A version copied from
+#                          a documentation page is a guess that ages.
+#   Packages/packages-lock.json  The actual pin.
+
+name: Create Unity project
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Commit what is generated back to this branch
+        type: boolean
+        default: true
+
+concurrency:
+  group: unity-licence     # shares the licence seat with the other Unity workflows
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  create:
+    name: Create the project and resolve its packages
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    container:
+      image: unityci/editor:ubuntu-6000.3.28f1-base-3
+      options: --user root
+
+    env:
+      LICENSING_CLIENT: /opt/unity/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client
+      EDITOR_VERSION: 6000.3.28f1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Take a Personal seat
+        id: activate
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set +e
+          output="$("$LICENSING_CLIENT" --activate-all --include-personal \
+                      --username "$UNITY_EMAIL" --password "$UNITY_PASSWORD" 2>&1)"
+          echo "$output" | grep -viE 'password|token'
+          echo "activated=true" >> "$GITHUB_OUTPUT"
+          echo "$output" | grep -q 'Activation processed successfully' || {
+            echo "::error title=Unity licence failed::no seat. Run the 'Unity licence' workflow for the reason."
+            exit 1
+          }
+
+      - name: Generate a fresh project, and take its settings
+        run: |
+          set -e
+          # Made somewhere else and copied in, rather than created over the top of this
+          # repository: -createProject on a directory that already has Packages/ in it is not a
+          # case Unity promises anything about.
+          unity-editor -batchmode -nographics -quit \
+            -createProject /tmp/fresh -logFile /tmp/create.log || {
+              echo "::group::Unity log"; cat /tmp/create.log || true; echo "::endgroup::"
+              echo "::error title=Project creation failed::the editor would not create a project"
+              exit 1
+            }
+
+          if [ -d ProjectSettings ]; then
+            echo "ProjectSettings already exists; leaving it alone."
+          else
+            cp -r /tmp/fresh/ProjectSettings ./ProjectSettings
+            echo "Took ProjectSettings from the fresh project."
+          fi
+
+          if [ -f Packages/manifest.json ]; then
+            echo "Packages/manifest.json already exists; leaving it alone."
+          else
+            mkdir -p Packages
+            cp /tmp/fresh/Packages/manifest.json Packages/manifest.json
+            echo "Took manifest.json from the fresh project."
+          fi
+
+          # The editor version is a decision (DECISIONS.md), so it is asserted rather than
+          # inherited from whatever image happened to run.
+          printf 'm_EditorVersion: %s\n' "$EDITOR_VERSION" > ProjectSettings/ProjectVersion.txt
+          echo "Pinned to $EDITOR_VERSION."
+
+      - name: Add the packages the project needs
+        run: |
+          set -e
+          unity-editor -batchmode -nographics -quit -projectPath . \
+            -executeMethod Island.Editor.ProjectBootstrap.AddPackages \
+            -logFile /tmp/packages.log || {
+              echo "::group::Unity log"; tail -200 /tmp/packages.log || true; echo "::endgroup::"
+              echo "::error title=Packages failed::a package could not be resolved; the log names it"
+              exit 1
+            }
+          echo "::group::what the resolver chose"
+          grep -A40 'resolved packages' /tmp/packages.log || true
+          echo "::endgroup::"
+
+      - name: Import once more, and check nothing drifts
+        run: |
+          set -e
+          # A project that rewrites its own settings every time it opens would make every later
+          # pull request noisy, and would mean nobody could tell a real change from a shuffle.
+          before="$(git status --porcelain ProjectSettings Packages | sort)"
+          unity-editor -batchmode -nographics -quit -projectPath . -logFile /tmp/reimport.log
+          after="$(git status --porcelain ProjectSettings Packages | sort)"
+
+          if [ "$before" != "$after" ]; then
+            echo "::warning title=The project changed on reimport::opening it again rewrote something"
+            diff <(echo "$before") <(echo "$after") || true
+          else
+            echo "Stable: opening the project again changed nothing."
+          fi
+
+      - name: Commit what was generated
+        if: ${{ inputs.commit }}
+        run: |
+          set -e
+          git config user.name "Islandia CI"
+          git config user.email "noreply@anthropic.com"
+          git add ProjectSettings Packages/manifest.json Packages/packages-lock.json 2>/dev/null || true
+
+          if git diff --cached --quiet; then
+            echo "Nothing to commit; the project was already in the repository."
+            exit 0
+          fi
+
+          {
+            printf 'F-03: the Unity project, generated\n\n'
+            printf 'Created by the "Create Unity project" workflow rather than by hand.\n'
+            printf 'Settings are Unity own YAML, which ADR-06 forbids writing by hand:\n'
+            printf 'a hand-made settings file opens fine and is subtly wrong in ways that\n'
+            printf 'only appear on a device.\n\n'
+            printf 'Packages were added by name with no version, so the resolver chose what\n'
+            printf 'suits editor %s and packages-lock.json records it. That lock\n' "$EDITOR_VERSION"
+            printf 'file is the pin, not a number copied from a page that may have moved.\n\n'
+            python3 tools/unity/lock_table.py || true
+            printf '\nCo-Authored-By: Claude Opus 5 <noreply@anthropic.com>\n'
+          } > /tmp/commit-message.txt
+
+          git commit -q -F /tmp/commit-message.txt
+          git push origin HEAD
+          echo "Committed and pushed."
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Unity project"
+            echo ""
+            echo "Editor: \`$EDITOR_VERSION\`"
+            echo ""
+            python3 tools/unity/lock_table.py || echo "_Could not read the lock file._"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Give the seat back
+        if: always() && steps.activate.outputs.activated == 'true'
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set +e
+          "$LICENSING_CLIENT" --deactivate-all \
+            --username "$UNITY_EMAIL" --password "$UNITY_PASSWORD" 2>&1 \
+            | grep -viE 'password|token' | tail -5
+          echo "Seat returned."
