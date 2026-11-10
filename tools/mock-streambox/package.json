@@ -1,0 +1,13 @@
+{
+  "name": "mock-streambox",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A fake StreamBox gateway: everything contract/streambox/v1.json describes, and nothing real. Lets the Islandia client be built and tested without the owner's server.",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": { "ws": "8.18.0" }
+}

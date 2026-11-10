@@ -17,7 +17,7 @@ be re-checked, not a guarantee.
   project's own phase process.
 - **This repository is public.** It never contains the server's address, any token, account name,
   library content, or anything from StreamBox beyond the client contract in §3. A scan enforces
-  this (`SB-01`).
+  this (`SB-01a`).
 - **The gateway is the only authority on access.** Islandia shows what the gateway returns and
   nothing else. It adds no filter of its own and removes none. It caches nothing across sign-out.
 - **No secrets in URLs or logs** beyond the short-lived stream and audio tokens the gateway itself
@@ -167,7 +167,7 @@ Rendering WebVTT text in the world is a later improvement.
 
 ## 6. Testing without the server
 
-`SB-01` builds a **mock gateway** from the contract snapshot: pairing, a fixture catalogue with
+`SB-01a` builds a **mock gateway** from the contract snapshot: pairing, a fixture catalogue with
 generated posters, a generated HLS test stream, signed audio, progress and Connect. Every
 `[L1]`–`[L3]` criterion in the StreamBox packages runs against it. The mock lives in this
 repository and contains nothing from the real library.

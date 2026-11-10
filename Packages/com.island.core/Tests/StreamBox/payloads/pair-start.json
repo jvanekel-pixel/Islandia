@@ -1,0 +1,7 @@
+{
+  "code": "410879",
+  "pollSecret": "9d4f6393-8065-48a8-a4dc-2405b2cc1045",
+  "expiresAt": "2026-11-10T16:53:10.341Z",
+  "approveUrl": "http://localhost:8787/pair/410879",
+  "intervalSeconds": 1
+}

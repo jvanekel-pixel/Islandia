@@ -1,0 +1,22 @@
+{
+  "streamId": "226c9cd7-9a66-4106-a707-38cb82c929bc",
+  "url": "/api/stream/31b57c5d-b87a-4949-8b30-12bfc0071672/master.m3u8",
+  "decision": "transcode",
+  "reasons": [
+    "the client cannot decode the source codecs"
+  ],
+  "expiresAt": "2026-11-10T16:48:12.001Z",
+  "durationMs": 6240000,
+  "remote": false,
+  "transcodes4k": false,
+  "audioIndex": 0,
+  "burnedInSubtitle": null,
+  "subtitles": [
+    {
+      "index": 0,
+      "kind": "text",
+      "language": "eng",
+      "url": "/api/stream/31b57c5d-b87a-4949-8b30-12bfc0071672/subtitles/0.vtt"
+    }
+  ]
+}

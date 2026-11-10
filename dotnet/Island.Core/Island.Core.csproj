@@ -22,4 +22,13 @@
     <Compile Include="../../Packages/com.island.core/Runtime/**/*.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!--
+      Newtonsoft.Json, not System.Text.Json: Unity ships this exact library as the official
+      package com.unity.nuget.newtonsoft-json, so one dependency covers both toolchains with the
+      same behaviour. See docs/plan/DECISIONS.md, 2026-11-10.
+    -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
 </Project>
