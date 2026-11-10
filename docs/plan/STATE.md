@@ -16,7 +16,7 @@
 
 | Gate | What is needed | Issue |
 | :-- | :-- | :-- |
-| HG-0 | Done 2026-11-10, except the Unity licence secrets (owner was adding them) | — |
+| HG-0 | **Done** 2026-11-10, Unity included | — |
 
 If `F-02` fails because `UNITY_LICENSE`, `UNITY_EMAIL` or `UNITY_PASSWORD` is missing, that is the
 tail of HG-0, not a new problem: open a `human-gate` issue pointing at `00-START-HERE.md` §2 step 4
@@ -54,11 +54,14 @@ Collected here as packages merge; they become the checklist for the next human g
 
 ## Next up
 
-`V-06` (the save system) → `V-07` (budget ledger and device tiers) → `SB-01c` (the StreamBox
-client) → `I-01`.
+`F-03` (create the Unity project headlessly) → `F-04` → `F-05`. **The Unity track is open:**
+activation works, so the whole M1 chain can proceed.
 
-`F-02` and `F-10` are parked as `needs-human`: the Unity licence secrets (issue #4) and an
-environment card only the owner can approve. Neither blocks anything else.
+Also unblocked and needing no Unity: `V-06` (save system), `V-07` (budget ledger and device
+tiers), `SB-01c` (StreamBox client), `I-01` (model-import gatekeeper).
+
+`F-10` stays `needs-human`: it needs an environment card only the owner can approve, and nothing
+waits on it.
 
 **The Unity track is parked**, waiting on issue #4: the licence secrets are not set, so `F-02`
 cannot pass and `F-03` to `F-07` cannot start. Nothing else is blocked by it.
@@ -77,6 +80,7 @@ cost is reinstalling the .NET SDK and the companion toolchain each session.
 
 ## Recently merged
 
+- `F-02` Unity licence activation in CI — **working** (2026-11-10)
 - `V-02` Terrain model in Core — heightfield, brushes, dirty regions (2026-11-10)
 - `SB-01b` StreamBox models and tolerant JSON mapping (2026-11-10)
 - `SB-01a` StreamBox contract snapshot and mock gateway (2026-11-10)
@@ -94,7 +98,8 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 | Local gate `make check` | 5 lint checks, 27 tooling tests, 78 core tests, 30 contract tests — about 11 s | F-01, F-08, SB-01a/b, V-02 |
 | .NET SDK in a cloud session | not present; installs to `~/.dotnet` in ~40 s | F-08 |
 | Unity editor pinned | `6000.3.28f1` — the newest 6000.3 tag with an Android module | F-02 |
-| Unity licence secrets | **not set**; the workflow fails in ~30 s and says so. Issue #4 | F-02 |
+| Unity licence in CI | **works.** Seat request with account credentials; no licence file. 104 s end to end | F-02 |
+| Editor version CI really runs | `6000.3.28f1`, reported by the editor itself | F-02 |
 | ffmpeg in a cloud session | present, so the mock serves a genuinely decodable stream | SB-01a |
 | GitHub REST from a session | runs, check-runs, status, pulls, issues all readable; `actions/secrets` blocked | F-01 |
 | Driver self-merge | **Refused** by the permission classifier unless `.claude/settings.json` allows it. See `05-OPERATIONS.md` §7 step 4 | F-01 |

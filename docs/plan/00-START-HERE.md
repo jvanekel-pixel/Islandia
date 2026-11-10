@@ -28,42 +28,34 @@ Open <https://claude.ai/connect-github> and make sure the **Claude GitHub App** 
 new repository. (It is already installed on your account; you may only need to add this
 repository to its list.)
 
-### Step 3 — Unity licence · 10 min
+### Step 3 — Unity credentials · 5 min
 
-Unity runs in GitHub Actions and needs your free Personal licence. This needs your PC once. You do
-**not** need to install the Unity Editor.
+Unity runs in GitHub Actions and needs your account. You do **not** need to install the Unity
+Editor, and — despite what almost every guide says — you do **not** need a licence file.
 
 1. Create a Unity ID at <https://id.unity.com> if you do not have one. Check that you qualify for
    Unity Personal under Unity's current terms.
-2. Install **Unity Hub** and sign in.
-3. In Unity Hub: **Settings (gear) → Licenses → Add → Get a free personal license**.
-4. The licence file is now at `C:\ProgramData\Unity\Unity_lic.ulf`.
-5. Add three **repository secrets** (repository → Settings → Secrets and variables → Actions →
+2. **Set a password.** If you sign in with Google you do not have one yet: use the password reset
+   at <https://login.unity.com> with that address. It does not unlink Google.
+3. Add two **repository secrets** (repository → Settings → Secrets and variables → Actions →
    New repository secret):
 
    | Secret name | Value |
    | :-- | :-- |
-   | `UNITY_LICENSE` | The entire contents of `Unity_lic.ulf` |
-   | `UNITY_EMAIL` | Your Unity ID email |
-   | `UNITY_PASSWORD` | Your Unity ID password |
-
-   With the GitHub CLI signed in, PowerShell does it without copy-paste (replace `OWNER/REPO`; the
-   last two prompt you for the value):
-
-   ```powershell
-   Get-Content "C:\ProgramData\Unity\Unity_lic.ulf" -Raw | gh secret set UNITY_LICENSE --repo OWNER/REPO
-   ```
-   ```powershell
-   gh secret set UNITY_EMAIL --repo OWNER/REPO
-   ```
-   ```powershell
-   gh secret set UNITY_PASSWORD --repo OWNER/REPO
-   ```
+   | `UNITY_EMAIL` | your Unity ID email |
+   | `UNITY_PASSWORD` | the password from step 2 |
 
 **Never paste these into a chat.** Secrets in a public repository are not visible to anyone and
-are not given to workflows from forks. If activation fails (for example because of two-factor
-sign-in), the first CI run says why and the driver opens an issue with exact steps. Licence files
-expire; when yours does you will get the same kind of issue, and the fix is steps 3–5 again.
+are not given to workflows from forks.
+
+> **Why no licence file?** The common advice is to activate Personal in Unity Hub and paste the
+> resulting `.ulf` into a `UNITY_LICENSE` secret. That cannot work on a cloud runner, and we
+> proved both halves of why rather than guessing: a `.ulf` from the Hub is bound to the machine
+> that made it, so the editor rejects it with *"Machine bindings don't match"*; and Unity no
+> longer supports manual activation of Personal licences at all, so the older `.alf` exchange
+> that would have produced a container-bound file is closed too. CI instead asks Unity's
+> licensing service for a seat using the account's own credentials, and gives it back when the
+> job ends.
 
 ### Step 4 — Repository settings · 3 min
 

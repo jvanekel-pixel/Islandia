@@ -56,16 +56,19 @@ packages:
   deps: [F-01]
   refs: [01-AUDIT.md §6]
   accept:
-    - "A manually dispatchable workflow activates the licence from the three secrets, prints the editor version and returns it [L4]"
-    - "On failure the workflow output names the cause (missing secret, expired licence, two-factor) and the driver opens a human-gate issue with exact steps [L0]"
+    - "A manually dispatchable workflow activates Unity, reports the editor version the editor itself reported, and gives the seat back even when the job fails [L4]"
+    - "On failure the workflow output names the cause (missing credential, rejected credentials, two-factor, no free seat) rather than leaving a 2,000-line log [L0]"
+    - "Activation needs only UNITY_EMAIL and UNITY_PASSWORD; no licence file is involved [L4]"
   note: >-
-    A missing or rejected licence secret is not a defect and must not burn the
-    three attempts of the stop-the-line rule. Open the human-gate issue, set this
-    package to needs-human, and take the next unblocked one. Unity Personal can
-    only be activated through Unity Hub — manual .alf activation does not cover
-    it — so this is genuinely the owner's to do, and several packages need no
-    Unity at all.
-  status: needs-human
+    Proven 2026-11-10: ASSIGN_SEAT, editor exit 0, version 6000.3.28f1, 104 s.
+    The widely-published route — activate in Unity Hub, paste the .ulf into
+    UNITY_LICENSE — cannot work here and both halves of why were proven, not
+    assumed: a Hub .ulf is bound to the machine that made it ("Machine bindings
+    don't match"), and Unity no longer supports manual activation of Personal
+    licences at all, so the .alf exchange that would have produced a
+    container-bound file is closed. Asking the licensing service for a seat with
+    the account's credentials is what works.
+  status: done
 
 - id: F-03
   title: Create the Unity project headlessly and pin the editor
