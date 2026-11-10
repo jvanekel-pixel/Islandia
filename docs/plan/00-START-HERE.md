@@ -242,3 +242,52 @@ Nothing in the plan requires a purchase. If the driver ever concludes one would 
 - **You disagree with something it built.** Say so in an issue. It is a normal input, not a failure.
 - **You want a human-readable summary.** Every milestone report in `docs/reports/` is written for
   you, not for Claude.
+
+## 9. One optional file that makes the build fully hands-off
+
+Measured on 2026-11-10: a session's permission classifier refuses to let a session merge its own
+pull request ("Merge Without Review"), and refuses to let a session write its own permission file.
+Both refusals are correct. GitHub's auto-merge is not a way round the first — enabling it is a
+GraphQL call, and GraphQL is blocked in cloud sessions.
+
+So you have a choice, and either is fine:
+
+**A. Leave it as is.** The driver builds each work package, proves it, opens a green pull request
+with the evidence in the body, labels it `awaiting-merge`, and moves on. You merge them whenever
+you like — one click each, and they batch up happily. Nothing stalls while they wait, and you get
+a look at everything before it lands.
+
+**B. Let the driver merge.** Create `.claude/settings.json` in the repository with the content
+below and commit it. The driver then merges its own pull requests once their checks are green, and
+you are not in the loop at all until the first human gate. The gates that matter are still
+enforced: required status checks, the acceptance criteria, and the stop-the-line rule.
+
+A session cannot create this file for you — that is the point of the refusal — so it is yours to
+make or skip.
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(make:*)",
+      "Bash(python3:*)",
+      "Bash(dotnet:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(git:*)",
+      "Bash(gh api:*)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Read(./**/*.ulf)",
+      "Read(./**/*.keystore)",
+      "Read(./**/.env*)"
+    ]
+  }
+}
+```
+
+If you take option B and later regret it, delete the file: the driver falls back to option A by
+itself, because `05-OPERATIONS.md` §7 describes both.

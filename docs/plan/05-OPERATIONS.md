@@ -34,16 +34,24 @@ start
 The lease is an **open pull request whose head branch starts with `claude/wp-`**.
 
 1. List open PRs. If none has a `claude/wp-` head, the lease is free.
-2. If one exists and its newest commit or comment is **under 90 minutes old**, another driver is
+2. **Ignore any pull request labelled `awaiting-merge`.** That is finished work waiting for the
+   owner, not a lease. It can sit there for days and must never stop the build.
+3. Of the rest, if one's newest commit or comment is **under 90 minutes old**, another driver is
    alive. Stop. Do not start a second work package.
-3. If one exists and is **older than 90 minutes**, it is stale. Adopt it: check out the branch, read
-   the PR description and its progress comments, continue the work. Do not restart from scratch.
-4. While you hold a lease, leave a heartbeat (a push or a one-line PR comment) at least hourly.
+4. If one is **older than 90 minutes**, it is stale. Adopt it: check out the branch, read the PR
+   description and its progress comments, continue the work. Do not restart from scratch.
+5. While you hold a lease, leave a heartbeat (a push or a one-line PR comment) at least hourly.
 
 ## 4. Picking work
 
 `BACKLOG.yaml` is ordered. Take the first package whose `status` is `todo` and whose `deps` are all
-`done`. Skip anything `blocked` or `needs-human`. Prefer packages in the current milestone; take
+`done`. Skip anything `blocked` or `needs-human`.
+
+**Then check it is not already built.** List open pull requests, `awaiting-merge` ones included,
+and look for a head branch named `claude/wp-<ID>-…`. If the package you were about to take has
+one, it is finished and waiting to merge — the backlog on `main` still says `todo` only because
+that pull request has not landed yet. Skip it and take the next package. Rebuilding it would throw
+away work and collide on merge. Prefer packages in the current milestone; take
 one from a later milestone only when the current one is waiting on a human gate.
 
 If nothing is available: make sure a `human-gate` issue exists explaining exactly what is needed,
@@ -64,12 +72,24 @@ pause the scheduled task if you are able to, record that in `STATE.md`, and stop
 5. **Push** and let CI do the Unity work.
 
 Keep packages small. If one grows past roughly 800 changed lines of hand-written code, split it:
-add the new entries to the backlog with a suffix (`W-03a`, `W-03b`) and finish the first slice.
+add the new entries to the backlog with a letter suffix on the original id, in the original's place,
+and finish the first slice.
 
 ## 6. Working with CI
 
 - Open PRs and read check results with the session's built-in GitHub tools, or `gh api` REST calls.
-  `gh pr …` and `gh issue …` do not work in cloud sessions (GraphQL is blocked).
+  `gh pr …` and `gh issue …` do not work in cloud sessions (GraphQL is blocked). Measured on
+  2026-11-10, these REST paths work from a session and are what the loop runs on:
+
+  | Path | For |
+  | :-- | :-- |
+  | `actions/runs`, `actions/workflows` | Has CI started, and did it finish |
+  | `commits/<sha>/check-runs`, `commits/<sha>/status` | Whether this commit is green |
+  | `pulls`, `pulls/<n>`, `pulls/<n>/files`, `pulls/<n>/merge` | Open, review and merge |
+  | `issues`, `issues/<n>/labels`, `labels` | Human gates and blocked work |
+
+  `actions/secrets` is blocked by the proxy and always will be. A session cannot tell whether a
+  secret exists; it finds out when a workflow runs. Do not treat that 403 as a fault.
 - Subscribe to the PR's activity if the tool is available so check results wake the session. If
   not, poll at intervals matched to the job (Unity jobs take 20–45 minutes; do not poll every
   minute). Ending the session while CI runs is fine — the lease protocol resumes it.
@@ -88,7 +108,20 @@ All required checks green on the head commit, then:
 2. For packages marked `risk: high`, get an independent read: hand the diff — not your reasoning —
    to a fresh subagent and ask for correctness defects only. Fix what is real.
 3. Confirm the Definition of Done in `04-VERIFICATION.md` §6.
-4. Squash-merge through the REST API. Delete nothing by force; never rewrite `main`.
+4. Merge. **How depends on a setting the owner controls** (measured 2026-11-10):
+
+   - A session's permission classifier refuses a self-merge — "Merge Without Review" — so by
+     default the driver cannot merge its own pull request. GitHub's auto-merge is not a way round
+     it either: enabling auto-merge is a GraphQL mutation, and GraphQL is blocked in cloud
+     sessions.
+   - **If `.claude/settings.json` allows the merge call** (see `F-01`, and `00-START-HERE.md` §9),
+     squash-merge through the REST API as the last step of the package.
+   - **If it does not**, stop at a green, reviewed pull request: put the evidence in the body,
+     label it `work-package` **and `awaiting-merge`**, leave it open, and move on to the next
+     package. The owner merges in batches. Do not rename the branch to signal this — deleting a
+     head branch closes its pull request.
+
+   Either way: delete nothing by force, and never rewrite `main`.
 
 ## 8. Stop the line
 
