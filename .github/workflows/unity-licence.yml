@@ -94,7 +94,10 @@ jobs:
           echo "$output" | grep -viE 'password|token'
           echo "activated=true" >> "$GITHUB_OUTPUT"
 
-          if [ $status -ne 0 ] || ! echo "$output" | grep -q 'ASSIGN_SEAT'; then
+          # The service reports more than one flavour of success: ASSIGN_SEAT when it hands out
+          # a fresh seat, SameMachine when this identity already holds one. Both are fine, so key
+          # on the sentence they share rather than on a particular status code.
+          if [ $status -ne 0 ] || ! echo "$output" | grep -q 'Activation processed successfully'; then
             cause="the licensing service did not assign a seat"
             if   echo "$output" | grep -qi 'invalid.*credential\|unauthorized\|401'; then
               cause="the account credentials were rejected. An account that signs in with Google has no password until one is set at https://login.unity.com"
@@ -109,7 +112,7 @@ jobs:
             echo "::error title=Unity licence failed::$cause"
             exit 1
           fi
-          echo "Seat assigned."
+          echo "Seat held: $(echo "$output" | grep -oE 'Status: \[[0-9]+\] [A-Za-z_]+' | head -1)"
 
       - name: Open the editor on a throwaway project
         id: report
