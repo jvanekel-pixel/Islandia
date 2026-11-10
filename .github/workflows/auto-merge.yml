@@ -8,7 +8,8 @@
 # What still has to hold before anything merges:
 #
 #   * the pull request carries the `awaiting-merge` label, which only a finished package gets;
-#   * every check on the head commit has succeeded, and none is still running;
+#   * at least one check ran on the head commit and every one of them succeeded, with none still
+#     running — an empty set of checks is a refusal, not a pass;
 #   * the branch is in THIS repository, never a fork;
 #   * the author is the repository owner;
 #   * it is not a draft, and carries none of the stop labels.
@@ -128,6 +129,21 @@ jobs:
 
             if [ -n "$failed" ]; then
               echo "SKIP: these checks did not pass: $failed"
+              skipped=$((skipped + 1)); echo "::endgroup::"; continue
+            fi
+
+            # A commit nothing has checked is not a commit whose checks passed. Every guard above
+            # is vacuously true on a commit with no check runs, so without this the label alone
+            # merges the code. That is not hypothetical: on 2026-11-10 this workflow merged four
+            # pull requests that no CI had touched, because it landed before the `checks` workflow
+            # existed and "all checks passed" was true of an empty set.
+            succeeded="$(echo "$runs" | jq '[.[] | select(.name | test("Merge what is finished") | not)
+                                              | select(.conclusion == "success")] | length')"
+            if [ "$succeeded" -eq 0 ]; then
+              echo "SKIP: nothing has verified ${head_sha:0:8}. No check succeeded on it, so there"
+              echo "      is no evidence to merge on. Expected the 'checks' workflow"
+              echo "      (.github/workflows/checks.yml) to run on every push; if it is not"
+              echo "      running on this branch, that is the thing to fix."
               skipped=$((skipped + 1)); echo "::endgroup::"; continue
             fi
 

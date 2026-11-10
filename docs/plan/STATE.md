@@ -6,7 +6,7 @@
 | :-- | :-- |
 | **Stage** | 2 — Construction |
 | **Current milestone** | M1 Factory online · M2 started on the engine-free track |
-| **In flight** | **One merge unblocks everything: [PR #10](https://github.com/jvanekel-pixel/Islandia/pull/10).** It carries `F-13` (auto-merge), the gift re-plan and `F-03` (the Unity-project workflow), because #11 and #12 were both merged into its branch rather than into `main`. Until it lands, auto-merge is not on `main`, so nothing merges itself |
+| **In flight** | **Two pull requests stand between `main` and everything built today.** [#16](https://github.com/jvanekel-pixel/Islandia/pull/16) is the CI checks workflow, green and independent. [#19](https://github.com/jvanekel-pixel/Islandia/pull/19) is the whole stack — auto-merge, the gift re-plan, the Unity-project workflow, `V-07a`, `C-01a`, `C-01b` and the auto-merge fix — because auto-merge collapsed each stacked PR into its base branch rather than into `main`. #10 is superseded by #19 |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | Paused. Being driven by an interactive session for now |
 | **Last updated** | 2026-11-10 (`C-01b` — catalogue validator and licence ledger) |
@@ -61,9 +61,12 @@ follow.
 Done so far: `F-01`, `F-02`, `F-08`, `F-13`, `SB-01a`, `SB-01b`, `V-02`, `V-06`, `V-07a`, `C-01a`,
 `C-01b`. Test counts: **147 core · 114 tooling · 30 StreamBox contract.**
 
-**CI now runs the non-Unity checks** (`F-07a`, PR #16) — before this, nothing did, and `F-13`'s
-auto-merge would have merged on zero verification. Its first run went red on a real portability bug
-(issue #15), which is the best argument for it there is.
+**CI now runs the non-Unity checks** (`F-07a`, PR #16) — before this, nothing did. Its first run
+went red on a real portability bug (issue #15), which is the best argument for it there is.
+
+**Auto-merge merged four pull requests on zero verification** before that landed, because "every
+check passed" is true of an empty set. The merges are sound but the mechanism was not; it now
+requires at least one check to have succeeded. See `DECISIONS.md`, 2026-11-10.
 
 **The content pipeline is ready for assets.** The catalogue, its schema, the validator, the licence
 ledger and the honest count all exist and are tested; `C-02` (fetch and normalise CC0 packs) and

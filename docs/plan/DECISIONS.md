@@ -310,6 +310,28 @@ The catalogue is still empty, so none of this is exercised by real content yet. 
 way to know a validator works, since one that has never refused anything is indistinguishable from
 one that cannot.
 
+## 2026-11-10 — Auto-merge treated "no checks" as "all checks passed"
+
+**It fired before it was noticed, which is the useful part of this entry.** `F-13`'s auto-merge
+waits until every check on the head commit has succeeded and none is still running. On a commit
+with no check runs at all, both conditions are true of an empty set, so the label alone was
+sufficient. Between 22:23 and 22:58 it merged four pull requests — `V-07a`, `F-03`, `C-01a` and
+`C-01b` — that no CI had touched.
+
+The merges themselves are sound: every package was proven locally before it was pushed, and the
+`checks` workflow later ran green on a commit containing `V-07a` and `C-01a` together. But the
+mechanism did exactly what it was warned about earlier the same day, in the entry above this one,
+and the warning did not stop it because the fix was sitting in an unmerged pull request.
+
+**The guard now requires at least one check to have succeeded.** An empty set of checks is a
+refusal, not a pass, and the skip message names the `checks` workflow as the thing to fix if it is
+not running. Nothing else about the merge conditions changed.
+
+**The wider lesson is about ordering.** The automation that lands work was built and merged before
+the automation that verifies it. That ordering is backwards and it produced exactly the failure it
+implies. `F-07a` exists because of it, and nothing of this kind should be merged again while the
+thing that checks it is still in review.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced
