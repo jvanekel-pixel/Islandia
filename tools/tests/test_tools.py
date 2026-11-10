@@ -177,6 +177,42 @@ class PrivacyPatternTests(unittest.TestCase):
             self.assertIn(suffix, check_privacy.FORBIDDEN_NAMES)
 
 
+class PrivacyScopeTests(unittest.TestCase):
+    """A file that is not committed yet must still be checked.
+
+    Scanning only tracked files left the check blind exactly where it mattered: a new file is
+    untracked right up until the commit that publishes it, so the scan would pass, the file would
+    land, and only the next run would notice. Found on 2026-11-10 when a test file carrying a fake
+    bearer token sailed through and was caught a package later.
+    """
+
+    def test_an_uncommitted_file_is_scanned(self):
+        probe = REPO / "_privacy_scope_probe.txt"
+        # Assembled, so this file does not match its own planted secret.
+        probe.write_text("AK" + "IA" + "ABCDEFGHIJKLMNOP" + "\n", encoding="utf-8")
+        try:
+            result = subprocess.run([sys.executable, "tools/lint/check_privacy.py"],
+                                    cwd=REPO, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 1,
+                             "a new, uncommitted file must not be able to slip past the scan")
+            self.assertIn("_privacy_scope_probe.txt", result.stdout)
+        finally:
+            probe.unlink()
+
+    def test_an_ignored_file_is_not_scanned(self):
+        # Build output and vendored code are not ours and would drown the signal.
+        probe = REPO / "tools" / "mock-streambox" / "node_modules" / "_ignored_probe.txt"
+        if not probe.parent.is_dir():
+            self.skipTest("node_modules is not present")
+        probe.write_text("AK" + "IA" + "ABCDEFGHIJKLMNOP" + "\n", encoding="utf-8")
+        try:
+            result = subprocess.run([sys.executable, "tools/lint/check_privacy.py"],
+                                    cwd=REPO, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout)
+        finally:
+            probe.unlink()
+
+
 class LayeringCheckTests(unittest.TestCase):
     """Island.Core must stay engine-free, and the check must notice when it does not."""
 

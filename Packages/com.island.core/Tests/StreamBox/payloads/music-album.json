@@ -1,0 +1,35 @@
+{
+  "id": "mk:album-1",
+  "name": "Shoreline",
+  "artist": "The Mock Ensemble",
+  "year": 2021,
+  "art": {
+    "url": "/api/music/art?token=mock-album-1"
+  },
+  "tracks": [
+    {
+      "id": "mk:track-1",
+      "name": "Low Tide",
+      "artist": "The Mock Ensemble",
+      "album": "Shoreline",
+      "trackNumber": 1,
+      "durationMs": 10000
+    },
+    {
+      "id": "mk:track-2",
+      "name": "Breakwater",
+      "artist": "The Mock Ensemble",
+      "album": "Shoreline",
+      "trackNumber": 2,
+      "durationMs": 10000
+    },
+    {
+      "id": "mk:track-3",
+      "name": "Gulls",
+      "artist": "The Mock Ensemble",
+      "album": "Shoreline",
+      "trackNumber": 3,
+      "durationMs": 10000
+    }
+  ]
+}

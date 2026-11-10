@@ -1,0 +1,76 @@
+{
+  "episode": {
+    "id": "mk:episode-2",
+    "kind": "episode",
+    "libraryId": "22222222-2222-4222-8222-222222222222",
+    "name": "The First Wall",
+    "overview": "An episode of the fake programme.",
+    "seasonNumber": 1,
+    "seasonId": "mk:season-1",
+    "episodeNumber": 2,
+    "series": {
+      "id": "mk:show-1",
+      "name": "Island Life"
+    },
+    "genres": [],
+    "tags": [],
+    "studios": [],
+    "providerIds": {},
+    "images": {
+      "thumb": {
+        "url": "/api/images/mk:episode-2.png",
+        "blurhash": "L6PZfSjE.AyE_3t7t7R**0o#DgR4",
+        "aspect": 0.6666666666666666
+      }
+    },
+    "runtimeMs": 1440000,
+    "media": {
+      "sourceId": "mock:1",
+      "container": "mkv",
+      "durationMs": 1440000,
+      "bitrate": 8000000,
+      "video": {
+        "codec": "h264",
+        "width": 1920,
+        "height": 1080,
+        "range": "sdr"
+      },
+      "audio": [
+        {
+          "index": 0,
+          "codec": "aac",
+          "channels": 2,
+          "language": "eng",
+          "isDefault": true
+        }
+      ],
+      "subtitles": [
+        {
+          "index": 0,
+          "codec": "subrip",
+          "kind": "text",
+          "language": "eng",
+          "isDefault": false,
+          "forced": false,
+          "external": false
+        },
+        {
+          "index": 1,
+          "codec": "pgs",
+          "kind": "image",
+          "language": "fra",
+          "isDefault": false,
+          "forced": false,
+          "external": false
+        }
+      ],
+      "flags": {
+        "uhd": false,
+        "hdr": false,
+        "dolbyVision": false,
+        "atmos": false,
+        "captions": true
+      }
+    }
+  }
+}

@@ -10,11 +10,16 @@ import { execFile } from 'node:child_process';
 import { mkdir, readdir, stat } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const run = promisify(execFile);
 
-/** Where generated media is cached between runs. */
-export const mediaDir = path.join(process.cwd(), '.media');
+/**
+ * Where generated media is cached between runs: always beside this module, never relative to
+ * whatever directory the caller happened to start in. Resolving against the working directory
+ * meant the capture script, run from the repository root, scattered .media/ there instead.
+ */
+export const mediaDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '.media');
 
 async function hasFfmpeg() {
   try {

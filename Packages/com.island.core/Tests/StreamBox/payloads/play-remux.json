@@ -1,0 +1,20 @@
+{
+  "streamId": "973cd49b-d8b4-4769-bc40-169fb7a71aeb",
+  "url": "/api/stream/07406182-4a83-4b39-a047-90b7a9489fcc/master.m3u8",
+  "decision": "remux",
+  "reasons": [],
+  "expiresAt": "2026-11-10T16:48:11.998Z",
+  "durationMs": 6240000,
+  "remote": false,
+  "transcodes4k": false,
+  "audioIndex": 0,
+  "burnedInSubtitle": null,
+  "subtitles": [
+    {
+      "index": 0,
+      "kind": "text",
+      "language": "eng",
+      "url": "/api/stream/07406182-4a83-4b39-a047-90b7a9489fcc/subtitles/0.vtt"
+    }
+  ]
+}

@@ -59,6 +59,35 @@ version. Changing it later is a decision record plus a full device gate, never i
 
 **Evidence:** the published tag list for `unityci/editor`, queried 2026-11-10.
 
+## 2026-11-10 — Island.Core parses JSON with Newtonsoft.Json
+
+**Decided by:** work package `SB-01b`.
+
+`Island.Core` must stay engine-free (ADR-07), so it cannot use Unity's `JsonUtility` — and that
+type could not express this contract anyway: it has no notion of an absent field versus a null
+one, which the StreamBox contract leans on throughout.
+
+Three options were weighed:
+
+| Option | Why not |
+| :-- | :-- |
+| Hand-written JSON reader | Keeps Core dependency-free, which is attractive for a package compiled by two toolchains. But a subtly wrong parser is worse than a dependency, and this is a well-known time sink |
+| `System.Text.Json` | Not shipped with Unity, and its netstandard2.1 story there is poor |
+| **`Newtonsoft.Json`** | **Chosen.** Unity ships it as the official `com.unity.nuget.newtonsoft-json` package, and NuGet has the same library, so one dependency covers both toolchains with identical behaviour |
+
+Newtonsoft is not a Unity reference, so the engine-free rule and `check_layering` are unaffected.
+
+Two constraints on how it is used:
+
+1. **No attribute-driven deserialisation.** Responses are parsed to a token tree and mapped by
+   explicit code, so a missing required field is a named error rather than a silent default, and
+   every mapping is unit-testable without a server.
+2. **Tolerance is the default.** Unknown fields are ignored and unknown enum values fall back to a
+   documented case. StreamBox is under active development and will add both; an older Islandia
+   build must keep working rather than throw.
+
+`F-03` adds `com.unity.nuget.newtonsoft-json` to the Unity manifest when it creates the project.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

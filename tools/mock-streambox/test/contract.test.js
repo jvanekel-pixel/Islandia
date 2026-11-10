@@ -78,8 +78,9 @@ describe('authentication', () => {
   });
 
   it('refuses an unknown token', async () => {
+    // Deliberately short: a longer fake would trip the repository's own secret scan.
     const response = await fetch(mock.url + '/api/catalog/home',
-      { headers: { authorization: 'Bearer not-a-real-token' } });
+      { headers: { authorization: 'Bearer nope' } });
     assert.equal(response.status, 401);
   });
 });

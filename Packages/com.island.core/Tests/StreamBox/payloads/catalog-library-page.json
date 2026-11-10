@@ -1,0 +1,154 @@
+{
+  "items": [
+    {
+      "id": "mk:film-1",
+      "kind": "movie",
+      "libraryId": "11111111-1111-4111-8111-111111111111",
+      "name": "The Long Afternoon",
+      "year": 2019,
+      "overview": "A quiet film about a quiet place.",
+      "genres": [
+        "Drama"
+      ],
+      "tags": [],
+      "studios": [
+        "Mock Pictures"
+      ],
+      "runtimeMs": 6240000,
+      "providerIds": {},
+      "images": {
+        "poster": {
+          "url": "/api/images/mk:film-1.png",
+          "blurhash": "L6PZfSjE.AyE_3t7t7R**0o#DgR4",
+          "aspect": 0.6666666666666666
+        }
+      },
+      "media": {
+        "sourceId": "mock:1",
+        "container": "mkv",
+        "durationMs": 6240000,
+        "bitrate": 8000000,
+        "video": {
+          "codec": "h264",
+          "width": 1920,
+          "height": 1080,
+          "range": "sdr"
+        },
+        "audio": [
+          {
+            "index": 0,
+            "codec": "aac",
+            "channels": 2,
+            "language": "eng",
+            "isDefault": true
+          }
+        ],
+        "subtitles": [
+          {
+            "index": 0,
+            "codec": "subrip",
+            "kind": "text",
+            "language": "eng",
+            "isDefault": false,
+            "forced": false,
+            "external": false
+          },
+          {
+            "index": 1,
+            "codec": "pgs",
+            "kind": "image",
+            "language": "fra",
+            "isDefault": false,
+            "forced": false,
+            "external": false
+          }
+        ],
+        "flags": {
+          "uhd": false,
+          "hdr": false,
+          "dolbyVision": false,
+          "atmos": false,
+          "captions": true
+        }
+      },
+      "addedAt": "2026-10-01T12:00:00.000Z"
+    },
+    {
+      "id": "mk:film-2",
+      "kind": "movie",
+      "libraryId": "11111111-1111-4111-8111-111111111111",
+      "name": "Harbour Lights",
+      "year": 2022,
+      "overview": "Two strangers, one ferry, and a storm.",
+      "genres": [
+        "Drama"
+      ],
+      "tags": [],
+      "studios": [
+        "Mock Pictures"
+      ],
+      "runtimeMs": 5760000,
+      "providerIds": {},
+      "images": {
+        "poster": {
+          "url": "/api/images/mk:film-2.png",
+          "blurhash": "L6PZfSjE.AyE_3t7t7R**0o#DgR4",
+          "aspect": 0.6666666666666666
+        }
+      },
+      "media": {
+        "sourceId": "mock:1",
+        "container": "mkv",
+        "durationMs": 5760000,
+        "bitrate": 8000000,
+        "video": {
+          "codec": "h264",
+          "width": 1920,
+          "height": 1080,
+          "range": "sdr"
+        },
+        "audio": [
+          {
+            "index": 0,
+            "codec": "aac",
+            "channels": 2,
+            "language": "eng",
+            "isDefault": true
+          }
+        ],
+        "subtitles": [
+          {
+            "index": 0,
+            "codec": "subrip",
+            "kind": "text",
+            "language": "eng",
+            "isDefault": false,
+            "forced": false,
+            "external": false
+          },
+          {
+            "index": 1,
+            "codec": "pgs",
+            "kind": "image",
+            "language": "fra",
+            "isDefault": false,
+            "forced": false,
+            "external": false
+          }
+        ],
+        "flags": {
+          "uhd": false,
+          "hdr": false,
+          "dolbyVision": false,
+          "atmos": false,
+          "captions": true
+        }
+      },
+      "addedAt": "2026-10-01T12:00:00.000Z"
+    }
+  ],
+  "total": 3,
+  "offset": 0,
+  "limit": 2,
+  "nextOffset": 2
+}

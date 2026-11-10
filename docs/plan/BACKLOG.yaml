@@ -536,16 +536,29 @@ packages:
   status: done
 
 - id: SB-01b
-  title: StreamBox client in Island.Core
+  title: StreamBox models and tolerant JSON mapping in Island.Core
   ms: M4
   risk: high
   deps: [SB-01a]
   refs: [07-STREAMBOX.md, adr ADR-23, adr ADR-07]
   accept:
-    - "Island.Core client covers pairing, catalogue, play, stop, progress, music and Connect messages behind an injectable HTTP and socket transport; every response is validated [L1]"
-    - "Unknown fields are tolerated and unknown enum values degrade gracefully, so a newer server does not break an older build [L1]"
-    - "Contract tests run the client against the mock gateway end to end [L3]"
+    - "Models for pairing, catalogue, playback, music, progress and Connect messages, mapped by explicit code so a missing required field is a named error, not a silent default [L1]"
+    - "Unknown fields are ignored and unknown enum values fall back to a documented case, so a newer server does not break an older build [L1]"
+    - "Mapping is proven against payloads captured from the mock gateway, not hand-written optimistic ones [L1]"
     - "The JSON approach is chosen and recorded in DECISIONS.md: Island.Core must stay engine-free, so it may not use Unity's JSON utility [L0]"
+  status: done
+
+- id: SB-01c
+  title: StreamBox client and transports in Island.Core
+  ms: M4
+  risk: high
+  deps: [SB-01b]
+  refs: [07-STREAMBOX.md, adr ADR-23]
+  accept:
+    - "A client covering pairing, catalogue, play, stop, progress, music and Connect, behind injectable HTTP and socket transports so it can be driven by a fake in tests [L1]"
+    - "Pairing polls at the interval the server asks for and handles pending, denied, expired and approved [L1]"
+    - "A 401, or a Connect close of 4401, returns the client to the pairing state; 4409 does not reconnect [L1]"
+    - "End-to-end tests run the client against the mock gateway, including the full pairing walk [L3]"
   status: todo
 
 - id: SB-02

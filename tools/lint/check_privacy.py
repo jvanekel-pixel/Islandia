@@ -45,9 +45,22 @@ SKIP_SUFFIXES = {".png", ".jpg", ".jpeg", ".tga", ".psd", ".fbx", ".glb", ".wav"
                  ".ogg", ".mp4", ".ttf", ".otf", ".dll", ".so", ".aar", ".apk", ".zip"}
 
 
-def tracked_files() -> list[str]:
-    out = subprocess.run(["git", "-C", str(REPO), "ls-files"], capture_output=True, text=True, check=True)
-    return [line for line in out.stdout.splitlines() if line]
+def files_to_scan() -> list[str]:
+    """Everything git would carry: tracked files, and new ones not covered by .gitignore.
+
+    Scanning only tracked files left a hole exactly where it mattered. A brand-new file is
+    untracked right up until the commit that publishes it, so the check would pass, the file
+    would land, and only the *next* run would notice. Found on 2026-11-10, when a new test file
+    with a fake bearer token sailed through and was caught a package later.
+    """
+    tracked = subprocess.run(
+        ["git", "-C", str(REPO), "ls-files"], capture_output=True, text=True, check=True)
+    untracked = subprocess.run(
+        ["git", "-C", str(REPO), "ls-files", "--others", "--exclude-standard"],
+        capture_output=True, text=True, check=True)
+    seen = dict.fromkeys(
+        line for line in (tracked.stdout + untracked.stdout).splitlines() if line)
+    return list(seen)
 
 
 def main() -> int:
@@ -55,7 +68,7 @@ def main() -> int:
     compiled = [(name, re.compile(pattern), why) for name, pattern, why in PATTERNS]
     scanned = 0
 
-    for relative in tracked_files():
+    for relative in files_to_scan():
         path = REPO / relative
         name = Path(relative).name
         if name in FORBIDDEN_EXACT or any(name.endswith(suffix) for suffix in FORBIDDEN_NAMES):
@@ -80,7 +93,7 @@ def main() -> int:
         print(f"\nprivacy: {len(problems)} problem(s). This repository is public — do not commit this.")
         return 1
 
-    print(f"privacy: {scanned} tracked text files scanned, nothing private found")
+    print(f"privacy: {scanned} text files scanned (tracked and new), nothing private found")
     return 0
 
 

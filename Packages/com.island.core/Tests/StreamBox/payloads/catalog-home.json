@@ -1,0 +1,353 @@
+{
+  "rows": [
+    {
+      "id": "continue",
+      "title": "Carry on watching",
+      "items": [
+        {
+          "id": "mk:episode-2",
+          "kind": "episode",
+          "libraryId": "22222222-2222-4222-8222-222222222222",
+          "name": "The First Wall",
+          "overview": "An episode of the fake programme.",
+          "seasonNumber": 1,
+          "seasonId": "mk:season-1",
+          "episodeNumber": 2,
+          "series": {
+            "id": "mk:show-1",
+            "name": "Island Life"
+          },
+          "genres": [],
+          "tags": [],
+          "studios": [],
+          "providerIds": {},
+          "images": {
+            "thumb": {
+              "url": "/api/images/mk:episode-2.png",
+              "blurhash": "L6PZfSjE.AyE_3t7t7R**0o#DgR4",
+              "aspect": 0.6666666666666666
+            }
+          },
+          "runtimeMs": 1440000,
+          "media": {
+            "sourceId": "mock:1",
+            "container": "mkv",
+            "durationMs": 1440000,
+            "bitrate": 8000000,
+            "video": {
+              "codec": "h264",
+              "width": 1920,
+              "height": 1080,
+              "range": "sdr"
+            },
+            "audio": [
+              {
+                "index": 0,
+                "codec": "aac",
+                "channels": 2,
+                "language": "eng",
+                "isDefault": true
+              }
+            ],
+            "subtitles": [
+              {
+                "index": 0,
+                "codec": "subrip",
+                "kind": "text",
+                "language": "eng",
+                "isDefault": false,
+                "forced": false,
+                "external": false
+              },
+              {
+                "index": 1,
+                "codec": "pgs",
+                "kind": "image",
+                "language": "fra",
+                "isDefault": false,
+                "forced": false,
+                "external": false
+              }
+            ],
+            "flags": {
+              "uhd": false,
+              "hdr": false,
+              "dolbyVision": false,
+              "atmos": false,
+              "captions": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "latest-films",
+      "title": "Recently added",
+      "items": [
+        {
+          "id": "mk:film-1",
+          "kind": "movie",
+          "libraryId": "11111111-1111-4111-8111-111111111111",
+          "name": "The Long Afternoon",
+          "year": 2019,
+          "overview": "A quiet film about a quiet place.",
+          "genres": [
+            "Drama"
+          ],
+          "tags": [],
+          "studios": [
+            "Mock Pictures"
+          ],
+          "runtimeMs": 6240000,
+          "providerIds": {},
+          "images": {
+            "poster": {
+              "url": "/api/images/mk:film-1.png",
+              "blurhash": "L6PZfSjE.AyE_3t7t7R**0o#DgR4",
+              "aspect": 0.6666666666666666
+            }
+          },
+          "media": {
+            "sourceId": "mock:1",
+            "container": "mkv",
+            "durationMs": 6240000,
+            "bitrate": 8000000,
+            "video": {
+              "codec": "h264",
+              "width": 1920,
+              "height": 1080,
+              "range": "sdr"
+            },
+            "audio": [
+              {
+                "index": 0,
+                "codec": "aac",
+                "channels": 2,
+                "language": "eng",
+                "isDefault": true
+              }
+            ],
+            "subtitles": [
+              {
+                "index": 0,
+                "codec": "subrip",
+                "kind": "text",
+                "language": "eng",
+                "isDefault": false,
+                "forced": false,
+                "external": false
+              },
+              {
+                "index": 1,
+                "codec": "pgs",
+                "kind": "image",
+                "language": "fra",
+                "isDefault": false,
+                "forced": false,
+                "external": false
+              }
+            ],
+            "flags": {
+              "uhd": false,
+              "hdr": false,
+              "dolbyVision": false,
+              "atmos": false,
+              "captions": true
+            }
+          },
+          "addedAt": "2026-10-01T12:00:00.000Z"
+        },
+        {
+          "id": "mk:film-2",
+          "kind": "movie",
+          "libraryId": "11111111-1111-4111-8111-111111111111",
+          "name": "Harbour Lights",
+          "year": 2022,
+          "overview": "Two strangers, one ferry, and a storm.",
+          "genres": [
+            "Drama"
+          ],
+          "tags": [],
+          "studios": [
+            "Mock Pictures"
+          ],
+          "runtimeMs": 5760000,
+          "providerIds": {},
+          "images": {
+            "poster": {
+              "url": "/api/images/mk:film-2.png",
+              "blurhash": "L6PZfSjE.AyE_3t7t7R**0o#DgR4",
+              "aspect": 0.6666666666666666
+            }
+          },
+          "media": {
+            "sourceId": "mock:1",
+            "container": "mkv",
+            "durationMs": 5760000,
+            "bitrate": 8000000,
+            "video": {
+              "codec": "h264",
+              "width": 1920,
+              "height": 1080,
+              "range": "sdr"
+            },
+            "audio": [
+              {
+                "index": 0,
+                "codec": "aac",
+                "channels": 2,
+                "language": "eng",
+                "isDefault": true
+              }
+            ],
+            "subtitles": [
+              {
+                "index": 0,
+                "codec": "subrip",
+                "kind": "text",
+                "language": "eng",
+                "isDefault": false,
+                "forced": false,
+                "external": false
+              },
+              {
+                "index": 1,
+                "codec": "pgs",
+                "kind": "image",
+                "language": "fra",
+                "isDefault": false,
+                "forced": false,
+                "external": false
+              }
+            ],
+            "flags": {
+              "uhd": false,
+              "hdr": false,
+              "dolbyVision": false,
+              "atmos": false,
+              "captions": true
+            }
+          },
+          "addedAt": "2026-10-01T12:00:00.000Z"
+        },
+        {
+          "id": "mk:film-3",
+          "kind": "movie",
+          "libraryId": "11111111-1111-4111-8111-111111111111",
+          "name": "Saltmarsh",
+          "year": 2024,
+          "overview": "The tide comes in whether or not you are ready.",
+          "genres": [
+            "Drama"
+          ],
+          "tags": [],
+          "studios": [
+            "Mock Pictures"
+          ],
+          "runtimeMs": 7080000,
+          "providerIds": {},
+          "images": {
+            "poster": {
+              "url": "/api/images/mk:film-3.png",
+              "blurhash": "L6PZfSjE.AyE_3t7t7R**0o#DgR4",
+              "aspect": 0.6666666666666666
+            }
+          },
+          "media": {
+            "sourceId": "mock:1",
+            "container": "mkv",
+            "durationMs": 7080000,
+            "bitrate": 8000000,
+            "video": {
+              "codec": "h264",
+              "width": 1920,
+              "height": 1080,
+              "range": "sdr"
+            },
+            "audio": [
+              {
+                "index": 0,
+                "codec": "aac",
+                "channels": 2,
+                "language": "eng",
+                "isDefault": true
+              }
+            ],
+            "subtitles": [
+              {
+                "index": 0,
+                "codec": "subrip",
+                "kind": "text",
+                "language": "eng",
+                "isDefault": false,
+                "forced": false,
+                "external": false
+              },
+              {
+                "index": 1,
+                "codec": "pgs",
+                "kind": "image",
+                "language": "fra",
+                "isDefault": false,
+                "forced": false,
+                "external": false
+              }
+            ],
+            "flags": {
+              "uhd": false,
+              "hdr": false,
+              "dolbyVision": false,
+              "atmos": false,
+              "captions": true
+            }
+          },
+          "addedAt": "2026-10-01T12:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "id": "shows",
+      "title": "Programmes",
+      "items": [
+        {
+          "id": "mk:show-1",
+          "kind": "series",
+          "libraryId": "22222222-2222-4222-8222-222222222222",
+          "name": "Island Life",
+          "year": 2023,
+          "overview": "Six episodes about building something slowly.",
+          "genres": [
+            "Documentary"
+          ],
+          "tags": [],
+          "studios": [
+            "Mock Television"
+          ],
+          "providerIds": {},
+          "images": {
+            "poster": {
+              "url": "/api/images/mk:show-1.png",
+              "blurhash": "L6PZfSjE.AyE_3t7t7R**0o#DgR4",
+              "aspect": 0.6666666666666666
+            }
+          },
+          "status": "continuing",
+          "childCount": 1,
+          "episodeCount": 3
+        }
+      ]
+    }
+  ],
+  "libraries": [
+    {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "name": "Films",
+      "kind": "movies"
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222222",
+      "name": "Programmes",
+      "kind": "tvshows"
+    }
+  ]
+}
