@@ -36,7 +36,13 @@ Collected here as packages merge; they become the checklist for the next human g
 
 ## Next up
 
-`F-02` → `F-08` (F-08 does not need Unity and can proceed if F-02 is waiting on secrets).
+`F-08` (no Unity) → `F-02` (needs the licence secrets) → `F-03`.
+
+The owner hit trouble activating a Unity Personal licence in Unity Hub on 2026-11-10 — a known
+flaky area, and the only route, since manual `.alf` activation does not cover Personal. `F-08` was
+moved ahead of `F-02` so the build keeps moving meanwhile. If the secrets are still absent when
+`F-02` comes up, follow its note: open a `human-gate` issue, set it `needs-human`, and carry on.
+Packages that need no Unity at all: `F-08`, `SB-01`, `I-01`, `I-04`, `I-05`.
 
 **Note on `F-10` (cloud environment):** the kickoff session did not propose one. Its own container
 had a second, unrelated repository attached, and an environment proposed from there would have

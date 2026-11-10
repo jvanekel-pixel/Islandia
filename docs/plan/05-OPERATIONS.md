@@ -45,7 +45,13 @@ The lease is an **open pull request whose head branch starts with `claude/wp-`**
 ## 4. Picking work
 
 `BACKLOG.yaml` is ordered. Take the first package whose `status` is `todo` and whose `deps` are all
-`done`. Skip anything `blocked` or `needs-human`. Prefer packages in the current milestone; take
+`done`. Skip anything `blocked` or `needs-human`.
+
+**Then check it is not already built.** List open pull requests, `awaiting-merge` ones included,
+and look for a head branch named `claude/wp-<ID>-…`. If the package you were about to take has
+one, it is finished and waiting to merge — the backlog on `main` still says `todo` only because
+that pull request has not landed yet. Skip it and take the next package. Rebuilding it would throw
+away work and collide on merge. Prefer packages in the current milestone; take
 one from a later milestone only when the current one is waiting on a human gate.
 
 If nothing is available: make sure a `human-gate` issue exists explaining exactly what is needed,

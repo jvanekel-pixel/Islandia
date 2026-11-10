@@ -37,6 +37,18 @@ packages:
     auto mode already allows these commands.
   status: done
 
+- id: F-08
+  title: Island.Core package and dotnet test harness
+  ms: M1
+  risk: low
+  deps: [F-01]
+  refs: [adr ADR-07, adr ADR-08]
+  accept:
+    - "Packages/com.island.core compiles with no Unity reference under both Unity and `dotnet build` [L1][L2]"
+    - "IslandConstants holds every ADR-08 value; a test asserts derived values (131,072 triangles, 257 samples) [L1]"
+    - "`make core-test` runs in under 30 seconds in a cloud session [L1]"
+  status: todo
+
 - id: F-02
   title: Unity licence activation smoke test in CI
   ms: M1
@@ -46,6 +58,13 @@ packages:
   accept:
     - "A manually dispatchable workflow activates the licence from the three secrets, prints the editor version and returns it [L4]"
     - "On failure the workflow output names the cause (missing secret, expired licence, two-factor) and the driver opens a human-gate issue with exact steps [L0]"
+  note: >-
+    A missing or rejected licence secret is not a defect and must not burn the
+    three attempts of the stop-the-line rule. Open the human-gate issue, set this
+    package to needs-human, and take the next unblocked one. Unity Personal can
+    only be activated through Unity Hub — manual .alf activation does not cover
+    it — so this is genuinely the owner's to do, and several packages need no
+    Unity at all.
   status: todo
 
 - id: F-03
@@ -111,18 +130,6 @@ packages:
     - "CI fails if import leaves uncommitted .meta or settings changes [L2]"
     - "An artefact contains the C# and shader sources of the resolved XR, URP and glTFast packages so sessions can check real APIs [L4]"
     - "The APK from main is downloadable as an artefact [L4]"
-  status: todo
-
-- id: F-08
-  title: Island.Core package and dotnet test harness
-  ms: M1
-  risk: low
-  deps: [F-01]
-  refs: [adr ADR-07, adr ADR-08]
-  accept:
-    - "Packages/com.island.core compiles with no Unity reference under both Unity and `dotnet build` [L1][L2]"
-    - "IslandConstants holds every ADR-08 value; a test asserts derived values (131,072 triangles, 257 samples) [L1]"
-    - "`make core-test` runs in under 30 seconds in a cloud session [L1]"
   status: todo
 
 - id: F-09
