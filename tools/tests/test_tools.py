@@ -177,6 +177,29 @@ class PrivacyPatternTests(unittest.TestCase):
             self.assertIn(suffix, check_privacy.FORBIDDEN_NAMES)
 
 
+class LayeringCheckTests(unittest.TestCase):
+    """Island.Core must stay engine-free, and the check must notice when it does not."""
+
+    def _run(self) -> subprocess.CompletedProcess:
+        return subprocess.run([sys.executable, "tools/lint/check_layering.py"],
+                              cwd=REPO, capture_output=True, text=True)
+
+    def test_passes_on_the_repository_as_it_stands(self):
+        self.assertEqual(self._run().returncode, 0, self._run().stdout)
+
+    def test_fails_when_a_core_source_reaches_for_the_engine(self):
+        probe = REPO / "Packages" / "com.island.core" / "Runtime" / "_layering_probe.cs"
+        if not probe.parent.is_dir():
+            self.skipTest("Island.Core is not present")
+        probe.write_text("using UnityEngine;\n", encoding="utf-8")
+        try:
+            result = self._run()
+            self.assertEqual(result.returncode, 1, "a `using UnityEngine` must fail the check")
+            self.assertIn("engine-free", result.stdout)
+        finally:
+            probe.unlink()
+
+
 class ScriptsRunCleanTests(unittest.TestCase):
     """Each check passes on the repository as it stands right now."""
 
@@ -193,6 +216,10 @@ class ScriptsRunCleanTests(unittest.TestCase):
 
     def test_markdown_check_passes(self):
         result = self._run("tools/lint/check_markdown.py")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_layering_check_passes(self):
+        result = self._run("tools/lint/check_layering.py")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_meta_check_passes(self):

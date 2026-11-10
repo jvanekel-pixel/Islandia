@@ -1,0 +1,8 @@
+{
+  "name": "com.island.core",
+  "version": "0.1.0",
+  "displayName": "Island Core",
+  "description": "Engine-free logic for Islandia: constants, data model, save format, budgets. References no Unity assembly, so it can be tested with plain dotnet in about a second.",
+  "unity": "6000.3",
+  "author": { "name": "Islandia" }
+}

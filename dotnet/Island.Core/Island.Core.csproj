@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Compiles the same sources Unity compiles through Island.Core.asmdef, so the logic can be
+    tested with plain `dotnet test` in about a second instead of waiting on a Unity run. The
+    sources are linked, not copied: there is one copy on disk, under Packages/.
+
+    netstandard2.1 is what Unity 6 targets, so anything that builds here builds there.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>Island.Core</AssemblyName>
+    <RootNamespace>Island.Core</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../Packages/com.island.core/Runtime/**/*.cs" />
+  </ItemGroup>
+
+</Project>

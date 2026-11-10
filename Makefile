@@ -35,7 +35,7 @@ check: lint tools-test core-test companion-test  ## Everything provable without 
 	@echo "check: all local gates passed"
 
 .PHONY: lint
-lint: lint-plan lint-privacy lint-markdown lint-meta  ## Static checks (verification level L0)
+lint: lint-plan lint-privacy lint-markdown lint-meta lint-layering  ## Static checks (verification level L0)
 
 .PHONY: lint-plan
 lint-plan:  ## The backlog and plan are internally consistent
@@ -53,19 +53,33 @@ lint-markdown:  ## Internal links and file references in the docs resolve
 lint-meta:  ## Every generated Unity .meta is present and current
 	@$(PY) tools/gen_meta.py --check
 
+
+.PHONY: lint-layering
+lint-layering:  ## Island.Core stays engine-free, so the fast tests keep working
+	@$(PY) tools/lint/check_layering.py
+
 # ------------------------------------------------------------------- the tests
 
 .PHONY: tools-test
 tools-test:  ## Tests for this repository's own tooling
 	@$(PY) -m unittest discover -s tools/tests -t tools/tests
 
+# A cloud session has no .NET SDK; F-10's setup script will install one, and until then a
+# session installs it under ~/.dotnet. Look there as well as on PATH.
+DOTNET := $(shell command -v dotnet 2>/dev/null || echo $(HOME)/.dotnet/dotnet)
+
 .PHONY: core-test
-core-test:  ## Island.Core tests — engine-free C#, seconds to run (level L1)
-	@if [ -d Packages/com.island.core ]; then \
-	  dotnet test Packages/com.island.core --nologo --verbosity quiet; \
-	else \
-	  echo "core-test: Island.Core does not exist yet (work package F-08)"; \
+core-test:  ## Island.Core tests — engine-free C#, about a second (level L1)
+	@if [ ! -x "$(DOTNET)" ]; then \
+	  echo "core-test: no .NET SDK found. Install one with:"; \
+	  echo "  curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 9.0 --install-dir \$$HOME/.dotnet"; \
+	  exit 1; \
 	fi
+	@"$(DOTNET)" test dotnet/Island.Core.Tests --nologo --verbosity quiet
+
+.PHONY: core-build
+core-build:  ## Compile Island.Core alone, the way Unity will (netstandard2.1)
+	@"$(DOTNET)" build dotnet/Island.Core --nologo --verbosity quiet
 
 .PHONY: companion-test
 companion-test:  ## Web converter and relay tests (level L1/L3)
