@@ -8,7 +8,7 @@
 | **Current milestone** | M1 Factory online |
 | **In flight** | `F-01` is built, green and reviewed — [PR #1](https://github.com/jvanekel-pixel/Islandia/pull/1), labelled `awaiting-merge`. Merge it when convenient; nothing waits on it |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
-| **Driver** | Scheduled: *Islandia build driver*, every 2 hours, new session per run, Opus |
+| **Driver** | **Paused 2026-11-10.** Scheduled task exists but is misconfigured — see below |
 | **Last updated** | 2026-11-10 (planning bundle, revised for the owner's decisions) |
 | **Target** | Quest 2 · public repository · StreamBox native in-world |
 
@@ -24,7 +24,25 @@ and carry on with packages that do not need Unity (`F-01`, `F-08`, `SB-01`, `I-0
 
 ## Blocked
 
-*(none)*
+**The scheduled driver cannot reach the repository.** Five runs between 06:49 and 14:49 on
+2026-11-10 each ended in about eleven seconds: clone, push and the GitHub API all returned 403,
+because the task was created with an empty repository list and neither `create_trigger` nor
+`update_trigger` can set one. The guard in the prompt worked — no run did work it would have lost,
+and the whole night cost about forty cents — but each one sent the owner a notification, so the
+task is paused until it is fixed.
+
+Two fields, both in the task's **Edit** dialog at <https://claude.ai/code/routines>:
+
+| Field | Where | Set it to |
+| :-- | :-- | :-- |
+| Repository | Advanced settings → General tab | `jvanekel-pixel/Islandia` |
+| Model | the model selector on the prompt box | Opus — runs so far defaulted to Sonnet |
+
+Then re-enable the task. A session cannot set either: there is no documented programmatic way to
+give a scheduled task a repository, and a session may not change a task's model on its own.
+
+Worth revisiting once a real run has happened: every two hours × three packages is a fast burn of
+the owner's usage. Tune the cadence from what one full run actually costs.
 
 ## Waiting on a device (`needs-device`) or a person (`needs-human`)
 
