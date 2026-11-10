@@ -320,7 +320,7 @@ packages:
     - "Migration framework with one worked example and a test that loads a checked-in v1 fixture forever after [L1]"
     - "Terrain section round-trips heights and weights exactly at the stated quantisation [L1]"
     - "Stable 64-bit instance id allocator, persisted [L1]"
-  status: todo
+  status: done
 
 - id: V-07
   title: Budget ledger and device tier classifier

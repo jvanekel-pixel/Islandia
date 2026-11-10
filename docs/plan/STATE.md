@@ -95,12 +95,13 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 
 | Fact | Value | Source |
 | :-- | :-- | :-- |
-| Local gate `make check` | 5 lint checks, 27 tooling tests, 78 core tests, 30 contract tests — about 11 s | F-01, F-08, SB-01a/b, V-02 |
+| Local gate `make check` | 5 lint checks, 27 tooling tests, 117 core tests, 30 contract tests — about 12 s | F-01, F-08, SB-01a/b, V-02, V-06 |
 | .NET SDK in a cloud session | not present; installs to `~/.dotnet` in ~40 s | F-08 |
 | Unity editor pinned | `6000.3.28f1` — the newest 6000.3 tag with an Android module | F-02 |
 | Unity licence in CI | **works.** Seat request with account credentials; no licence file. 104 s end to end | F-02 |
 | Editor version CI really runs | `6000.3.28f1`, reported by the editor itself | F-02 |
 | ffmpeg in a cloud session | present, so the mock serves a genuinely decodable stream | SB-01a |
+| Terrain on disk | ~129 KB before packing; whole island well under 400 KB | V-06 |
 | GitHub REST from a session | runs, check-runs, status, pulls, issues all readable; `actions/secrets` blocked | F-01 |
 | Driver self-merge | **Refused** by the permission classifier unless `.claude/settings.json` allows it. See `05-OPERATIONS.md` §7 step 4 | F-01 |
 | Unity editor version pinned | — | F-03 |
