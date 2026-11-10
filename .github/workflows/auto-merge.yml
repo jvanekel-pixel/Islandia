@@ -1,0 +1,162 @@
+# Merges finished work once its checks are green.
+#
+# Added at the owner's explicit request (docs/plan/DECISIONS.md, 2026-11-10) so that a build
+# driven by scheduled sessions does not stop every few hours waiting for someone to click a
+# button. It removes a real safety net — a human looking at each change before it reaches main —
+# and that trade was made knowingly.
+#
+# What still has to hold before anything merges:
+#
+#   * the pull request carries the `awaiting-merge` label, which only a finished package gets;
+#   * every check on the head commit has succeeded, and none is still running;
+#   * the branch is in THIS repository, never a fork;
+#   * the author is the repository owner;
+#   * it is not a draft, and carries none of the stop labels.
+#
+# The fork rule is the one that matters. This repository is public: anyone may open a pull
+# request, and without that check a stranger could land code on main by adding a label. GitHub
+# gives a fork's workflow a read-only token, so this could not merge for them anyway, but a
+# control that depends on a token scope is not a control — it is a coincidence. So it is checked.
+
+name: Auto-merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, ready_for_review]
+  check_suite:
+    types: [completed]
+  workflow_run:
+    workflows: ["Unity licence"]
+    types: [completed]
+  workflow_dispatch:
+  schedule:
+    # A backstop, in case an event is missed. Nothing should normally wait this long.
+    - cron: '23 * * * *'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: auto-merge
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    name: Merge what is finished and green
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Consider every labelled pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+
+          merged=0
+          skipped=0
+
+          # Stop labels. Any one of these means a human wanted this left alone.
+          blocked_labels='blocked|needs-human|do-not-merge|wip'
+
+          numbers="$(gh api "repos/$REPO/pulls?state=open&per_page=100" \
+            --jq '.[] | select(.labels | map(.name) | index("awaiting-merge")) | .number')"
+
+          if [ -z "$numbers" ]; then
+            echo "Nothing is labelled awaiting-merge."
+            exit 0
+          fi
+
+          for number in $numbers; do
+            pr="$(gh api "repos/$REPO/pulls/$number")"
+            title="$(echo "$pr"     | jq -r '.title')"
+            head_repo="$(echo "$pr" | jq -r '.head.repo.full_name')"
+            head_sha="$(echo "$pr"  | jq -r '.head.sha')"
+            author="$(echo "$pr"    | jq -r '.user.login')"
+            draft="$(echo "$pr"     | jq -r '.draft')"
+            mergeable="$(echo "$pr" | jq -r '.mergeable_state')"
+            labels="$(echo "$pr"    | jq -r '.labels[].name' | tr '\n' ' ')"
+
+            echo "::group::#$number $title"
+            echo "head: $head_repo @ ${head_sha:0:8} | author: $author | state: $mergeable"
+            echo "labels: $labels"
+
+            # --- the guards ----------------------------------------------------------------
+
+            if [ "$head_repo" != "$REPO" ]; then
+              echo "SKIP: the branch lives in $head_repo, not this repository. Fork pull requests are never merged automatically."
+              skipped=$((skipped + 1)); echo "::endgroup::"; continue
+            fi
+
+            if [ "$author" != "$OWNER" ]; then
+              echo "SKIP: opened by $author, who is not the repository owner."
+              skipped=$((skipped + 1)); echo "::endgroup::"; continue
+            fi
+
+            if [ "$draft" = "true" ]; then
+              echo "SKIP: still a draft."
+              skipped=$((skipped + 1)); echo "::endgroup::"; continue
+            fi
+
+            if echo "$labels" | grep -qE "$blocked_labels"; then
+              echo "SKIP: carries a stop label."
+              skipped=$((skipped + 1)); echo "::endgroup::"; continue
+            fi
+
+            # --- the checks ----------------------------------------------------------------
+
+            runs="$(gh api "repos/$REPO/commits/$head_sha/check-runs" --jq '.check_runs')"
+            total="$(echo "$runs" | jq 'length')"
+            # This workflow checks itself; ignore its own run or it would wait on itself forever.
+            pending="$(echo "$runs" | jq '[.[] | select(.name | test("Merge what is finished") | not)
+                                              | select(.status != "completed")] | length')"
+            failed="$(echo "$runs"  | jq -r '[.[] | select(.name | test("Merge what is finished") | not)
+                                              | select(.conclusion != null and
+                                                       (.conclusion | IN("success","neutral","skipped") | not))
+                                              | .name] | join(", ")')"
+
+            statuses="$(gh api "repos/$REPO/commits/$head_sha/status" --jq '.state')"
+
+            echo "checks: $total total, $pending still running; commit status: $statuses"
+
+            if [ "$pending" -gt 0 ]; then
+              echo "SKIP: checks are still running. A later event will come back to this."
+              skipped=$((skipped + 1)); echo "::endgroup::"; continue
+            fi
+
+            if [ -n "$failed" ]; then
+              echo "SKIP: these checks did not pass: $failed"
+              skipped=$((skipped + 1)); echo "::endgroup::"; continue
+            fi
+
+            if [ "$statuses" = "failure" ] || [ "$statuses" = "error" ]; then
+              echo "SKIP: the commit status is $statuses."
+              skipped=$((skipped + 1)); echo "::endgroup::"; continue
+            fi
+
+            if [ "$mergeable" = "dirty" ] || [ "$mergeable" = "blocked" ]; then
+              echo "SKIP: GitHub reports the branch as '$mergeable' — probably a conflict."
+              skipped=$((skipped + 1)); echo "::endgroup::"; continue
+            fi
+
+            # --- merge -----------------------------------------------------------------------
+
+            if gh api -X PUT "repos/$REPO/pulls/$number/merge" \
+                 -f merge_method=squash -f sha="$head_sha" >/dev/null 2>&1; then
+              echo "MERGED"
+              gh api -X POST "repos/$REPO/issues/$number/comments" \
+                -f body="Merged automatically: every check on \`${head_sha:0:8}\` passed. See \`.github/workflows/auto-merge.yml\`." >/dev/null || true
+              merged=$((merged + 1))
+            else
+              echo "SKIP: GitHub refused the merge. It may have changed since this run started."
+              skipped=$((skipped + 1))
+            fi
+            echo "::endgroup::"
+          done
+
+          echo "## Auto-merge" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Merged $merged, left alone $skipped." >> "$GITHUB_STEP_SUMMARY"
+          echo "Merged $merged, left alone $skipped."

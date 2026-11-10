@@ -43,6 +43,9 @@ the same PR and log why in `docs/plan/DECISIONS.md`.
   and record the reason in `DECISIONS.md`. Deleting or skipping a failing test is never the fix.
 - **One work package per pull request.** Branch `claude/wp-<ID>-<slug>`. Small, reviewable,
   squash-merged. Use the session's GitHub tools or `gh api`; `gh pr` and `gh issue` do not work here.
+- **Never merge your own pull request.** Label it `work-package` and `awaiting-merge`; the
+  repository's auto-merge workflow lands it once the checks are green. The permission classifier
+  refuses a self-merge and that refusal is not to be worked around.
 - **Secrets** live in GitHub Actions secrets or the cloud environment only. Never print, commit or
   echo them. Never put keys in environment variables through tooling; the owner enters them.
 - **Nothing may cost money.** No paid asset, service or dependency. Account-bound things (hosting,

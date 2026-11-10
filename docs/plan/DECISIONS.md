@@ -118,6 +118,34 @@ Two consequences worth remembering:
 
 **Evidence:** runs on `claude/wp-F-02b-licence-activation`, 2026-11-10.
 
+## 2026-11-10 — Finished work merges itself
+
+**Decided by:** the owner, explicitly, after merging five pull requests by hand in one day.
+
+A build driven by scheduled sessions stops every few hours waiting for a button to be pressed. A
+session cannot press it: the permission classifier refuses a self-merge, and GitHub's own
+auto-merge is a GraphQL call, which cloud sessions cannot make. So the merging moves into the
+repository itself, as `.github/workflows/auto-merge.yml`.
+
+**What this gives up, stated plainly:** a human no longer sees each change before it reaches
+`main`. That is a real safety net and it is now gone. The owner was told so before choosing.
+
+What still has to hold:
+
+- every check on the head commit has passed, and none is still running;
+- the pull request carries `awaiting-merge`, which only a finished package gets;
+- **the branch is in this repository, never a fork** — this one matters most. The repository is
+  public, so anyone may open a pull request; without it, a stranger could land code on `main` by
+  adding a label. A fork's workflow gets a read-only token and so could not merge anyway, but a
+  control that holds only because of a token scope is a coincidence, not a control;
+- the author is the repository owner, it is not a draft, and it carries none of
+  `blocked`, `needs-human`, `do-not-merge`, `wip`.
+
+The escape hatch is a label: adding `do-not-merge` to a pull request parks it for a human.
+
+The workflow that introduced this was **not** auto-merged. The change that removes review should
+not be the first thing to skip it.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

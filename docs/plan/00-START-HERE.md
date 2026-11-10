@@ -235,51 +235,41 @@ Nothing in the plan requires a purchase. If the driver ever concludes one would 
 - **You want a human-readable summary.** Every milestone report in `docs/reports/` is written for
   you, not for Claude.
 
-## 9. One optional file that makes the build fully hands-off
+## 9. Merging happens by itself
 
-Measured on 2026-11-10: a session's permission classifier refuses to let a session merge its own
-pull request ("Merge Without Review"), and refuses to let a session write its own permission file.
-Both refusals are correct. GitHub's auto-merge is not a way round the first — enabling it is a
-GraphQL call, and GraphQL is blocked in cloud sessions.
+Since 2026-11-10 the repository merges finished work on its own
+(`.github/workflows/auto-merge.yml`). You asked for this, and it is worth being clear about what
+you traded: **nobody looks at a change before it reaches `main` any more.** That was a real safety
+net.
 
-So you have a choice, and either is fine:
+What still has to be true before anything merges:
 
-**A. Leave it as is.** The driver builds each work package, proves it, opens a green pull request
-with the evidence in the body, labels it `awaiting-merge`, and moves on. You merge them whenever
-you like — one click each, and they batch up happily. Nothing stalls while they wait, and you get
-a look at everything before it lands.
+- every test has passed, and none is still running;
+- the pull request is marked finished (the `awaiting-merge` label, which only a completed work
+  package gets);
+- the branch is in your repository, **never a fork** — anyone can open a pull request on a public
+  repository, and this is what stops a stranger landing code on `main`;
+- you are the author; it is not a draft; and it carries no stop label.
 
-**B. Let the driver merge.** Create `.claude/settings.json` in the repository with the content
-below and commit it. The driver then merges its own pull requests once their checks are green, and
-you are not in the loop at all until the first human gate. The gates that matter are still
-enforced: required status checks, the acceptance criteria, and the stop-the-line rule.
+### If you want to look at something before it lands
 
-A session cannot create this file for you — that is the point of the refusal — so it is yours to
-make or skip.
+Add the label **`do-not-merge`** to the pull request. It will sit there until you take the label
+off. That is the escape hatch.
 
-```json
-{
-  "permissions": {
-    "allow": [
-      "Bash(make:*)",
-      "Bash(python3:*)",
-      "Bash(dotnet:*)",
-      "Bash(npm:*)",
-      "Bash(npx:*)",
-      "Bash(node:*)",
-      "Bash(git:*)",
-      "Bash(gh api:*)"
-    ],
-    "deny": [
-      "Bash(git push --force:*)",
-      "Bash(git push -f:*)",
-      "Read(./**/*.ulf)",
-      "Read(./**/*.keystore)",
-      "Read(./**/.env*)"
-    ]
-  }
-}
+### If you want this turned off
+
+Delete `.github/workflows/auto-merge.yml`, or rename it to end in `.disabled`. Everything falls
+back to merging by hand, and the prompt below still works.
+
+### Merging by hand, if you ever need to
+
 ```
+Go to https://github.com/jvanekel-pixel/Islandia/pulls
 
-If you take option B and later regret it, delete the file: the driver falls back to option A by
-itself, because `05-OPERATIONS.md` §7 describes both.
+For every open pull request in that list, starting with the lowest number:
+open it, scroll to the bottom, click the green "Merge pull request" button,
+then "Confirm merge", and wait for the purple "Merged" label before the next one.
+
+If one shows a conflict warning instead of a green button, skip it and tell me
+its number. When the list is empty, tell me which numbers you merged.
+```

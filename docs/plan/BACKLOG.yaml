@@ -165,6 +165,23 @@ packages:
     about forty seconds. Take it from a session that has only this repository.
   status: needs-human
 
+- id: F-13
+  title: Auto-merge finished work
+  ms: M1
+  risk: med
+  deps: [F-01]
+  refs: [05-OPERATIONS.md §7, 00-START-HERE.md §9]
+  accept:
+    - "A workflow squash-merges pull requests labelled awaiting-merge once every check on the head commit has passed [L4]"
+    - "It never merges a fork's branch, a draft, another author's pull request, or anything carrying a stop label; each guard is stated in the workflow and its reason given [L0]"
+    - "`do-not-merge` parks a pull request for a human, and deleting the workflow restores merging by hand [L0]"
+    - "The change introducing it was merged by a person, not by itself [L0]"
+  note: >-
+    The owner asked for this after merging five pull requests by hand in a day.
+    It gives up human review of every change before it reaches main; that was
+    said plainly before they chose. See DECISIONS.md, 2026-11-10.
+  status: done
+
 - id: F-11
   title: Driver scheduled task and end-to-end loop rehearsal
   ms: M1
