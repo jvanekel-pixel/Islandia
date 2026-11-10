@@ -59,8 +59,11 @@ lint-layering:  ## Island.Core stays engine-free, so the fast tests keep working
 	@$(PY) tools/lint/check_layering.py
 
 .PHONY: lint-content
-lint-content:  ## The catalogue is valid and its generated ids are current
+lint-content:  ## The catalogue is valid, within budget, licensed, and its generated files current
 	@$(PY) tools/content/generate_ids.py --check
+	@$(PY) tools/content/validate.py
+	@$(PY) tools/content/ledger.py --check
+	@$(PY) tools/content/report.py --check
 
 # ------------------------------------------------------------------- the tests
 
@@ -114,6 +117,11 @@ mock:  ## Run the mock StreamBox gateway on http://localhost:8787
 .PHONY: content
 content:  ## Regenerate what the catalogue derives — run after editing content/catalogue
 	@$(PY) tools/content/generate_ids.py
+	@$(PY) tools/content/ledger.py
+
+.PHONY: content-report
+content-report:  ## What is in the catalogue: distinct meshes and palette variants, counted honestly
+	@$(PY) tools/content/report.py
 
 .PHONY: meta
 meta:  ## Write any missing or stale Unity .meta files

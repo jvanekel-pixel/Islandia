@@ -757,7 +757,8 @@ packages:
     - "Per-item budgets live in content/budgets.yaml as data; an LOD chain that does not actually reduce fails [L0]"
     - "Licence ledger generated from the catalogue; a licence outside the allowlist fails, the allowlist cites the decision record that admits it, and the tool checks that record exists [L0]"
     - "Report counts distinct meshes by asset checksum, not by catalogue entry, so two entries sharing a mesh count as one mesh and two variants [L0]"
-  status: todo
+    - "One mesh shared across two kinds fails, because that is the shape the blueprint's dishonest count took [L0]"
+  status: done
 
 - id: C-02
   title: CC0 ingestion pipeline

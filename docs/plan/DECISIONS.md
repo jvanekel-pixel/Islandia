@@ -268,6 +268,48 @@ validator and the ingest pipeline exist, generated or downloaded meshes have now
 now `C-01a` (schema, loader, ids — done) and `C-01b` (validator, licence ledger, honest count), and
 the packages that depended on the whole of it depend on `C-01b`.
 
+## 2026-11-10 — The catalogue's facts are bound to the asset by checksum
+
+**`C-01b`.** The validator needs to know a mesh's triangle counts, bounds, texture sizes and edge
+counts. It does not re-derive them from the GLB: Blender has exact topology at the moment it
+exports, and reconstructing it afterwards is both lossy and a second implementation to keep
+correct. So the ingest pipeline writes a small JSON **facts file** per item and the validator reads
+that.
+
+That trades a real risk — facts can say anything — for a cheap one. Every facts file carries the
+CRC-32 of its asset and the validator recomputes it from the file on disk, so facts and asset are
+bound together or the item is refused. There is no legitimate way for them to disagree, because
+`C-02`'s pipeline is deterministic; a mismatch means the asset changed without the pipeline
+re-running, or someone edited the facts by hand.
+
+**Four checks are there because the blueprint failed them.** An LOD chain whose levels do not
+actually reduce is refused (its "LODs" were the same mesh three times: all the memory, none of the
+saving). Open geometry must be *declared* double-sided rather than assumed — legitimate for a grass
+blade or a petal, fatal for anything the player can walk behind, and in VR that is everything.
+Non-manifold geometry is never allowed, because it breaks collider generation, normals and welding.
+And one mesh shared across two different `kind`s fails: sharing geometry between a spring and an
+autumn oak is the palette system working, sharing it between a stair and a roof is what the
+blueprint did ninety-five times.
+
+**Per-item budgets are data** (`content/budgets.yaml`), derived by dividing ADR-10's subsystem
+allowance by roughly the instance count that subsystem expects. They are guesses and say so, in the
+file. Recalibrating them from device readings is then an edit to a table rather than a change to a
+program.
+
+**The licence allowlist cites its own authority.** `content/licences.yaml` names the `DECISIONS.md`
+record that admitted attribution licences, and the ledger tool checks that heading really exists. A
+future session cannot widen what the project may use by editing a data file; widening it means
+writing down why, where the owner can read it. Attribution is enforced rather than encouraged — an
+attribution-licensed item with no author or no source url fails the build, because the alternative
+is a notices screen that quietly omits people whose work is in the game. Non-commercial licences are
+admitted and listed in their own section of the generated notices, so that if this project's purpose
+ever changed, the list of what would have to go already exists.
+
+The catalogue is still empty, so none of this is exercised by real content yet. It is exercised by
+50 tests that each build a complete valid item and then break exactly one thing — which is the only
+way to know a validator works, since one that has never refused anything is indistinguishable from
+one that cannot.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced
