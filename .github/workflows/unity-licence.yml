@@ -54,76 +54,41 @@ jobs:
             *) echo "::warning title=Unexpected licence contents::UNITY_LICENSE does not contain '<License'. Did the whole .ulf file get pasted?" ;;
           esac
 
-      - name: What licensing tooling does this image have
+      - name: Ask the licensing client what it can actually do
         run: |
-          echo "::group::Licensing client"
-          find /opt/unity -iname '*Licensing*' -maxdepth 6 2>/dev/null | head -20 || true
-          echo "::endgroup::"
-          echo "::group::unity-editor -help, licence flags only"
-          unity-editor -help 2>&1 | grep -iE 'licen[cs]e|serial|manual' | head -20 || true
+          client=/opt/unity/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client
+          echo "::group::--help"
+          "$client" --help 2>&1 | head -60 || true
           echo "::endgroup::"
 
-      - name: Try each way of applying the licence, and say which works
+      - name: Request a Personal seat from Unity's licensing service
         id: probe
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         run: |
           set +e
-          install -d /root/.local/share/unity3d/Unity
-          printf '%s' "$UNITY_LICENSE" > /tmp/Unity_lic.ulf
-          cp /tmp/Unity_lic.ulf /root/.local/share/unity3d/Unity/Unity_lic.ulf
+          client=/opt/unity/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client
 
-          worked=""
+          # Manual activation of a Personal licence is no longer supported by Unity, and a .ulf
+          # from Unity Hub is bound to the machine that made it ("Machine bindings don't match").
+          # The remaining route is to ask the licensing service for a seat with the account's own
+          # credentials, which is what GameCI's newer personal strategy does.
+          echo "::group::--activate-all --include-personal"
+          "$client" --activate-all --include-personal \
+            --username "$UNITY_EMAIL" --password "$UNITY_PASSWORD" 2>&1 | tail -30
+          echo "::endgroup::"
 
-          # A: the licensing client imports the file. This is what Unity 6 expects; simply
-          #    placing the file is the 2019-era method and is what failed.
-          client="$(find /opt/unity -name 'Unity.Licensing.Client' -type f 2>/dev/null | head -1)"
-          if [ -n "$client" ]; then
-            echo "::group::A. Unity.Licensing.Client --import"
-            "$client" --import /tmp/Unity_lic.ulf 2>&1 | tail -20
-            echo "exit $?"
-            echo "::endgroup::"
-            unity-editor -batchmode -nographics -quit -createProject /tmp/probe-a -logFile /tmp/a.log
-            [ $? -eq 0 ] && worked="A: licensing client import"
-          else
-            echo "A. skipped: no Unity.Licensing.Client in this image"
-          fi
+          echo "::group::what the client now holds"
+          "$client" --show-entitlements 2>&1 | tail -20
+          echo "::endgroup::"
 
-          # B: the editor's own flag for applying a .ulf.
-          if [ -z "$worked" ]; then
-            echo "::group::B. -manualLicenseFile"
-            unity-editor -batchmode -nographics -quit \
-              -manualLicenseFile /tmp/Unity_lic.ulf -logFile /tmp/b.log 2>&1 | tail -5
-            tail -25 /tmp/b.log 2>/dev/null
-            echo "::endgroup::"
-            unity-editor -batchmode -nographics -quit -createProject /tmp/probe-b -logFile /tmp/b2.log
-            [ $? -eq 0 ] && worked="B: -manualLicenseFile"
-          fi
-
-          # C: sign in with the account, which is the path GameCI uses for serials.
-          if [ -z "$worked" ]; then
-            echo "::group::C. -username/-password sign-in"
-            unity-editor -batchmode -nographics -quit \
-              -username "$UNITY_EMAIL" -password "$UNITY_PASSWORD" \
-              -logFile /tmp/c.log 2>&1 | tail -5
-            tail -25 /tmp/c.log 2>/dev/null
-            echo "::endgroup::"
-            unity-editor -batchmode -nographics -quit -createProject /tmp/probe-c -logFile /tmp/c2.log
-            [ $? -eq 0 ] && worked="C: account sign-in"
-          fi
-
-          echo "worked=$worked" >> "$GITHUB_OUTPUT"
-          echo "=============================================="
-          if [ -n "$worked" ]; then echo "ACTIVATION METHOD THAT WORKS -> $worked"
-          else echo "NONE of A, B or C produced a usable licence"; fi
-          echo "=============================================="
-
-          # Whichever got furthest, surface the entitlement lines: they say whether the account
-          # is the problem rather than the method.
-          echo "::group::entitlement and licence lines from every attempt"
-          grep -hiE 'entitlement|licen[cs]e|serial|Machine binding' /tmp/a.log /tmp/b.log /tmp/b2.log /tmp/c.log /tmp/c2.log 2>/dev/null | sort -u | head -40
+          unity-editor -batchmode -nographics -quit -createProject /tmp/probe -logFile /tmp/unity.log
+          status=$?
+          echo "exit-code=$status" >> "$GITHUB_OUTPUT"
+          echo "editor exit: $status"
+          echo "::group::licence lines from the editor"
+          grep -iE 'entitlement|licen[cs]e|Machine binding|serial' /tmp/unity.log 2>/dev/null | sort -u | head -30
           echo "::endgroup::"
           exit 0
 
