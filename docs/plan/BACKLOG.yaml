@@ -47,7 +47,7 @@ packages:
     - "Packages/com.island.core compiles with no Unity reference under both Unity and `dotnet build` [L1][L2]"
     - "IslandConstants holds every ADR-08 value; a test asserts derived values (131,072 triangles, 257 samples) [L1]"
     - "`make core-test` runs in under 30 seconds in a cloud session [L1]"
-  status: todo
+  status: done
 
 - id: F-02
   title: Unity licence activation smoke test in CI

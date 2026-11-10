@@ -54,7 +54,8 @@ Collected here as packages merge; they become the checklist for the next human g
 
 ## Next up
 
-`F-08` (no Unity) → `F-02` (needs the licence secrets) → `F-03`.
+`F-02` (needs the licence secrets) → `F-03` → `F-04`. Non-Unity work still available if the
+licence is not ready: `SB-01`, `I-01`, `I-04`, `I-05`.
 
 The owner hit trouble activating a Unity Personal licence in Unity Hub on 2026-11-10 — a known
 flaky area, and the only route, since manual `.alf` activation does not cover Personal. `F-08` was
@@ -70,7 +71,8 @@ cost is reinstalling the .NET SDK and the companion toolchain each session.
 
 ## Recently merged
 
-- `F-01` Repository skeleton, Makefile, lint, meta generator (2026-11-10)
+- `F-08` Island.Core package and dotnet test harness (2026-11-10, PR #2)
+- `F-01` Repository skeleton, Makefile, lint, meta generator (2026-11-10, PR #1)
 - Planning bundle, driver prompt and kickoff state (2026-11-10)
 
 ## Measured facts
@@ -79,7 +81,8 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 
 | Fact | Value | Source |
 | :-- | :-- | :-- |
-| Local gate `make check` | 4 lint checks + 22 tooling tests, under 1 s | F-01 |
+| Local gate `make check` | 5 lint checks, 22 tooling tests, 15 core tests — about 3 s | F-01, F-08 |
+| .NET SDK in a cloud session | not present; installs to `~/.dotnet` in ~40 s | F-08 |
 | GitHub REST from a session | runs, check-runs, status, pulls, issues all readable; `actions/secrets` blocked | F-01 |
 | Driver self-merge | **Refused** by the permission classifier unless `.claude/settings.json` allows it. See `05-OPERATIONS.md` §7 step 4 | F-01 |
 | Unity editor version pinned | — | F-03 |
