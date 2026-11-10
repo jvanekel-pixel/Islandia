@@ -65,7 +65,7 @@ packages:
     only be activated through Unity Hub — manual .alf activation does not cover
     it — so this is genuinely the owner's to do, and several packages need no
     Unity at all.
-  status: todo
+  status: needs-human
 
 - id: F-03
   title: Create the Unity project headlessly and pin the editor
@@ -153,7 +153,14 @@ packages:
     - "A dedicated cloud environment is proposed to the owner with a setup script that installs the .NET SDK and companion toolchain in under five minutes [L0]"
     - "A fresh session can run `make core-test` and `make companion-test` with no manual installation [L1]"
     - "Allowed hosts are the minimum the measured needs show; each is listed with its reason in DECISIONS.md [L0]"
-  status: todo
+  note: >-
+    Parked 2026-11-10, twice over. Creating an environment needs the owner to
+    approve a card, and the kickoff session's container had a second, unrelated
+    repository attached, so an environment proposed from it would have covered
+    that project too. Neither is urgent: the Default environment has unrestricted
+    network access and the only cost is reinstalling the .NET SDK each session,
+    about forty seconds. Take it from a session that has only this repository.
+  status: needs-human
 
 - id: F-11
   title: Driver scheduled task and end-to-end loop rehearsal
@@ -258,7 +265,7 @@ packages:
     - "Brush results are independent of frame rate (strength × dt integrates identically at 30, 72 and 90 Hz within tolerance) [L1]"
     - "Dirty-region tracking returns exactly the chunks a brush touches, for every radius up to the maximum [L1]"
     - "Auto rock weight on slope uses one threshold from IslandConstants [L1]"
-  status: todo
+  status: done
 
 - id: V-03
   title: Terrain runtime — chunk meshes, Burst jobs, async colliders

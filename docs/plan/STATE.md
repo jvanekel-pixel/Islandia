@@ -54,7 +54,11 @@ Collected here as packages merge; they become the checklist for the next human g
 
 ## Next up
 
-`SB-01c` (the StreamBox client and transports) → `I-01` (the model-import gatekeeper) → `I-04`.
+`V-06` (the save system) → `V-07` (budget ledger and device tiers) → `SB-01c` (the StreamBox
+client) → `I-01`.
+
+`F-02` and `F-10` are parked as `needs-human`: the Unity licence secrets (issue #4) and an
+environment card only the owner can approve. Neither blocks anything else.
 
 **The Unity track is parked**, waiting on issue #4: the licence secrets are not set, so `F-02`
 cannot pass and `F-03` to `F-07` cannot start. Nothing else is blocked by it.
@@ -73,6 +77,7 @@ cost is reinstalling the .NET SDK and the companion toolchain each session.
 
 ## Recently merged
 
+- `V-02` Terrain model in Core — heightfield, brushes, dirty regions (2026-11-10)
 - `SB-01b` StreamBox models and tolerant JSON mapping (2026-11-10)
 - `SB-01a` StreamBox contract snapshot and mock gateway (2026-11-10)
 - `F-02` Unity licence workflow — built and merged; cannot pass until the secrets exist (2026-11-10, PR #3)
@@ -86,7 +91,7 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 
 | Fact | Value | Source |
 | :-- | :-- | :-- |
-| Local gate `make check` | 5 lint checks, 25 tooling tests, 48 core tests, 30 contract tests — about 10 s | F-01, F-08, SB-01a/b |
+| Local gate `make check` | 5 lint checks, 27 tooling tests, 78 core tests, 30 contract tests — about 11 s | F-01, F-08, SB-01a/b, V-02 |
 | .NET SDK in a cloud session | not present; installs to `~/.dotnet` in ~40 s | F-08 |
 | Unity editor pinned | `6000.3.28f1` — the newest 6000.3 tag with an Android module | F-02 |
 | Unity licence secrets | **not set**; the workflow fails in ~30 s and says so. Issue #4 | F-02 |
