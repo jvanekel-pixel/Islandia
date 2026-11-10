@@ -47,9 +47,10 @@ Every milestone ships a tagged GitHub Release with an installable APK and a repo
 | | **M6 Builder's kit** | Build, edit and export structures | Module system, snapping, studio tools, first architecture theme, full save coverage | — |
 | | **M7 Bring your own models** | Convert a model in a browser and place it on the island | Gatekeeper, loader, imports folder, web converter, relay (local) | — |
 | | **M8 Island companions** | Adopt, customise and live with pets | Pets, navigation, behaviour, hand interaction | — |
-| 4 Alpha | **M9 Feature complete** | Use every feature on a stress island without breaking a budget in simulation | Scaler, stress suite, robustness, onboarding, security and licence review | **HG-3** full device pass |
-| 5 Beta | **M10 Content complete** | See the full catalogue; device findings fixed | Catalogue targets met; device-driven optimisation; soak; polish | **HG-4** art, comfort and soak review |
-| 6 Finished | **M11 On the headset** | Give it to them | Signed installable build, hand-over notes, maintenance task running | — |
+| | **M9 Be someone** | Choose one of twelve, dress it, see yourself in a mirror | Shared rig, the twelve, wardrobe, dressing room, garments | — |
+| 4 Alpha | **M10 Feature complete** | Use every feature on a stress island without breaking a budget in simulation | Scaler, stress suite, robustness, onboarding, security and licence review | **HG-3** full device pass |
+| 5 Beta | **M11 Content complete** | See the full catalogue; device findings fixed | Catalogue targets met; device-driven optimisation; soak; polish | **HG-4** art, comfort and soak review |
+| 6 Finished | **M12 On the headset** | Give it to them | Signed installable build, hand-over notes, maintenance task running | — |
 
 Media is fourth, ahead of the garden and the building kit, for two reasons: the owner called it
 imperative, and it carries the largest risk that only a headset can retire.
@@ -63,8 +64,8 @@ Everything the owner does, in one place. Detail and copy-paste commands are in `
 | **HG-0** | Now | 15–30 min | Create the repository, add the licence secrets, start the driver | Yes — nothing starts without it |
 | **HG-1** | After M2 | 30–45 min first time, 10 after | One-time headset developer setup; run the device script; look around for five minutes. Includes the video probe | **No.** Strongly recommended: it is the earliest proof the app renders in a headset, and it decides how video will be played |
 | **HG-2** | After M4 | 20–30 min | Pair the headset with your StreamBox; watch something; play an album; try the phone remote | **No.** Recommended: it is the feature you called imperative |
-| **HG-3** | After M9 | 60–90 min | Run the device script; play every feature against a checklist; decide on relay hosting | Blocks M10's device-driven work only |
-| **HG-4** | After M10 | 60–90 min + an unattended hour | Review art and comfort; start the soak run. **The last gate** | Blocks M11 |
+| **HG-3** | After M10 | 60–90 min | Run the device script; play every feature against a checklist; decide on relay hosting | Blocks M10's device-driven work only |
+| **HG-4** | After M11 | 60–90 min + an unattended hour | Review art and comfort; start the soak run. **The last gate** | Blocks M11 |
 
 Between gates the driver never waits for you unless every remaining package depends on your answer.
 
@@ -87,6 +88,7 @@ so a blocked track does not stall the others.
 | `A` | Audio core, radio and screen props | 8, 9 |
 | `SB` | StreamBox: the owner's media service, native in-world | — (new requirement) |
 | `PET` | Pets, navigation, behaviour | 10, 11 |
+| `AV` | Avatars and wardrobe | — (new requirement) |
 | `Q` | Quality: scaler, stress, robustness, device kit | 12 |
 | `R` | Release and live operations | 12 |
 | `D` | Device-finding fixes, created from gate reports | — |
@@ -95,7 +97,7 @@ so a blocked track does not stall the others.
 
 Honest constraints rather than a calendar:
 
-- **About 108 work packages** to M11, each sized for one session.
+- **About 114 work packages** to M12, each sized for one session.
 - **CI is free but not instant.** The repository is public, so GitHub-hosted runner minutes cost
   nothing. A Unity test run takes roughly ten to fifteen minutes and an Android build twenty-five
   to forty-five, so a Unity-touching package still spends most of its wall-clock time waiting.

@@ -1141,11 +1141,94 @@ packages:
     - "JourneyTests.M8 passes; report, retro and release done [L3][L0]"
   status: todo
 
-# ───────────────────────────── M9  ALPHA — FEATURE COMPLETE ─────────────────────────────
+# ───────────────────────────── M9  AVATARS AND WARDROBE ─────────────────────────────
+# The most personal part of the gift: twelve anthropomorphic dog avatars whose clothes swap
+# between them like a doll's. Architecture and the trade it forces: 02-ARCHITECTURE.md ADR-24.
+# Character briefs: docs/design/avatars.md.
+
+- id: AV-01
+  title: Avatar architecture — one rig, shared wardrobe
+  ms: M9
+  risk: high
+  deps: [M8-RETRO]
+  refs: [adr ADR-24]
+  accept:
+    - "The VRM avatar standard is evaluated first and the outcome recorded in DECISIONS.md: adopted, or rejected with the reason. Rigged anthro characters with modular clothing are the hardest art problem here and assembling beats authoring if it fits [L0]"
+    - "One skeleton serves every avatar; a test asserts all bodies and all garments bind to the same joint names [L2]"
+    - "A garment authored once fits every body in its archetype without hand-editing; proven with two placeholder bodies and one placeholder garment [L3]"
+    - "Body masking hides what a garment covers, with no poke-through on a scripted turnaround [L3]"
+    - "Avatar choice, body archetype and worn garments round-trip through the save [L1]"
+  status: todo
+
+- id: AV-02
+  title: The twelve, as heads on shared bodies
+  ms: M9
+  risk: high
+  deps: [AV-01, C-02]
+  refs: [adr ADR-24]
+  accept:
+    - "All twelve from docs/design/avatars.md are selectable and visibly distinct at a glance: head, ears, tail, fur pattern and colour carry the identity, not a bespoke body [L3][L7]"
+    - "Two or three body archetypes cover them. Whether the compact build shares a garment set or needs its own is decided here from how it actually looks, and recorded [L0][L7]"
+    - "Each avatar keeps its colouring and markings through every garment change [L3]"
+    - "Budget: the worn avatar stays inside the pets-media-UI allocation in ADR-10 — it is on screen whenever a mirror is [L3]"
+  status: todo
+
+- id: AV-03
+  title: Wardrobe — garments that swap like a doll's
+  ms: M9
+  risk: med
+  deps: [AV-02]
+  refs: [adr ADR-24]
+  accept:
+    - "Garments are independent items in slots (over, top, bottom, feet, accessory); any combination can be worn, including none in a slot [L3]"
+    - "Each of the twelve has the three states its brief describes, as saved outfits that can be recalled in one gesture [L3]"
+    - "Swapping a garment is immediate, with no reload and no visible rebuild [L3]"
+    - "Outfits are saved per avatar, so going back to one finds it as it was left [L1]"
+  status: todo
+
+- id: AV-04
+  title: Dressing room and mirror
+  ms: M9
+  risk: med
+  deps: [AV-03, U-11]
+  refs: [adr ADR-24]
+  accept:
+    - "A mirror in the world shows the avatar, reflecting real movement and head position; a placeable mirror prop so it can go where the player wants [L3][L7]"
+    - "Dressing is done by picking garments in the world, not from a settings menu — it should feel like dressing a doll, which is the point [L7]"
+    - "A photo mode: step out of the body, frame a shot, and keep the picture [L3]"
+    - "The mirror costs nothing when nobody is near it [L3]"
+    - "It is a pleasure to use and they want to show someone [L7]"
+  status: todo
+
+- id: C-20
+  title: Garment content
+  ms: M9
+  risk: high
+  deps: [AV-03, C-01]
+  refs: [adr ADR-24, adr ADR-11]
+  accept:
+    - "Enough garments to build every state in the twelve briefs, plus enough spares that mixing feels worthwhile [L0]"
+    - "Every garment passes the catalogue validator: budgets, licence, thumbnail, and no poke-through on any body it is offered for [L0][L3]"
+    - "Licences honoured in the notices screen, attribution included [L0]"
+    - "They look like they belong in the same wardrobe [L7]"
+  status: todo
+
+- id: M9-RETRO
+  title: Milestone M9 journey, report, retro, release
+  ms: M9
+  risk: low
+  deps: [AV-04, C-20]
+  refs: [04-VERIFICATION.md §5]
+  accept:
+    - "JourneyTests.M9 passes: choose an avatar, dress it, save the outfit, change avatar, come back and find it as it was [L3]"
+    - "Report, retro and release done [L0]"
+  status: todo
+
+# ───────────────────────────── M10  ALPHA — FEATURE COMPLETE ─────────────────────────────
 
 - id: Q-01
   title: Quality scaler
-  ms: M9
+  ms: M10
   risk: med
   deps: [M8-RETRO]
   refs: [adr ADR-02, adr ADR-10, bp phase-12.md]
@@ -1156,7 +1239,7 @@ packages:
 
 - id: Q-02
   title: Stress islands and performance regression suite
-  ms: M9
+  ms: M10
   risk: med
   deps: [Q-01]
   refs: [04-VERIFICATION.md §5]
@@ -1168,7 +1251,7 @@ packages:
 
 - id: Q-03
   title: Robustness
-  ms: M9
+  ms: M10
   risk: med
   deps: [P-10]
   refs: [adr ADR-09]
@@ -1179,7 +1262,7 @@ packages:
 
 - id: Q-04
   title: Onboarding, settings, accessibility
-  ms: M9
+  ms: M10
   risk: high
   deps: [U-11, U-02]
   refs: [bp phase-03.md]
@@ -1192,7 +1275,7 @@ packages:
 
 - id: Q-05
   title: Security, privacy and licence review
-  ms: M9
+  ms: M10
   risk: high
   deps: [M7-RETRO]
   refs: [adr ADR-21, au phase-06-companion.md]
@@ -1202,9 +1285,9 @@ packages:
     - "A data-flow statement lists every network request the app can make and why [L0]"
   status: todo
 
-- id: M9-RETRO
+- id: M10-RETRO
   title: Alpha report, retro, release and HG-3 issue
-  ms: M9
+  ms: M10
   risk: low
   deps: [Q-02, Q-03, Q-04, Q-05]
   refs: [00-START-HERE.md §5]
@@ -1213,13 +1296,13 @@ packages:
     - "HG-3 issue opened; release cut [L0]"
   status: todo
 
-# ───────────────────────────── M10  BETA — CONTENT COMPLETE ─────────────────────────────
+# ───────────────────────────── M11  BETA — CONTENT COMPLETE ─────────────────────────────
 
 - id: D-TRIAGE-ALPHA
   title: Triage the alpha device report into fix packages
-  ms: M10
+  ms: M11
   risk: med
-  deps: [M9-RETRO]
+  deps: [M10-RETRO]
   refs: [04-VERIFICATION.md §4]
   accept:
     - "Every failed measurement and every owner note becomes a D-* package with a reproduction in simulation where possible [L0]"
@@ -1228,7 +1311,7 @@ packages:
 
 - id: A-03
   title: "Optional: internet radio tuner"
-  ms: M10
+  ms: M11
   risk: high
   deps: [A-02]
   refs: [adr ADR-14, dr Assets/Scripts/Audio/PrimaryAudioCatalogAndScanner.cs, au phase-08-12-media-pets-ai.md]
@@ -1240,7 +1323,7 @@ packages:
 
 - id: C-10
   title: Botanical batches to target
-  ms: M10
+  ms: M11
   risk: med
   deps: [C-04]
   refs: [adr ADR-11]
@@ -1251,7 +1334,7 @@ packages:
 
 - id: C-11
   title: Architecture themes 2 and 3
-  ms: M10
+  ms: M11
   risk: high
   deps: [C-05]
   refs: [adr ADR-11, bp phase-05.md §5.2]
@@ -1261,7 +1344,7 @@ packages:
 
 - id: C-12
   title: Gazebos, rocks, outdoor props, media and pet props to target
-  ms: M10
+  ms: M11
   risk: med
   deps: [C-05]
   refs: [adr ADR-11]
@@ -1271,7 +1354,7 @@ packages:
 
 - id: Q-10
   title: Visual polish pass
-  ms: M10
+  ms: M11
   risk: med
   deps: [C-10, C-11, C-12]
   refs: [adr ADR-04]
@@ -1282,7 +1365,7 @@ packages:
 
 - id: Q-11
   title: Soak and leak hunt
-  ms: M10
+  ms: M11
   risk: med
   deps: [Q-02]
   refs: [bp phase-12.md]
@@ -1294,7 +1377,7 @@ packages:
 
 - id: Q-12
   title: Strings externalised
-  ms: M10
+  ms: M11
   risk: low
   deps: [Q-04]
   refs: []
@@ -1302,9 +1385,9 @@ packages:
     - "No player-facing literal string in code outside the string table; English only [L0]"
   status: todo
 
-- id: M10-RETRO
+- id: M11-RETRO
   title: Beta report, retro, release and HG-4 issue
-  ms: M10
+  ms: M11
   risk: low
   deps: [D-TRIAGE-ALPHA, Q-10, Q-11, Q-12]
   refs: [00-START-HERE.md §5]
@@ -1313,15 +1396,15 @@ packages:
     - "HG-4 issue opened; release cut. This is the last gate — there is no store submission after it [L0]"
   status: todo
 
-# ───────────────────────────── M11  FINISHED — ON THE HEADSET ─────────────────────────────
+# ───────────────────────────── M12  FINISHED — ON THE HEADSET ─────────────────────────────
 # Not a store release. This is a gift for one person: a signed build that installs, and enough
 # written down that it can be looked after. See 02-ARCHITECTURE.md ADR-20.
 
 - id: R-01
   title: Signed, installable build
-  ms: M11
+  ms: M12
   risk: med
-  deps: [M10-RETRO]
+  deps: [M11-RETRO]
   refs: [adr ADR-20]
   accept:
     - "CI produces a signed APK from a key the owner supplies as secrets; the key never enters the repository or a session [L4]"
@@ -1332,7 +1415,7 @@ packages:
 
 - id: R-03
   title: Relay readiness, only if the relay is used
-  ms: M11
+  ms: M12
   risk: low
   deps: [I-07]
   refs: [adr ADR-13, adr ADR-21]
@@ -1344,7 +1427,7 @@ packages:
 
 - id: R-11
   title: Hand-over notes and monthly upkeep
-  ms: M11
+  ms: M12
   risk: low
   deps: [R-01]
   refs: [05-OPERATIONS.md]
@@ -1354,9 +1437,9 @@ packages:
     - "The build driver is replaced by a monthly maintenance task [L0]"
   status: todo
 
-- id: M11-RETRO
+- id: M12-RETRO
   title: It is finished — report, retro, release
-  ms: M11
+  ms: M12
   risk: low
   deps: [R-01, R-03, R-11]
   refs: [05-OPERATIONS.md §9]

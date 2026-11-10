@@ -317,6 +317,52 @@ The app is **Islandia**. Android package id `dev.islandia.app` is a placeholder 
 confirmed by the owner before the first upload to a Meta release channel, because the package id
 cannot change afterwards.
 
+## ADR-24 — Avatars and wardrobe **(owner requirement, 2026-11-10)**
+
+Twelve anthropomorphic dog avatars, all playable, with **clothing that swaps between them like a
+doll's**. This is the most personal part of the gift and is treated as a feature, not decoration.
+
+### The constraint that decides everything
+
+Interchangeable clothing forces a **shared skeleton and constrained proportions**. A garment is a
+mesh skinned to a rig; if each of twelve avatars had its own skeleton and topology, every garment
+would need twelve bespoke versions. Twelve avatars × twenty garments becomes 240 pieces of
+authored art instead of twenty, and a hobby project does not finish that.
+
+So:
+
+- **One skeleton for every avatar.** Humanoid, with a digitigrade-looking lower leg achieved by
+  proportion rather than by extra joints, so one rig serves all twelve.
+- **Breed identity comes from the head, ears, tail, fur pattern and colour** — swapped as
+  attachments and materials — not from a wholly different body. A Border Collie and a Doberman
+  differ at a glance without differing in what fits them.
+- **Two or three body archetypes** (lean, broad, and probably tall) as blend-shape ranges on one
+  base mesh, each with its own garment set. Three sets of clothes, not twelve.
+- **Garments are attachments** skinned to the shared skeleton, with body masking so what is
+  underneath does not poke through.
+
+### The part that will not work cleanly, said now
+
+**Pip the Corgi.** A compact, low-slung body in the same garment set as Atlas the Great Dane is
+asking a lot of three blend shapes. Two honest outcomes, decided when it is built rather than
+guessed at here: Pip becomes a scale-and-proportion variant that wears the lean set with some
+stretching, or the compact archetype gets its own garment set and the cost goes up by a third.
+Either is acceptable; pretending the problem is not there is not.
+
+### It needs somewhere to be seen
+
+In VR you mostly see your hands. An avatar nobody can look at is wasted work, so this comes with a
+**mirror in the world and a dressing area** — and that, rather than the meshes, is what makes it
+feel like dressing a doll.
+
+### What to evaluate before authoring anything
+
+Rigged anthropomorphic characters with modular clothing are the hardest art problem in this
+project, and freely-licensed sources are thin. `AV-01` must look at the **VRM** avatar standard
+first: it exists precisely to give avatars a common humanoid rig with a Unity runtime, there is
+existing free content, and adopting it could turn most of this from authoring into assembly. If it
+does not fit, say why in a decision record before falling back to bespoke work.
+
 ## ADR-23 — StreamBox **(owner requirement, 2026-11-10)**
 
 Islandia is a native client of the owner's StreamBox media service. Full specification:

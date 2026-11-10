@@ -180,6 +180,34 @@ published.
 
 **No deadline.** Prioritise on quality and risk, not on a date.
 
+## 2026-11-10 — Twelve avatars with shared clothing
+
+**Decided by:** the owner. All twelve of the characters in `docs/design/avatars.md`, with clothes
+that swap between them like a doll's.
+
+The second half of that is what shapes the work. Interchangeable clothing forces one skeleton and
+constrained proportions, because a garment is a mesh skinned to a rig: twelve bespoke bodies would
+mean every garment authored twelve times, and twelve avatars by twenty garments is 240 pieces of
+art rather than twenty. So breed identity moves to the head, ears, tail, fur and colour, and the
+bodies become two or three archetypes sharing a rig. Full reasoning in ADR-24.
+
+Three consequences worth being plain about:
+
+1. **It adds six packages** — architecture, the twelve, the wardrobe, a dressing room with a
+   mirror, the garment content, and a retro — as a new milestone `M9`, pushing alpha, beta and
+   finishing up by one each. The overall count goes from 108 to 114.
+2. **It is now the hardest art problem in the project.** Rigged anthropomorphic characters with
+   modular clothing, and freely-licensed sources are thin. `AV-01` must evaluate the VRM avatar
+   standard before anything is authored; adopting it could turn most of this from authoring into
+   assembly.
+3. **Pip the Corgi may not share a garment set** with Atlas the Great Dane. Flagged now rather
+   than discovered later: either a scale variant with some stretching, or a fourth garment set at
+   a third more clothing work.
+
+It needs a mirror and a dressing area to be worth anything, since in VR you otherwise only see
+your hands. That is in `AV-04`, and it is the part that makes it feel like dressing a doll rather
+than editing a settings page.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

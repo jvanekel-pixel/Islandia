@@ -5,8 +5,8 @@ Everything a human has to do, in one file. The rest of `docs/plan/` is written f
 ## 1. What you are starting
 
 An autonomous build of **Islandia**. A scheduled Claude Code cloud session — the *driver* — wakes
-every two hours, takes the next work package from an ordered backlog, builds it, proves it in
-GitHub Actions, merges it and records what it did. About 108 packages lead through twelve
+every four hours, takes the next work package from an ordered backlog, builds it, proves it in
+GitHub Actions, merges it and records what it did. About 114 packages lead through twelve
 milestones. Each milestone publishes an installable build and a report.
 
 You are needed six times: once now, then at five *human gates* where something only a person with
@@ -182,18 +182,18 @@ Also non-blocking, and the one you will want to do. Install the M4 build, enter 
 address once, approve the pairing on your phone, then: watch ten minutes of a film, play an album
 through two speakers, and drive it from the StreamBox phone app. Note anything that felt wrong.
 
-### HG-3 — Alpha device pass (after M9) · 60–90 min
+### HG-3 — Alpha device pass (after M10) · 60–90 min
 
 Run the script again. Play every feature against the checklist in the issue. Decide whether to
 deploy the model relay.
 
-### HG-4 — The last gate (after M10) · 60–90 min, plus an unattended hour
+### HG-4 — The last gate (after M11) · 60–90 min, plus an unattended hour
 
 Judge the art, comfort and sound — is this a nice thing to be given? Start the soak run (the
 headset sits on a stand for an hour).
 
-After this there is no submission and no review board. Milestone 11 is a signed build, a page of
-notes written for whoever is going to play it, and handing it over.
+After this there is no submission and no review board. The last milestone is a signed build, a
+page of notes written for whoever is going to play it, and handing it over.
 
 ## 6. What this costs
 
