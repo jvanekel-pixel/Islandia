@@ -42,6 +42,23 @@ they were made or changed.
 **Consequences logged:** milestones renumbered (media is M4; garden, builder and import are M5–M7);
 human gates renumbered (alpha, beta and release are HG-3 to HG-5).
 
+## 2026-11-10 — Unity editor pinned to 6000.3.28f1
+
+**Decided by:** work package `F-02`.
+
+ADR-01 says to pin a 6000.3 LTS patch for which a GameCI Android image exists. Of the 6000.3 tags
+published for `unityci/editor`, exactly two carry the Android module: `ubuntu-6000.3.27f2-android-3`
+and `ubuntu-6000.3.28f1-android-3`. 28f1 is the newer, so:
+
+- **Editor:** `6000.3.28f1`
+- **Licence check image:** `unityci/editor:ubuntu-6000.3.28f1-base-3` (no Android module needed)
+- **Build and test image:** `unityci/editor:ubuntu-6000.3.28f1-android-3`
+
+`F-03` writes this into `ProjectSettings/ProjectVersion.txt` and every Unity workflow uses the same
+version. Changing it later is a decision record plus a full device gate, never incidental.
+
+**Evidence:** the published tag list for `unityci/editor`, queried 2026-11-10.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

@@ -1,0 +1,118 @@
+# Does the Unity licence actually work in CI?
+#
+# Work package F-02. This is deliberately the smallest thing that can answer that question, and it
+# runs on its own so a licence problem is never mistaken for a code problem. Everything else that
+# needs Unity depends on this passing first.
+#
+# Run it by hand: Actions -> "Unity licence" -> "Run workflow".
+
+name: Unity licence
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: unity-licence
+  cancel-in-progress: true
+
+jobs:
+  licence:
+    name: Activate, then report the editor version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    container:
+      # Pinned in docs/plan/DECISIONS.md. The base image carries no Android module, which this
+      # check does not need; the build workflow uses the -android- image of the same version.
+      image: unityci/editor:ubuntu-6000.3.28f1-base-3
+      options: --user root
+
+    steps:
+      - name: The three secrets are present
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          missing=""
+          [ -n "${UNITY_LICENSE:-}" ]  || missing="$missing UNITY_LICENSE"
+          [ -n "${UNITY_EMAIL:-}" ]    || missing="$missing UNITY_EMAIL"
+          [ -n "${UNITY_PASSWORD:-}" ] || missing="$missing UNITY_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error title=Unity secrets missing::Not set on this repository:$missing"
+            echo
+            echo "Add them under Settings -> Secrets and variables -> Actions -> New repository secret."
+            echo "docs/plan/00-START-HERE.md section 2 step 3 has where each value comes from."
+            echo "UNITY_LICENSE is the whole contents of C:\\ProgramData\\Unity\\Unity_lic.ulf."
+            echo "UNITY_PASSWORD needs a real Unity password; a Google-only account has none until"
+            echo "one is set through the password reset at https://login.unity.com."
+            exit 1
+          fi
+          # Values are never printed. Length alone tells us a paste was not truncated.
+          echo "All three secrets are set. UNITY_LICENSE is ${#UNITY_LICENSE} characters."
+          case "$UNITY_LICENSE" in
+            *"<License"*) echo "It looks like a .ulf licence file." ;;
+            *) echo "::warning title=Unexpected licence contents::UNITY_LICENSE does not contain '<License'. Did the whole .ulf file get pasted?" ;;
+          esac
+
+      - name: Install the licence
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        run: |
+          install -d /root/.local/share/unity3d/Unity
+          printf '%s' "$UNITY_LICENSE" > /root/.local/share/unity3d/Unity/Unity_lic.ulf
+          echo "Licence written to /root/.local/share/unity3d/Unity/Unity_lic.ulf"
+
+      - name: Open the editor on a throwaway project
+        id: probe
+        run: |
+          set +e
+          # -createProject makes the editor open, licence itself and write a project, which is the
+          # cheapest thing that genuinely needs a valid licence. -nographics keeps it headless.
+          unity-editor \
+            -batchmode -nographics -quit \
+            -createProject /tmp/licence-probe \
+            -logFile /tmp/unity.log
+          status=$?
+          set -e
+          echo "exit-code=$status" >> "$GITHUB_OUTPUT"
+          echo "::group::Unity log"
+          cat /tmp/unity.log || true
+          echo "::endgroup::"
+          exit 0
+
+      - name: Say what happened
+        run: |
+          log=/tmp/unity.log
+          status="${{ steps.probe.outputs.exit-code }}"
+
+          version="$(grep -m1 -oE 'Version is .[0-9]+\.[0-9]+\.[0-9]+[a-z0-9]*' "$log" 2>/dev/null | sed 's/Version is .//')"
+          [ -n "$version" ] || version="$(unity-editor -version 2>/dev/null | head -1)"
+
+          if [ "$status" = "0" ] && [ -d /tmp/licence-probe ]; then
+            echo "## Unity licence works" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Editor version: \`${version:-unknown}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "Image: \`unityci/editor:ubuntu-6000.3.28f1-base-3\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "Editor version: ${version:-unknown}"
+            exit 0
+          fi
+
+          # Name the cause rather than make someone read a 2,000-line Unity log.
+          cause="the editor exited $status"
+          if   grep -qi 'License has expired\|license is not valid\|Licence expired' "$log" 2>/dev/null; then
+            cause="the licence has expired — re-issue it in Unity Hub and update UNITY_LICENSE"
+          elif grep -qi 'No valid Unity Editor license\|Unable to find a valid license\|LICENSE SYSTEM.*FAILED' "$log" 2>/dev/null; then
+            cause="Unity did not accept the licence file — check UNITY_LICENSE holds the entire .ulf, including the closing tag"
+          elif grep -qi 'two.factor\|2FA\|verification code' "$log" 2>/dev/null; then
+            cause="the account wants a two-factor code, which CI cannot answer — a licence file avoids the sign-in path, so make sure UNITY_LICENSE is set"
+          elif grep -qi 'Invalid credentials\|wrong password\|Unauthorized' "$log" 2>/dev/null; then
+            cause="the account credentials were rejected — set a real Unity password at https://login.unity.com (a Google-only account has none)"
+          fi
+
+          echo "## Unity licence failed" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Cause: $cause" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "The full editor log is in the previous step, under \"Unity log\"." >> "$GITHUB_STEP_SUMMARY"
+          echo "::error title=Unity licence failed::$cause"
+          exit 1
