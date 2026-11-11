@@ -376,6 +376,52 @@ seconds is one thing to undo, which is what the person did.
 sculpting, which is both the thing people do most and the thing they most need to take back,
 because a brush's falloff is not invertible by eye.
 
+## 2026-11-11 — The StreamBox client takes its transport by injection, and its address never enters the core
+
+**`SB-01c`.** Two reasons, and the second is the one that decided it.
+
+The obvious one is testability: every state the gateway can put the client in — pending for three
+polls then approved, a denial, a 401 in the middle of browsing — is two lines against a fake
+transport, and would otherwise need a server that could be told to misbehave on command.
+
+The one that settles it is that **this repository is public**. The gateway's address is given to
+the transport, at the edge, by the Unity layer reading device configuration. `Island.Core` never
+sees it, so no amount of carelessness inside the core can commit it. `07-STREAMBOX.md` §1 requires
+that the address never appear here; making it structurally absent is better than remembering.
+
+The device token is handled on the same principle. It lives in the client and in the
+`Authorization` header of the request it belongs to — never as a default header on a shared
+`HttpClient`, where a call made after signing out could still carry it, and never in a URL, a log
+line or an exception message. A test asserts that an error raised by a failing call does not
+contain the token.
+
+**A 401 is the one status with a required consequence.** The device session is revocable from
+StreamBox, so a 401 means the token is gone for good. The client drops it and falls back to
+`Unpaired` *before* the exception leaves, because an app that treats it as an ordinary error retries
+forever with a credential that will never work again.
+
+**Pairing polls at the server's interval, not ours.** The gateway rate-limits the pairing endpoints,
+and polling faster than asked is how a device flow earns a denial for the pairing it was trying to
+complete. The one liberty taken is a floor of one second, so a server answering `intervalSeconds: 0`
+does not produce a busy loop.
+
+**`SB-01c` is split.** It is now the HTTP half; the Connect socket is `SB-01d`. Request and response
+is everything the island needs to browse and to start playing; the socket is what remote control
+needs, and it is a different transport with its own failure modes — close codes that must not be
+retried, a reconnect policy, a state feed. One package each.
+
+**Four music routes are deliberately missing.** The contract snapshot declares `/music/search`,
+`/music/artists`, `/music/playlists` and `/music/favorites`; the mock gateway implements none of
+them, so a client method for any of them could only guess at a response shape and would be proven
+against nothing. They arrive when the mock does. This is also a gap in `SB-01a`, whose contract
+tests are supposed to check the mock against the snapshot and did not notice four declared paths
+were unserved — filed as an issue.
+
+**The end-to-end tests start the mock themselves**, on a port the operating system picks, and run
+the real pairing walk over a real socket. They are marked `EndToEnd` and excluded from
+`make core-test`, which exists to be a one-second suite; `make streambox-e2e` runs them. They wait
+in real time, because the thing being proven is the real thing.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

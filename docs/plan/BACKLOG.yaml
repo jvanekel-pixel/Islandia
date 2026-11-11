@@ -599,16 +599,31 @@ packages:
   status: done
 
 - id: SB-01c
-  title: StreamBox client and transports in Island.Core
+  title: StreamBox client and HTTP transport in Island.Core
   ms: M4
   risk: high
   deps: [SB-01b]
   refs: [07-STREAMBOX.md, adr ADR-23]
   accept:
-    - "A client covering pairing, catalogue, play, stop, progress, music and Connect, behind injectable HTTP and socket transports so it can be driven by a fake in tests [L1]"
+    - "A client covering pairing, catalogue, play, stop, progress and music, behind an injectable HTTP transport so it can be driven by a fake in tests [L1]"
     - "Pairing polls at the interval the server asks for and handles pending, denied, expired and approved [L1]"
-    - "A 401, or a Connect close of 4401, returns the client to the pairing state; 4409 does not reconnect [L1]"
-    - "End-to-end tests run the client against the mock gateway, including the full pairing walk [L3]"
+    - "A 401 returns the client to the pairing state and drops the token; no error message or exception carries the credential [L1]"
+    - "The gateway's address never enters Island.Core; the transport holds it [L0]"
+    - "End-to-end tests run the client against the mock gateway over real HTTP, including the full pairing walk [L3]"
+  status: done
+
+- id: SB-01d
+  title: Connect socket transport and remote control
+  ms: M4
+  risk: high
+  deps: [SB-01c]
+  refs: [07-STREAMBOX.md, adr ADR-23]
+  accept:
+    - "A socket transport behind an interface, so Connect can be driven by a fake in tests [L1]"
+    - "Hello and welcome, every command in 07-STREAMBOX.md §3.6, and state sent on change and periodically while playing [L1]"
+    - "A Connect close of 4401 returns the client to the pairing state; 4409 does not reconnect; anything else reconnects with backoff [L1]"
+    - "Islandia stops cleanly when told to and does not fight for the stream (07-STREAMBOX.md §3.6) [L1]"
+    - "End-to-end tests drive the client's Connect socket against the mock gateway [L3]"
   status: todo
 
 - id: SB-02

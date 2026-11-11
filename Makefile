@@ -30,7 +30,7 @@ deps:  ## Install the Python packages the tooling needs
 # ----------------------------------------------------------------------- gates
 
 .PHONY: check
-check: lint tools-test core-test mock-test companion-test  ## Everything provable without Unity. Run before every push.
+check: lint tools-test core-test mock-test streambox-e2e companion-test  ## Everything provable without Unity. Run before every push.
 	@echo
 	@echo "check: all local gates passed"
 
@@ -82,7 +82,7 @@ core-test:  ## Island.Core tests — engine-free C#, about a second (level L1)
 	  echo "  curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 9.0 --install-dir \$$HOME/.dotnet"; \
 	  exit 1; \
 	fi
-	@"$(DOTNET)" test dotnet/Island.Core.Tests --nologo --verbosity quiet
+	@"$(DOTNET)" test dotnet/Island.Core.Tests --nologo --verbosity quiet --filter "TestCategory!=EndToEnd"
 
 .PHONY: core-build
 core-build:  ## Compile Island.Core alone, the way Unity will (netstandard2.1)
@@ -103,6 +103,10 @@ mock-test:  ## The mock StreamBox gateway matches contract/streambox (level L1/L
 	else \
 	  echo "mock-test: run 'make mock-install' first"; exit 1; \
 	fi
+
+.PHONY: streambox-e2e
+streambox-e2e: mock-install  ## The StreamBox client against the running mock gateway (level L3)
+	@"$(DOTNET)" test dotnet/Island.Core.Tests --nologo --verbosity quiet --filter "TestCategory=EndToEnd"
 
 .PHONY: mock-install
 mock-install:  ## Install the mock gateway's one dependency

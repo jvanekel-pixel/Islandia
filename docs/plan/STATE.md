@@ -9,7 +9,7 @@
 | **In flight** | **Two pull requests stand between `main` and everything built today.** [#16](https://github.com/jvanekel-pixel/Islandia/pull/16) is the CI checks workflow, green and independent. [#19](https://github.com/jvanekel-pixel/Islandia/pull/19) is the whole stack — auto-merge, the gift re-plan, the Unity-project workflow, `V-07a`, `C-01a`, `C-01b` and the auto-merge fix — because auto-merge collapsed each stacked PR into its base branch rather than into `main`. #10 is superseded by #19 |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | Paused. Being driven by an interactive session for now |
-| **Last updated** | 2026-11-11 (`V-08` — undo/redo history) |
+| **Last updated** | 2026-11-11 (`SB-01c` — StreamBox client) |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## Open human gates
@@ -59,7 +59,10 @@ second half (generate the project, commit `ProjectSettings` and the manifest), a
 follow.
 
 Done so far: `F-01`, `F-02`, `F-08`, `F-13`, `SB-01a`, `SB-01b`, `V-02`, `V-06`, `V-07a`, `C-01a`,
-`C-01b`, `V-08`. Test counts: **169 core · 114 tooling · 30 StreamBox contract.**
+`C-01b`, `V-08`, `SB-01c`.
+
+Test counts: **242 Island.Core** (233 fast, 9 end-to-end against the mock gateway) **· 114 tooling
+· 30 StreamBox contract.**
 
 **CI now runs the non-Unity checks** (`F-07a`, PR #16) — before this, nothing did. Its first run
 went red on a real portability bug (issue #15), which is the best argument for it there is.
@@ -73,8 +76,8 @@ ledger and the honest count all exist and are tested; `C-02` (fetch and normalis
 `C-03` (parametric generators) are what fill it. `C-02` needs headless Blender, which is the next
 thing to prove.
 
-Unblocked and needing no Unity: `C-03` (parametric generators), `SB-01c` (StreamBox client), `I-01`
-(model-import gatekeeper). `V-07b` waits on the Unity project.
+Unblocked and needing no Unity: `SB-01d` (Connect socket), `I-01` (GLB gatekeeper), `C-03`
+(parametric generators, though its thumbnails need Blender). `V-07b` waits on the Unity project.
 
 `C-02` (CC0 ingestion) needs **headless Blender**, which is not installed in a session container
 and has not been proven here. That is the next real unknown on the content track.
