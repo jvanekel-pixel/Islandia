@@ -103,7 +103,13 @@ jobs:
           set -e
           git config user.name "Islandia CI"
           git config user.email "noreply@anthropic.com"
-          git add Assets/Island/Generated ProjectSettings 2>/dev/null || true
+          # Everything in the project the configurator touched, not just our own folder. URP
+          # creates UniversalRenderPipelineGlobalSettings.asset and DefaultVolumeProfile.asset at
+          # the Assets root of its own accord, and the first of those is where RenderGraphSettings
+          # lives — so leaving it out would mean the Render Graph assertion passed on the machine
+          # that generated it and failed on a fresh checkout. Library/ is gitignored, so this
+          # cannot pick up build state.
+          git add Assets ProjectSettings 2>/dev/null || true
 
           if git diff --cached --quiet; then
             echo "Nothing to commit: the configuration already matches, which is what idempotent means."
