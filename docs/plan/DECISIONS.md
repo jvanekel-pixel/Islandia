@@ -665,6 +665,34 @@ verifies the work arriving after the work, and a guard that could never fire. Th
 that automation failures are *quiet* — a pull request sitting green looks like nothing happening,
 not like something broken. Every fix in this entry is therefore a check rather than a habit.
 
+## 2026-11-11 — The resolved package sources, and why the registry cannot replace them
+
+**`F-07c`**, split out of `F-07` and brought forward for the third time this week, because `F-04` is
+the first package that needs it. `05-OPERATIONS.md` §5 step 3 already told sessions to check any
+unfamiliar Unity, URP, OpenXR or glTFast API against the real package source — and the thing it
+pointed at did not exist.
+
+This is not a convenience. A session cannot compile Unity code here, so each wrong API guess costs a
+ten-minute CI round trip against a cap of four per work package. `F-04` has to set roughly twenty
+ADR-03 properties on a `UniversalRenderPipelineAsset`, several of which have **internal setters** and
+must go through `SerializedObject` by their serialised field names. Guessing those names is three or
+four runs; reading them is one.
+
+**I tried to avoid the CI run and could not.** Unity's public registry serves package tarballs, so
+fetching URP 17.3.0 directly looked like a way to skip the whole workflow. It is not: that registry's
+newest URP is **10.10.1**, and 17.3.0 is a Unity 6 package which is not published there at all. The
+resolved cache in a Unity container is the only place those sources exist. Checking that took two
+minutes and saved building the wrong thing.
+
+**What is kept and dropped.** `.cs`, `.shader`, `.hlsl`, `.compute`, `.cginc` and each
+`package.json`, for the packages a session is plausibly stuck on. Tests, samples, documentation and
+binaries are dropped — none answers "what is this property called", and all of them would make the
+artefact large enough that nobody downloads it. Every resolved package is listed in the index with
+its version even when its sources were not kept, so the index never implies a package is absent.
+
+**Keeping nothing fails.** An empty artefact uploads perfectly happily, and the next session would
+download it, find nothing, and have no way to tell whether that is the truth.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

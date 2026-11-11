@@ -97,11 +97,23 @@ packages:
     - "The editor's test run agrees with `dotnet test`: the same count, and a cross-runtime exception difference caught rather than papered over [L2]"
   status: done
 
+- id: F-07c
+  title: The resolved packages' sources, as an artefact
+  ms: M1
+  risk: low
+  deps: [F-03]
+  refs: [adr ADR-19, 05-OPERATIONS.md §5]
+  accept:
+    - "A workflow uploads the C# and shader sources of the packages the project actually resolved, with an index of every package and its version [L2]"
+    - "Tests and samples are dropped, binaries are dropped, and keeping nothing fails rather than uploading an empty artefact [L0]"
+    - "It runs when packages-lock.json changes, and on demand [L2]"
+  status: todo
+
 - id: F-04
   title: Player, graphics and URP configuration as code, with assertion tests
   ms: M1
   risk: med
-  deps: [F-03, F-07b]
+  deps: [F-03, F-07b, F-07c]
   refs: [adr ADR-03, dr Assets/Scripts/Editor/Phase1ProjectConfigurator.cs, au phase-01-03-engine-terrain-ux.md]
   accept:
     - "`Island.Editor.ProjectConfigurator.Apply` is idempotent, runs with -executeMethod, creates the URP asset and renderer, and throws on failure [L2]"
@@ -157,7 +169,6 @@ packages:
     - "An android-build workflow, on merge to main and on demand, path-filtered and concurrency-cancelled [L4]"
     - "Runner pinned to ubuntu-24.04; free-disk-space step; Library cached by lockfile hash; warm test run under 15 minutes [L4]"
     - "CI fails if import leaves uncommitted .meta or settings changes [L2]"
-    - "An artefact contains the C# and shader sources of the resolved XR, URP and glTFast packages so sessions can check real APIs [L4]"
     - "The APK from main is downloadable as an artefact [L4]"
   status: todo
 
