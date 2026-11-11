@@ -1,0 +1,93 @@
+# Everything this project can prove without Unity, on every push and pull request.
+#
+# Verification levels L0 and L1 (docs/plan/04-VERIFICATION.md): the linters, the tooling tests,
+# the engine-free Island.Core tests, and the mock StreamBox gateway's contract tests. Minutes, not
+# the twenty-plus a Unity run costs, which is why these are the gate on every commit and the Unity
+# workflows are not.
+#
+# This exists separately from F-07's full pipeline because it needs no Unity project, and waiting
+# for one meant nothing was checked on push at all: the auto-merge workflow waits for checks to
+# pass, and with no checks configured that is a wait for nothing. L2 and above join in F-07.
+
+name: checks
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+# A later push supersedes an earlier one on the same branch. Nothing here has side effects, so
+# cancelling a run in flight costs only the minutes it had already spent.
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install the tooling's Python packages
+        run: python3 -m pip install -r tools/requirements.txt
+
+      # The mock StreamBox gateway generates a real, decodable H.264 + AAC HLS stream with
+      # ffmpeg, which the runner image does not carry. Without it two of its contract tests skip
+      # and two fail, and the stream the media probe (V-14) will play on the headset is never
+      # built anywhere — so a change that broke the generation would go unnoticed.
+      - name: Install ffmpeg, which the mock gateway's media generation needs
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg
+
+      - name: Static checks (L0)
+        run: make lint
+
+      - name: Tests for this repository's own tooling (L0)
+        run: make tools-test
+
+      - name: Island.Core tests (L1)
+        run: make core-test
+
+      - name: Compile Island.Core the way Unity will
+        run: make core-build
+
+      - name: Mock StreamBox gateway contract tests (L1)
+        run: |
+          make mock-install
+          make mock-test
+
+      - name: Companion tests, if the companion exists yet (L1)
+        run: make companion-test
+
+      # The counts go in the summary so a reviewer, or a session reading a run, sees at a glance
+      # whether a change removed tests rather than fixing them. RK-07: a gate weakened to get
+      # green is the failure mode this project is least able to notice on its own.
+      - name: Report what ran
+        if: always()
+        run: |
+          {
+            echo "## Checks"
+            echo
+            echo '| Suite | Count |'
+            echo '| :-- | --: |'
+            echo "| Island.Core tests | $(grep -roh '\[Test\]' Packages/com.island.core/Tests | wc -l) |"
+            echo "| Tooling tests | $(grep -rohE '    def test_' tools/tests | wc -l) |"
+            echo "| Catalogue items | $(python3 -c 'import sys; sys.path.insert(0, "tools/content"); import catalogue; print(len(catalogue.load().items))' 2>/dev/null || echo 'n/a') |"
+          } >> "$GITHUB_STEP_SUMMARY"
