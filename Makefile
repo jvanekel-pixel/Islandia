@@ -74,6 +74,7 @@ tools-test:  ## Tests for this repository's own tooling
 # A cloud session has no .NET SDK; F-10's setup script will install one, and until then a
 # session installs it under ~/.dotnet. Look there as well as on PATH.
 DOTNET := $(shell command -v dotnet 2>/dev/null || echo $(HOME)/.dotnet/dotnet)
+BLENDER := $(shell command -v blender 2>/dev/null || echo /opt/blender/blender)
 
 .PHONY: core-test
 core-test:  ## Island.Core tests — engine-free C#, about a second (level L1)
@@ -117,6 +118,20 @@ mock:  ## Run the mock StreamBox gateway on http://localhost:8787
 	@npm --prefix tools/mock-streambox start
 
 # ------------------------------------------------------------------- utilities
+
+.PHONY: blender
+blender:  ## Install the one pinned Blender the content pipeline uses
+	@tools/blender/install.sh
+
+.PHONY: blender-probe
+blender-probe: blender  ## Prove that Blender can do what the content pipeline needs (level L1)
+	@out="$$($(BLENDER) --background --factory-startup --python tools/blender/probe.py 2>&1)"; \
+	echo "$$out" | grep -E '^(version|scripting|topology|glb|render|PROBE)' || true; \
+	if ! echo "$$out" | grep -q 'PROBE OK'; then \
+	  echo "blender-probe: the probe did not finish. Blender said:"; \
+	  echo "$$out" | tail -40; \
+	  exit 1; \
+	fi
 
 .PHONY: content
 content:  ## Regenerate what the catalogue derives — run after editing content/catalogue

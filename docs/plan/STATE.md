@@ -9,7 +9,7 @@
 | **In flight** | **Two pull requests stand between `main` and everything built today.** [#16](https://github.com/jvanekel-pixel/Islandia/pull/16) is the CI checks workflow, green and independent. [#19](https://github.com/jvanekel-pixel/Islandia/pull/19) is the whole stack — auto-merge, the gift re-plan, the Unity-project workflow, `V-07a`, `C-01a`, `C-01b` and the auto-merge fix — because auto-merge collapsed each stacked PR into its base branch rather than into `main`. #10 is superseded by #19 |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | Paused. Being driven by an interactive session for now |
-| **Last updated** | 2026-11-11 (`I-01` — GLB import gatekeeper) |
+| **Last updated** | 2026-11-11 (`C-02a` — pinned headless Blender) |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## Open human gates
@@ -59,7 +59,7 @@ second half (generate the project, commit `ProjectSettings` and the manifest), a
 follow.
 
 Done so far: `F-01`, `F-02`, `F-08`, `F-13`, `SB-01a`, `SB-01b`, `V-02`, `V-06`, `V-07a`, `C-01a`,
-`C-01b`, `V-08`, `SB-01c`, `SB-01d`, `I-01`.
+`C-01b`, `V-08`, `SB-01c`, `SB-01d`, `I-01`, `F-03`, `C-02a`.
 
 Test counts: **323 Island.Core** (312 fast, 11 end-to-end against the mock gateway) **· 114 tooling
 · 30 StreamBox contract.**
