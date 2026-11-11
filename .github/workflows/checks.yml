@@ -73,6 +73,12 @@ jobs:
           make mock-install
           make mock-test
 
+      # The StreamBox client against the real mock gateway, over a real socket. Separate from
+      # core-test because it starts a server and waits in real time, and core-test exists to be a
+      # one-second suite — but it is the only thing that proves the client can talk to anything.
+      - name: StreamBox client end to end (L3)
+        run: make streambox-e2e
+
       - name: Companion tests, if the companion exists yet (L1)
         run: make companion-test
 
@@ -88,6 +94,7 @@ jobs:
             echo '| Suite | Count |'
             echo '| :-- | --: |'
             echo "| Island.Core tests | $(grep -roh '\[Test\]' Packages/com.island.core/Tests | wc -l) |"
+            echo "| ...of which end to end | $(grep -rl 'Category(\"EndToEnd\")' Packages/com.island.core/Tests | xargs -r grep -roh '\[Test\]' | wc -l) |"
             echo "| Tooling tests | $(grep -rohE '    def test_' tools/tests | wc -l) |"
             echo "| Catalogue items | $(python3 -c 'import sys; sys.path.insert(0, "tools/content"); import catalogue; print(len(catalogue.load().items))' 2>/dev/null || echo 'n/a') |"
           } >> "$GITHUB_STEP_SUMMARY"
