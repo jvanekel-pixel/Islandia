@@ -917,6 +917,38 @@ Network is **limited**. Package registries and MCP servers are allowed by defaul
 The Default environment was unrestricted; this is narrower on purpose. If a session needs another
 host, it says which and why, and the owner approves that one host.
 
+## 2026-11-11 — OpenXR in code: no depth submission, and the Android image for configure and tests
+
+**Decided by:** work package `F-05`.
+
+- **No depth submission.** The blueprint (§1.3C) asks for 16-bit depth submission "for compositor
+  layer depth sorting and Application SpaceWarp". Neither exists here: there are no depth-sorted
+  composition layers, and SpaceWarp sits behind a no-op interface (audit, phases 1–3, decision 2).
+  Submitting depth makes the GPU store the depth buffer out of tile memory every frame, which is
+  the cost ADR-03's other choices exist to avoid. Revisit only alongside a package that adds a
+  consumer for it, measured at a device gate.
+- **Features are chosen by id, and nothing else is on.** Android enables Meta Quest Support,
+  Foveated Rendering (SRP foveation API), the XR Hands tracking subsystem, Meta Display Utilities,
+  and two interaction profiles: Oculus Touch (the Quest 2's controllers) and Hand Interaction. Every
+  other feature is switched off, except Meta's hidden life-cycle helper, which Meta OpenXR manages
+  itself and its features need. Multiview render regions are not enabled: they need hardware the
+  Quest 2 does not have.
+- **`unity-configure` and `unity-tests` run on `ubuntu-6000.3.28f1-android-3`.** OpenXR only
+  creates settings for a build target the editor can build for, so on the base image the
+  configurator would have found no Android settings to write. This is the build-and-test image
+  this log named on 2026-11-10; the two workflows had been using the base image only because
+  nothing before F-05 needed the Android module.
+- **"A batchmode build resets it" is guarded twice.** `XrConfigurationTests` reads the committed
+  assets by path, and `unity-tests` fails any run after which `Assets/XR` or
+  `ProjectSettings/EditorBuildSettings.asset` differs from the commit. The Android build itself
+  arrives with `F-07`, which must keep the same check after its build step.
+
+**Evidence:** the `com.unity.xr.openxr` 1.19.0, `com.unity.xr.management` 4.7.0,
+`com.unity.xr.meta-openxr` 2.7.0 and `com.unity.xr.hands` 1.10.0 sources from the `F-07c`
+artefact — `OpenXRPackageSettings.GetSettingsForBuildTargetGroupFromPackageSettings` returns null
+for a group whose module is missing, and `FeatureHelpers.RefreshFeatures` is the public route that
+creates the settings.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced
