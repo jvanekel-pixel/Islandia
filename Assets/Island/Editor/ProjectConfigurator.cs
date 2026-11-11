@@ -10,6 +10,7 @@ namespace Island.Editor
 {
     /// <summary>
     /// Sets every rendering decision in ADR-03, in code, and creates the assets they live on.
+    /// The XR half is <see cref="XrConfigurator"/>, which <see cref="Apply"/> also runs (F-05).
     /// </summary>
     /// <remarks>
     /// <para>
@@ -57,10 +58,11 @@ namespace Island.Editor
                 var pipeline = ConfigurePipeline(renderer);
                 AssignPipeline(pipeline);
                 ConfigurePlayer();
+                XrConfigurator.Apply();
 
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
-                Debug.Log($"[Island] Project configured. Pipeline at {PipelineAssetPath}.");
+                Debug.Log($"[Island] Project configured. Pipeline at {PipelineAssetPath}, XR in {XrConfigurator.XrFolder}.");
             }
             catch (Exception error)
             {
