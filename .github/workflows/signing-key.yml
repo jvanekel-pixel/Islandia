@@ -1,0 +1,83 @@
+# Does the signing key in the repository secrets actually work?
+#
+# R-01 groundwork. The owner makes the key once, on their own PC, with
+# tools/owner/new-signing-key.ps1, which stores it as four repository secrets. A session cannot
+# read secrets, not even their names, so this is how anyone finds out they are right: decode the
+# key, open it with the password, find the alias, and print only the certificate's fingerprint and
+# expiry — public facts that identify the key without revealing it.
+#
+# The fingerprint matters later: every build ever installed on the headset must be signed by this
+# same key, or the update installs as a separate app and the saved islands are left behind.
+#
+# Runs when this file or the owner's script changes, and by hand: Actions -> "Signing key".
+# Pull requests from forks are never given secrets, so a fork's run fails here and proves nothing.
+
+name: Signing key
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/signing-key.yml
+      - tools/owner/new-signing-key.ps1
+
+permissions:
+  contents: read
+
+concurrency:
+  group: signing-key-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Open the key with its secrets
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in KEYSTORE_B64 STORE_PASS KEY_ALIAS KEY_PASS; do
+            if [ -z "${!name:-}" ]; then echo "::error::the secret behind $name is not set"; missing=1; fi
+          done
+          [ "$missing" = 0 ] || exit 1
+
+          keystore="$RUNNER_TEMP/islandia-release.jks"
+          trap 'rm -f "$keystore"' EXIT
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$keystore"
+
+          # PKCS12 keeps one password for the store and the key; the owner's script sets both
+          # secrets to it. Different values would make signing fail much later, so catch it here.
+          if [ "$KEY_PASS" != "$STORE_PASS" ]; then
+            echo "::error::ANDROID_KEY_PASSWORD differs from ANDROID_KEYSTORE_PASSWORD; a PKCS12 key has one password"
+            exit 1
+          fi
+
+          if ! keytool -list -v -keystore "$keystore" -storetype PKCS12 -storepass:env STORE_PASS \
+               -alias "$KEY_ALIAS" > "$RUNNER_TEMP/listing.txt" 2>&1; then
+            echo "::error::the keystore would not open with that password and alias"
+            grep -i -E 'error|exception' "$RUNNER_TEMP/listing.txt" | head -3 || true
+            exit 1
+          fi
+
+          sha256=$(grep -m1 'SHA256:' "$RUNNER_TEMP/listing.txt" | sed 's/.*SHA256: *//')
+          until=$(grep -m1 'Valid from' "$RUNNER_TEMP/listing.txt" | sed 's/.*until: *//')
+          rm -f "$RUNNER_TEMP/listing.txt"
+          {
+            echo "## Signing key opens"
+            echo ""
+            echo "| | |"
+            echo "| :-- | :-- |"
+            echo "| Alias | \`$KEY_ALIAS\` |"
+            echo "| Certificate SHA-256 | \`$sha256\` |"
+            echo "| Valid until | $until |"
+            echo ""
+            echo "Every build installed on the headset must carry this fingerprint."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "Signing key opens. Certificate SHA-256: $sha256"
