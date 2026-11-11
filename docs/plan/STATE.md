@@ -9,7 +9,7 @@
 | **In flight** | **Two pull requests stand between `main` and everything built today.** [#16](https://github.com/jvanekel-pixel/Islandia/pull/16) is the CI checks workflow, green and independent. [#19](https://github.com/jvanekel-pixel/Islandia/pull/19) is the whole stack — auto-merge, the gift re-plan, the Unity-project workflow, `V-07a`, `C-01a`, `C-01b` and the auto-merge fix — because auto-merge collapsed each stacked PR into its base branch rather than into `main`. #10 is superseded by #19 |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | Paused. Being driven by an interactive session for now |
-| **Last updated** | 2026-11-11 (auto-merge trigger coverage is checked) |
+| **Last updated** | 2026-11-11 (`F-07c` — the resolved package sources) |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## Open human gates

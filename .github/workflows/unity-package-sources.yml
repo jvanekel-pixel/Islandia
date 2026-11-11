@@ -1,0 +1,114 @@
+# Uploads the C# and shader sources of the packages the project actually resolved.
+#
+# Work package F-07c, split out of F-07 and brought forward because F-04 is the first package that
+# needs it. `05-OPERATIONS.md` §5 step 3 already tells sessions to check unfamiliar Unity, URP,
+# OpenXR or glTFast APIs against the real package source rather than from memory — and the thing it
+# points at did not exist.
+#
+# It cannot be replaced by fetching from Unity's public registry. That registry's newest URP is
+# 10.10.1; this project resolves 17.3.0, which is a Unity 6 package and is not published there. I
+# checked before writing this, and the resolved cache is the only place those sources exist.
+#
+# Why it matters more than it looks: a session writing editor code cannot compile it here, so every
+# wrong API guess costs a ten-minute CI round trip against a cap of four per work package
+# (`05-OPERATIONS.md` §6). Reading the signature first is the difference between one run and four.
+
+name: unity-package-sources
+
+on:
+  push:
+    paths:
+      - 'Packages/packages-lock.json'
+      - '.github/workflows/unity-package-sources.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: unity-licence
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    name: Collect the resolved package sources
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    container:
+      image: unityci/editor:ubuntu-6000.3.28f1-base-3
+      options: --user root
+
+    env:
+      LICENSING_CLIENT: /opt/unity/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Let git use this checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Take a Personal seat
+        id: activate
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set +e
+          output="$("$LICENSING_CLIENT" --activate-all --include-personal \
+                      --username "$UNITY_EMAIL" --password "$UNITY_PASSWORD" 2>&1)"
+          echo "$output" | grep -viE 'password|token'
+          echo "activated=true" >> "$GITHUB_OUTPUT"
+          echo "$output" | grep -q 'Activation processed successfully' || {
+            echo "::error title=Unity licence failed::no seat. Run the 'Unity licence' workflow for the reason."
+            exit 1
+          }
+
+      - name: Resolve the packages
+        run: |
+          set -e
+          # Opening the project is what populates Library/PackageCache.
+          unity-editor -batchmode -nographics -quit -projectPath . -logFile /tmp/resolve.log || {
+            echo "::group::Unity log"; tail -200 /tmp/resolve.log || true; echo "::endgroup::"
+            echo "::error title=Resolve failed::the project would not open"
+            exit 1
+          }
+          test -d Library/PackageCache || {
+            echo "::error title=No package cache::Library/PackageCache does not exist after opening the project"
+            exit 1
+          }
+
+      - name: Gather the sources
+        run: python3 tools/unity/collect_package_sources.py Library/PackageCache /tmp/package-sources
+
+      - name: Upload them
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-package-sources
+          path: /tmp/package-sources
+          if-no-files-found: error
+          # Long enough to stay useful between version bumps, short enough not to pile up.
+          retention-days: 60
+
+      - name: Report what was gathered
+        if: always()
+        run: |
+          {
+            echo "## Unity package sources"
+            echo ""
+            echo "Download the \`unity-package-sources\` artefact to read the real signatures of the"
+            echo "packages this project resolved. \`05-OPERATIONS.md\` §5 step 3."
+            echo ""
+            if [ -f /tmp/package-sources/INDEX.md ]; then cat /tmp/package-sources/INDEX.md; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Give the seat back
+        if: always() && steps.activate.outputs.activated == 'true'
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set +e
+          "$LICENSING_CLIENT" --deactivate-all \
+            --username "$UNITY_EMAIL" --password "$UNITY_PASSWORD" 2>&1 \
+            | grep -viE 'password|token' | tail -5
+          echo "Seat returned."
