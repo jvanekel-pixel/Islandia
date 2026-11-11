@@ -1,0 +1,182 @@
+# EditMode and PlayMode tests — verification levels L2 and L3.
+#
+# Work package F-07b. Split out of F-07 and placed ahead of F-04 because the plan had a circle in
+# it: F-04's criteria are all [L2], meaning EditMode tests proven in CI, and the workflow that runs
+# EditMode tests belonged to F-07 — three packages downstream of F-04, behind F-05 and F-06. So the
+# first package that needed this harness could not have been proven with it.
+#
+# That is the same mistake as building auto-merge before the checks it waits for (DECISIONS.md,
+# 2026-11-10): the thing that verifies the work has to exist before the work it verifies.
+#
+# F-07 keeps the rest — the Android build, the Library cache, the package-source artefact, the APK
+# artefact — all of which need a scene and a build target that do not exist yet.
+
+name: unity-tests
+
+on:
+  push:
+    paths:
+      - 'Assets/**'
+      - 'Packages/**'
+      - 'ProjectSettings/**'
+      - '.github/workflows/unity-tests.yml'
+      - 'tools/unity/**'
+  pull_request:
+    paths:
+      - 'Assets/**'
+      - 'Packages/**'
+      - 'ProjectSettings/**'
+      - '.github/workflows/unity-tests.yml'
+      - 'tools/unity/**'
+  workflow_dispatch:
+
+# One Personal seat exists, and the other Unity workflows share it. Two runs at once would race for
+# it and one would fail for a reason that has nothing to do with the code.
+concurrency:
+  group: unity-licence
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: EditMode and PlayMode
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    container:
+      image: unityci/editor:ubuntu-6000.3.28f1-base-3
+      options: --user root
+
+    env:
+      LICENSING_CLIENT: /opt/unity/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Root in the container over a checkout owned by the runner's user; git refuses that without
+      # being told. Learned from the project workflow's second attempt.
+      - name: Let git use this checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Take a Personal seat
+        id: activate
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set +e
+          output="$("$LICENSING_CLIENT" --activate-all --include-personal \
+                      --username "$UNITY_EMAIL" --password "$UNITY_PASSWORD" 2>&1)"
+          echo "$output" | grep -viE 'password|token'
+          echo "activated=true" >> "$GITHUB_OUTPUT"
+          echo "$output" | grep -q 'Activation processed successfully' || {
+            echo "::error title=Unity licence failed::no seat. Run the 'Unity licence' workflow for the reason."
+            exit 1
+          }
+
+      - name: EditMode tests (L2)
+        id: editmode
+        run: |
+          set +e
+          # No -quit: -runTests quits by itself, and adding both makes the editor leave before the
+          # results are written.
+          #
+          # EndToEnd is excluded because those tests drive the StreamBox client against the mock
+          # gateway, which is a node server the Unity container does not have. `make core-test`
+          # excludes them the same way and `make streambox-e2e` runs them in the `checks` workflow,
+          # so they are proven on every commit — just not here. The first run of this workflow
+          # failed on exactly that, with eleven fixtures reporting the mock's dependency missing.
+          unity-editor -batchmode -nographics -runTests \
+            -projectPath . \
+            -testPlatform EditMode \
+            -testCategory "!EndToEnd" \
+            -testResults /tmp/editmode.xml \
+            -logFile /tmp/editmode.log
+          code=$?
+          echo "::group::Editor log (tail)"; tail -120 /tmp/editmode.log || true; echo "::endgroup::"
+          # The summariser is the gate, not the exit code: it also refuses a run that produced no
+          # tests at all, which is what a non-compiling test assembly looks like from out here.
+          python3 tools/unity/test_summary.py /tmp/editmode.xml
+          summary=$?
+          if [ "$code" -ne 0 ] || [ "$summary" -ne 0 ]; then
+            echo "::error title=EditMode tests failed::editor exit $code, summary exit $summary"
+            exit 1
+          fi
+
+      - name: PlayMode tests (L3)
+        id: playmode
+        run: |
+          set +e
+          unity-editor -batchmode -nographics -runTests \
+            -projectPath . \
+            -testPlatform PlayMode \
+            -testCategory "!EndToEnd" \
+            -testResults /tmp/playmode.xml \
+            -logFile /tmp/playmode.log
+          code=$?
+          echo "::group::Editor log (tail)"; tail -120 /tmp/playmode.log || true; echo "::endgroup::"
+
+          # There are no PlayMode tests yet — they arrive with F-06's boot tests. Until then an
+          # empty run is the expected state, and is reported rather than failed. The moment a
+          # PlayMode assembly exists this becomes a real gate, because the summariser refuses an
+          # empty run and the condition below stops excusing it.
+          if [ ! -f /tmp/playmode.xml ]; then
+            echo "No PlayMode results: no PlayMode test assembly exists yet (F-06)."
+            exit 0
+          fi
+          python3 tools/unity/test_summary.py /tmp/playmode.xml
+          summary=$?
+          total=$(python3 -c "import xml.etree.ElementTree as E,sys; print(E.parse('/tmp/playmode.xml').getroot().get('total','0'))" 2>/dev/null || echo 0)
+          if [ "$total" = "0" ]; then
+            echo "No PlayMode tests yet (F-06 adds the first). Not treated as a failure."
+            exit 0
+          fi
+          if [ "$code" -ne 0 ] || [ "$summary" -ne 0 ]; then
+            echo "::error title=PlayMode tests failed::editor exit $code, summary exit $summary"
+            exit 1
+          fi
+
+      - name: Keep the results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-test-results
+          path: |
+            /tmp/editmode.xml
+            /tmp/playmode.xml
+            /tmp/editmode.log
+            /tmp/playmode.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      # The counts go in the summary so a reviewer sees at a glance whether a change removed tests
+      # rather than fixing them (RK-07).
+      - name: Report the counts
+        if: always()
+        run: |
+          {
+            echo "## Unity tests"
+            echo ""
+            echo "### EditMode"
+            python3 tools/unity/test_summary.py /tmp/editmode.xml --markdown || true
+            echo ""
+            echo "### PlayMode"
+            if [ -f /tmp/playmode.xml ]; then
+              python3 tools/unity/test_summary.py /tmp/playmode.xml --markdown || true
+            else
+              echo "_None yet — the first arrive with F-06._"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Give the seat back
+        if: always() && steps.activate.outputs.activated == 'true'
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set +e
+          "$LICENSING_CLIENT" --deactivate-all \
+            --username "$UNITY_EMAIL" --password "$UNITY_PASSWORD" 2>&1 \
+            | grep -viE 'password|token' | tail -5
+          echo "Seat returned."

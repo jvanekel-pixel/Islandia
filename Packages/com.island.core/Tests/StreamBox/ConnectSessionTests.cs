@@ -395,7 +395,10 @@ namespace Island.Core.Tests.StreamBox
             using (var cancel = new CancellationTokenSource())
             {
                 cancel.Cancel();
-                Assert.ThrowsAsync<OperationCanceledException>(() => session.RunAsync(cancel.Token));
+
+                // CatchAsync rather than ThrowsAsync — see the note in ClientTests: the exact
+                // exception type for cancellation differs between .NET 9 and Unity's runtime.
+                Assert.CatchAsync<OperationCanceledException>(() => session.RunAsync(cancel.Token));
             }
             Assert.That(session.Status, Is.Not.EqualTo(ConnectStatus.Done));
         }

@@ -83,11 +83,25 @@ packages:
     - "A second CI import of the committed project produces no uncommitted changes [L2]"
   status: done
 
+- id: F-07b
+  title: EditMode and PlayMode tests in CI
+  ms: M1
+  risk: med
+  deps: [F-03]
+  refs: [adr ADR-19, 04-VERIFICATION.md §1]
+  accept:
+    - "A workflow runs EditMode and PlayMode tests on the committed project, path-filtered, sharing the licence seat so runs cannot race for it [L2]"
+    - "A run that produces no tests fails rather than passing, because that is what a test assembly which did not compile looks like from outside [L0]"
+    - "Results and editor logs are kept as artefacts, and the counts appear in the run summary (RK-07) [L0]"
+    - "The seat is returned even when the tests fail [L2]"
+    - "The editor's test run agrees with `dotnet test`: the same count, and a cross-runtime exception difference caught rather than papered over [L2]"
+  status: done
+
 - id: F-04
   title: Player, graphics and URP configuration as code, with assertion tests
   ms: M1
   risk: med
-  deps: [F-03]
+  deps: [F-03, F-07b]
   refs: [adr ADR-03, dr Assets/Scripts/Editor/Phase1ProjectConfigurator.cs, au phase-01-03-engine-terrain-ux.md]
   accept:
     - "`Island.Editor.ProjectConfigurator.Apply` is idempotent, runs with -executeMethod, creates the URP asset and renderer, and throws on failure [L2]"
@@ -131,16 +145,16 @@ packages:
     - "A workflow runs make lint, tools-test, core-test, core-build and mock-test on every push and pull request, concurrency-cancelled per ref [L1]"
     - "The toolchain the tests need is installed on the runner, so nothing passes only because a session container happened to have it [L1]"
     - "The run summary reports test counts per suite, so a count that drops between runs is visible (RK-07) [L0]"
-  status: todo
+  status: done
 
 - id: F-07
-  title: The Unity half of the CI pipeline — caching, path filters, package-source artefact
+  title: The rest of the Unity CI pipeline — caching, path filters, package-source artefact
   ms: M1
   risk: med
   deps: [F-06]
   refs: [adr ADR-19, 04-VERIFICATION.md §1]
   accept:
-    - "Workflows: unity-tests (EditMode + PlayMode) and android-build (merge to main and on demand), each path-filtered and concurrency-cancelled [L4]"
+    - "An android-build workflow, on merge to main and on demand, path-filtered and concurrency-cancelled [L4]"
     - "Runner pinned to ubuntu-24.04; free-disk-space step; Library cached by lockfile hash; warm test run under 15 minutes [L4]"
     - "CI fails if import leaves uncommitted .meta or settings changes [L2]"
     - "An artefact contains the C# and shader sources of the resolved XR, URP and glTFast packages so sessions can check real APIs [L4]"

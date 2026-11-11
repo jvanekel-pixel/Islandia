@@ -613,6 +613,35 @@ runner, and `diff <(…) <(…)` in a step GitHub runs under `sh` rather than ba
 None of that was discoverable by reading. It is the argument for dispatching the thing rather than
 reasoning about it.
 
+## 2026-11-11 — The test runner comes before the work it tests
+
+**`F-07b`.** The plan had a circle in it. `F-04`'s criteria are all `[L2]` — EditMode tests proven
+in CI — and the workflow that runs EditMode tests belonged to `F-07`, which sits behind `F-06`,
+`F-05` and `F-04` itself. So the first package that needed the harness could not have been proven
+with it, and the only ways out were to write tests nothing ran or to call a criterion met on a local
+run.
+
+This is the same mistake as building auto-merge before the checks it waits for, recorded yesterday:
+**the thing that verifies the work has to exist before the work it verifies.** Twice in two days
+suggests it is worth stating as a rule rather than noticing again.
+
+`F-07b` is the EditMode/PlayMode workflow, depending only on `F-03`, placed ahead of `F-04`. `F-07`
+keeps the Android build, the Library cache, the package-source artefact and the APK artefact — all
+of which need a scene and a build target that do not exist yet.
+
+**An empty run fails.** `tools/unity/test_summary.py` refuses a result file reporting zero tests,
+and refuses a missing file too. Both are what a test assembly that did not compile looks like from
+outside the editor, and both would otherwise read as a pass — `Island.Core.Tests` is behind
+`UNITY_INCLUDE_TESTS` and an `Editor` platform filter, either of which could silently match nothing.
+
+**PlayMode is wired but not yet a gate**, because no PlayMode assembly exists until `F-06`'s boot
+tests. The workflow says so in the step rather than skipping quietly, and the moment a PlayMode test
+exists the empty-run refusal applies to it as well.
+
+**The seat is shared.** All three Unity workflows use `concurrency: unity-licence`, because there is
+one Personal seat: two runs at once would race for it and one would fail for a reason unrelated to
+the code. The seat is returned in an `if: always()` step, so a failing test run does not strand it.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced
