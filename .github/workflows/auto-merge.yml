@@ -33,7 +33,12 @@ on:
   # hour late. `workflow_run` is the documented way to chain one workflow to another and does fire
   # in this case. `check_suite` is kept for checks from GitHub Apps, which do trigger runs.
   workflow_run:
-    workflows: ["checks", "Unity licence"]
+    # Every workflow that reports a check has to be named here, or auto-merge skips while it runs
+    # and nothing wakes it when it finishes. `tools/lint/check_workflows.py` enforces that, because
+    # the omission is silent: adding a workflow gives no hint that a different one needs editing.
+    # It has already cost two hours of pull requests sitting green — once for relying on
+    # `check_suite` at all, then again when `unity-tests` was added and not listed.
+    workflows: ["checks", "content", "unity-tests", "Unity licence"]
     types: [completed]
   check_suite:
     types: [completed]

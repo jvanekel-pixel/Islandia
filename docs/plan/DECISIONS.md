@@ -642,6 +642,29 @@ exists the empty-run refusal applies to it as well.
 one Personal seat: two runs at once would race for it and one would fail for a reason unrelated to
 the code. The seat is returned in an `if: always()` step, so a failing test run does not strand it.
 
+## 2026-11-11 — Auto-merge's trigger list is now checked, not remembered
+
+**The same fault twice in two days.** Yesterday auto-merge relied on `check_suite: completed`,
+which GitHub never fires for our own workflows because their check suites are created with
+`GITHUB_TOKEN`; the fix was `workflow_run` naming `checks`. Today `unity-tests` was added, nothing
+named it, and `F-07b`'s own pull request skipped at *"1 still running"* and sat green waiting for an
+event that could not come. `content` was missing too.
+
+The mechanism was right both times. What was wrong is that **the list has to be remembered**, and
+nothing about adding a workflow hints that a different workflow needs editing. So the invariant is
+now a check: `tools/lint/check_workflows.py` fails if any workflow triggered by `push` or
+`pull_request` is absent from `workflow_run.workflows`, and also fails if that list names a workflow
+that does not exist — because a name matching nothing waits forever, just as silently.
+
+It is in `make lint`, so it runs on every commit, and it has eight tests of its own including the
+exact 2026-11-11 mistake. It found both omissions the moment it was written, which is the only
+evidence worth having for a linter.
+
+**Why this keeps happening.** Both faults share a shape with the two before them: the thing that
+verifies the work arriving after the work, and a guard that could never fire. The common cause is
+that automation failures are *quiet* — a pull request sitting green looks like nothing happening,
+not like something broken. Every fix in this entry is therefore a check rather than a habit.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced
