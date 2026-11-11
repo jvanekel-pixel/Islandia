@@ -24,14 +24,23 @@ name: Auto-merge
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, ready_for_review]
-  check_suite:
-    types: [completed]
+  # `workflow_run` rather than `check_suite`, and this is not a style choice. GitHub does not
+  # start a new workflow run from an event created with GITHUB_TOKEN, which is what the `checks`
+  # workflow's own check suite is — so `check_suite: completed` never fired for it and the
+  # "a later event will come back to this" below was simply untrue. The first pull request to
+  # reach `main` with checks on it (#22) skipped at "2 still running" and then sat there, waiting
+  # for an event that was never coming; only the hourly backstop would have rescued it, up to an
+  # hour late. `workflow_run` is the documented way to chain one workflow to another and does fire
+  # in this case. `check_suite` is kept for checks from GitHub Apps, which do trigger runs.
   workflow_run:
-    workflows: ["Unity licence"]
+    workflows: ["checks", "Unity licence"]
+    types: [completed]
+  check_suite:
     types: [completed]
   workflow_dispatch:
   schedule:
-    # A backstop, in case an event is missed. Nothing should normally wait this long.
+    # A backstop, in case an event is missed. Nothing should normally wait this long — and when
+    # something did, this is what found it rather than anyone noticing.
     - cron: '23 * * * *'
 
 permissions:
@@ -123,7 +132,8 @@ jobs:
             echo "checks: $total total, $pending still running; commit status: $statuses"
 
             if [ "$pending" -gt 0 ]; then
-              echo "SKIP: checks are still running. A later event will come back to this."
+              echo "SKIP: checks are still running. The checks workflow finishing will bring us"
+              echo "      back here through workflow_run; the hourly schedule is the backstop."
               skipped=$((skipped + 1)); echo "::endgroup::"; continue
             fi
 
