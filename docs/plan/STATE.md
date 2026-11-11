@@ -9,7 +9,7 @@
 | **In flight** | **Two pull requests stand between `main` and everything built today.** [#16](https://github.com/jvanekel-pixel/Islandia/pull/16) is the CI checks workflow, green and independent. [#19](https://github.com/jvanekel-pixel/Islandia/pull/19) is the whole stack — auto-merge, the gift re-plan, the Unity-project workflow, `V-07a`, `C-01a`, `C-01b` and the auto-merge fix — because auto-merge collapsed each stacked PR into its base branch rather than into `main`. #10 is superseded by #19 |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | Paused. Being driven by an interactive session for now |
-| **Last updated** | 2026-11-11 (`SB-01c` — StreamBox client) |
+| **Last updated** | 2026-11-11 (`SB-01d` — Connect socket) |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## Open human gates
@@ -59,10 +59,13 @@ second half (generate the project, commit `ProjectSettings` and the manifest), a
 follow.
 
 Done so far: `F-01`, `F-02`, `F-08`, `F-13`, `SB-01a`, `SB-01b`, `V-02`, `V-06`, `V-07a`, `C-01a`,
-`C-01b`, `V-08`, `SB-01c`.
+`C-01b`, `V-08`, `SB-01c`, `SB-01d`.
 
-Test counts: **242 Island.Core** (233 fast, 9 end-to-end against the mock gateway) **· 114 tooling
+Test counts: **269 Island.Core** (258 fast, 11 end-to-end against the mock gateway) **· 114 tooling
 · 30 StreamBox contract.**
+
+**CI is green on the chain**, end-to-end suite included: the `checks` workflow was folded into it,
+so the nine packages waiting to land are verified by a run rather than by a session's word.
 
 **CI now runs the non-Unity checks** (`F-07a`, PR #16) — before this, nothing did. Its first run
 went red on a real portability bug (issue #15), which is the best argument for it there is.
@@ -76,8 +79,13 @@ ledger and the honest count all exist and are tested; `C-02` (fetch and normalis
 `C-03` (parametric generators) are what fill it. `C-02` needs headless Blender, which is the next
 thing to prove.
 
-Unblocked and needing no Unity: `SB-01d` (Connect socket), `I-01` (GLB gatekeeper), `C-03`
-(parametric generators, though its thumbnails need Blender). `V-07b` waits on the Unity project.
+Unblocked and needing no Unity: `I-01` (GLB gatekeeper), `C-03` (parametric generators, though its
+thumbnails need Blender). `V-07b` waits on the Unity project.
+
+StreamBox is now reachable end to end from `Island.Core`: pairing, browsing, playing, progress,
+music and remote control, all proven against the mock gateway in CI. What remains for media is
+`SB-02`, the player backend — and that is the one thing that cannot be settled without the headset
+(`RT-16`, the `V-14` probe).
 
 `C-02` (CC0 ingestion) needs **headless Blender**, which is not installed in a session container
 and has not been proven here. That is the next real unknown on the content track.

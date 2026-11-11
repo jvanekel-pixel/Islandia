@@ -422,6 +422,43 @@ the real pairing walk over a real socket. They are marked `EndToEnd` and exclude
 `make core-test`, which exists to be a one-second suite; `make streambox-e2e` runs them. They wait
 in real time, because the thing being proven is the real thing.
 
+## 2026-11-11 — Connect reports state on change, and the position is not a change
+
+**`SB-01d`.** `07-STREAMBOX.md` §3.6 asks for state "on every change and every few seconds while
+playing". Taken literally that is a message every frame, because the playback position changes
+seventy-two times a second — which would be seventy-two messages a second to tell the phone the
+obvious.
+
+So a change is any field a remote would *draw differently*: the item, playing, buffering, muted,
+has-next, volume, duration, and the audio and subtitle selections. Position rides along on whatever
+message goes out, and the periodic re-send every five seconds is what keeps the phone's scrubber
+honest. `EveryFieldARemoteDrawsCountsAsAChange` pins each field individually, through the public
+method rather than by reaching for the throttle.
+
+**There is no background timer.** `ReportAsync` is called by the app as often as it likes and
+decides for itself whether to send. The alternative — a second loop pushing state on a schedule —
+would mean a test either racing it or waiting on it in real time, and concurrency that only
+misbehaves on a headset is the kind of defect this project cannot afford to find at a device gate.
+
+**The socket transport is pull-shaped**, not event-shaped: `ReceiveAsync` returns the next message
+or null once closed. An event-based transport would hand the session callbacks on whatever thread
+the socket library chose, which on a headset is a source of races nobody would find until HG-2.
+
+**Reconnect policy.** 4401 and 4409 are never retried — 4401 because the token is gone and
+reconnecting fails forever with a credential that will never work again, 4409 because the owner has
+directed that playback be one-at-a-time with the newest device winning, so reconnecting would be
+this island fighting the phone for the stream. Everything else doubles from one second to a cap of
+thirty. A gateway that is down comes back on its own schedule.
+
+**Two bugs the tests found, both mine.** The no-token path set `Done` inside the connection attempt
+and then had it overwritten by the loop's `Offline`, so it retried forever and the test died of an
+out-of-memory error after ninety seconds of accumulating backoff delays. And `RunAsync` returned
+quietly for an already-cancelled token while throwing for one cancelled mid-flight; it now throws in
+both cases, because inconsistent cancellation is worse than either choice.
+
+The no-token path also no longer claims a close code. Setting `FinalCloseCode` to 4401 when the
+gateway never sent one puts a fiction in front of whoever reads it to find out why Connect stopped.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

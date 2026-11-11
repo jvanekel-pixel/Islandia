@@ -624,7 +624,7 @@ packages:
     - "A Connect close of 4401 returns the client to the pairing state; 4409 does not reconnect; anything else reconnects with backoff [L1]"
     - "Islandia stops cleanly when told to and does not fight for the stream (07-STREAMBOX.md §3.6) [L1]"
     - "End-to-end tests drive the client's Connect socket against the mock gateway [L3]"
-  status: todo
+  status: done
 
 - id: SB-02
   title: Media player backend

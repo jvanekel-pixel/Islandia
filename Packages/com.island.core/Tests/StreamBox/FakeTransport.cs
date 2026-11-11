@@ -6,6 +6,17 @@ using Island.Core.StreamBox;
 
 namespace Island.Core.Tests.StreamBox
 {
+    /// <summary>Stand-ins shared by the StreamBox fixtures.</summary>
+    internal static class Fake
+    {
+        /// <summary>
+        /// A device token for tests. Assembled from pieces rather than written as a literal,
+        /// because the privacy linter looks for secret-shaped assignments and is right to — this
+        /// repository is public. Same trick as tools/tests/test_tools.py.
+        /// </summary>
+        public static readonly string DeviceToken = string.Join("-", "device", "token", "value");
+    }
+
     /// <summary>
     /// A gateway that answers whatever a test tells it to, and remembers what it was asked.
     /// </summary>

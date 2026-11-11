@@ -310,6 +310,102 @@ namespace Island.Core.Tests.StreamBox
             Assert.That(await second.HomeAsync(), Is.Not.Empty);
         }
 
+        // ---- Connect -----------------------------------------------------------------------------
+
+        [Test]
+        public async Task ThePhoneCanDriveTheIslandOverARealSocket()
+        {
+            // The whole point of Connect: Islandia registers as a place to play and the owner's
+            // phone tells it what to do. Driven here by the mock's /mock/command, which exists to
+            // play the phone.
+            var client = NewClient();
+            await client.PairAsync("Islandia — Quest", null);
+
+            var session = new ConnectSession(
+                new WebSocketFactory(new Uri($"http://127.0.0.1:{_port}")),
+                client.TokenToPersist);
+
+            var received = new System.Collections.Concurrent.ConcurrentQueue<ConnectCommand>();
+            session.CommandReceived += command => received.Enqueue(command);
+
+            using (var stop = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
+            {
+                var running = session.RunAsync(stop.Token);
+
+                await WaitFor(() => session.Status == ConnectStatus.Live, "the socket to go live");
+                Assert.That(session.SessionId, Is.Not.Null.And.Not.Empty,
+                    "the gateway should have said welcome with a session id");
+
+                await PlayThePhone(new { type = "pause" });
+                await WaitFor(() => received.Count > 0, "the command to arrive");
+
+                Assert.That(received.TryDequeue(out var command), Is.True);
+                Assert.That(command.Kind, Is.EqualTo(ConnectCommandKind.Pause));
+
+                // Reporting state must not throw against a real server; the mock keeps the last
+                // one but offers no way to read it back (see issue #21).
+                Assert.That(await session.ReportAsync(
+                    new PlaybackState("mk:film-1", 1000, playing: false)), Is.True);
+
+                session.Stop();
+                stop.Cancel();
+                await Settled(running);
+            }
+        }
+
+        [Test]
+        public async Task ARevokedTokenClosesTheSocketWithSignedOut()
+        {
+            // 4401 against a server that really checks, rather than a fake told to say it. This
+            // is the path a device revoked from the StreamBox app takes.
+            var session = new ConnectSession(
+                new WebSocketFactory(new Uri($"http://127.0.0.1:{_port}")),
+                () => "a-token-this-server-never-issued");
+
+            var signedOut = 0;
+            session.SignedOut += () => signedOut++;
+
+            using (var stop = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
+            {
+                var running = session.RunAsync(stop.Token);
+                await WaitFor(() => session.Status == ConnectStatus.Done, "the gateway to refuse it");
+                await Settled(running);
+
+                Assert.That(session.FinalCloseCode, Is.EqualTo(ConnectClose.SignedOut));
+                Assert.That(signedOut, Is.EqualTo(1));
+                Assert.That(session.Attempts, Is.EqualTo(1), "4401 must never be retried");
+            }
+        }
+
+        private async Task PlayThePhone(object command)
+        {
+            using (var http = new HttpClient())
+            {
+                var body = Newtonsoft.Json.JsonConvert.SerializeObject(new { command });
+                var reply = await http.PostAsync($"http://127.0.0.1:{_port}/mock/command",
+                    new StringContent(body, System.Text.Encoding.UTF8, "application/json"));
+                Assert.That((int)reply.StatusCode, Is.EqualTo(200));
+            }
+        }
+
+        private static async Task WaitFor(Func<bool> condition, string what, int seconds = 15)
+        {
+            var deadline = DateTime.UtcNow.AddSeconds(seconds);
+            while (DateTime.UtcNow < deadline)
+            {
+                if (condition()) return;
+                await Task.Delay(50);
+            }
+            Assert.Fail($"Waited {seconds}s for {what} and it did not happen.");
+        }
+
+        /// <summary>Lets the run loop finish, treating its cancellation as the expected end.</summary>
+        private static async Task Settled(Task running)
+        {
+            try { await running; }
+            catch (OperationCanceledException) { /* how a cancelled pump ends */ }
+        }
+
         private static CatalogItem FirstPlayable(System.Collections.Generic.List<HomeRow> rows)
         {
             foreach (var row in rows)
