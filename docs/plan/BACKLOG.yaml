@@ -121,14 +121,26 @@ packages:
     - "Decision recorded: which generated asset types are committed versus rebuilt in CI [L0]"
   status: todo
 
+- id: F-07a
+  title: Run the non-Unity checks in CI on every push
+  ms: M1
+  risk: low
+  deps: [F-01]
+  refs: [04-VERIFICATION.md §1]
+  accept:
+    - "A workflow runs make lint, tools-test, core-test, core-build and mock-test on every push and pull request, concurrency-cancelled per ref [L1]"
+    - "The toolchain the tests need is installed on the runner, so nothing passes only because a session container happened to have it [L1]"
+    - "The run summary reports test counts per suite, so a count that drops between runs is visible (RK-07) [L0]"
+  status: todo
+
 - id: F-07
-  title: Full CI pipeline with caching, path filters and package-source artefact
+  title: The Unity half of the CI pipeline — caching, path filters, package-source artefact
   ms: M1
   risk: med
   deps: [F-06]
   refs: [adr ADR-19, 04-VERIFICATION.md §1]
   accept:
-    - "Workflows: core, lint, unity-tests (EditMode + PlayMode), android-build (merge to main and on demand), each path-filtered and concurrency-cancelled [L4]"
+    - "Workflows: unity-tests (EditMode + PlayMode) and android-build (merge to main and on demand), each path-filtered and concurrency-cancelled [L4]"
     - "Runner pinned to ubuntu-24.04; free-disk-space step; Library cached by lockfile hash; warm test run under 15 minutes [L4]"
     - "CI fails if import leaves uncommitted .meta or settings changes [L2]"
     - "An artefact contains the C# and shader sources of the resolved XR, URP and glTFast packages so sessions can check real APIs [L4]"
@@ -164,6 +176,23 @@ packages:
     network access and the only cost is reinstalling the .NET SDK each session,
     about forty seconds. Take it from a session that has only this repository.
   status: needs-human
+
+- id: F-13
+  title: Auto-merge finished work
+  ms: M1
+  risk: med
+  deps: [F-01]
+  refs: [05-OPERATIONS.md §7, 00-START-HERE.md §9]
+  accept:
+    - "A workflow squash-merges pull requests labelled awaiting-merge once every check on the head commit has passed [L4]"
+    - "It never merges a fork's branch, a draft, another author's pull request, or anything carrying a stop label; each guard is stated in the workflow and its reason given [L0]"
+    - "`do-not-merge` parks a pull request for a human, and deleting the workflow restores merging by hand [L0]"
+    - "The change introducing it was merged by a person, not by itself [L0]"
+  note: >-
+    The owner asked for this after merging five pull requests by hand in a day.
+    It gives up human review of every change before it reaches main; that was
+    said plainly before they chose. See DECISIONS.md, 2026-11-10.
+  status: done
 
 - id: F-11
   title: Driver scheduled task and end-to-end loop rehearsal
@@ -322,8 +351,8 @@ packages:
     - "Stable 64-bit instance id allocator, persisted [L1]"
   status: done
 
-- id: V-07
-  title: Budget ledger and device tier classifier
+- id: V-07a
+  title: Budget ledger and device tier classifier (engine-free)
   ms: M2
   risk: med
   deps: [F-08]
@@ -331,8 +360,18 @@ packages:
   accept:
     - "Ledger accepts registrations per subsystem and computes zone per ADR-10 from data, not code [L1]"
     - "Tier classifier is a pure function with a table; Quest 2 is the baseline tier and unknown inputs map to it; the Quest 3 / 3S ambiguity case is covered by a test [L1]"
+    - "All three measures are judged against stated device caps, and the absence of headroom in ADR-10's numbers is pinned by a test [L1]"
+  status: done
+
+- id: V-07b
+  title: Apply the tier settings at runtime
+  ms: M2
+  risk: med
+  deps: [V-07a, F-03]
+  refs: [adr ADR-02, adr ADR-10]
+  accept:
     - "Runtime applies foveation level, refresh rate and render scale for the tier through public APIs [L2]"
-    - "Device strings captured and the table confirmed [L6]"
+    - "Device strings captured and the table confirmed; memory measured first, per DECISIONS.md 2026-11-10 [L6]"
   status: todo
 
 - id: V-08
@@ -345,7 +384,8 @@ packages:
     - "Command stack in Core keyed by instance id; bounded memory; evicted commands release what they own [L1]"
     - "A terrain stroke is one undoable command storing a compressed region delta; undo/redo restores heights and weights exactly [L1]"
     - "Batches undo as one step [L1]"
-  status: todo
+    - "Eviction takes a whole batch or none of it, and the step just taken is always undoable [L1]"
+  status: done
 
 - id: V-09
   title: Sculpt tool end to end
@@ -375,7 +415,7 @@ packages:
   title: Wrist panel v1
   ms: M2
   risk: low
-  deps: [V-07, V-09]
+  deps: [V-07a, V-09]
   refs: [dr Assets/Scripts/UX/WristCompositorHudController.cs, au phase-01-03-engine-terrain-ux.md]
   accept:
     - "World-space panel on the off hand shows the ledger gauge, tool selection, save and load; built in code [L3]"
@@ -559,17 +599,32 @@ packages:
   status: done
 
 - id: SB-01c
-  title: StreamBox client and transports in Island.Core
+  title: StreamBox client and HTTP transport in Island.Core
   ms: M4
   risk: high
   deps: [SB-01b]
   refs: [07-STREAMBOX.md, adr ADR-23]
   accept:
-    - "A client covering pairing, catalogue, play, stop, progress, music and Connect, behind injectable HTTP and socket transports so it can be driven by a fake in tests [L1]"
+    - "A client covering pairing, catalogue, play, stop, progress and music, behind an injectable HTTP transport so it can be driven by a fake in tests [L1]"
     - "Pairing polls at the interval the server asks for and handles pending, denied, expired and approved [L1]"
-    - "A 401, or a Connect close of 4401, returns the client to the pairing state; 4409 does not reconnect [L1]"
-    - "End-to-end tests run the client against the mock gateway, including the full pairing walk [L3]"
-  status: todo
+    - "A 401 returns the client to the pairing state and drops the token; no error message or exception carries the credential [L1]"
+    - "The gateway's address never enters Island.Core; the transport holds it [L0]"
+    - "End-to-end tests run the client against the mock gateway over real HTTP, including the full pairing walk [L3]"
+  status: done
+
+- id: SB-01d
+  title: Connect socket transport and remote control
+  ms: M4
+  risk: high
+  deps: [SB-01c]
+  refs: [07-STREAMBOX.md, adr ADR-23]
+  accept:
+    - "A socket transport behind an interface, so Connect can be driven by a fake in tests [L1]"
+    - "Hello and welcome, every command in 07-STREAMBOX.md §3.6, and state sent on change and periodically while playing [L1]"
+    - "A Connect close of 4401 returns the client to the pairing state; 4409 does not reconnect; anything else reconnects with backoff [L1]"
+    - "Islandia stops cleanly when told to and does not fight for the stream (07-STREAMBOX.md §3.6) [L1]"
+    - "End-to-end tests drive the client's Connect socket against the mock gateway [L3]"
+  status: done
 
 - id: SB-02
   title: Media player backend
@@ -694,24 +749,38 @@ packages:
 
 # ───────────────────────────── M5  LIVING GARDEN ─────────────────────────────
 
-- id: C-01
-  title: Catalogue schema, id generation, licence ledger, validator
+- id: C-01a
+  title: Catalogue schema, loader and deterministic id generation
   ms: M5
   risk: med
-  deps: [M3-RETRO]
+  deps: [F-01]
   refs: [adr ADR-11, au phase-04-05-07-foliage-architecture-import.md]
   accept:
-    - "content/catalogue/*.yaml schema documented and validated; C# ids generated deterministically; ids are stable across additions [L1]"
+    - "content/catalogue/*.yaml schema documented and validated; every way of getting an entry wrong is covered by a test that proves the loader refuses it [L1]"
+    - "C# ids generated deterministically from the catalogue; ids are stable across additions; collisions, zero and duplicate C# names all fail the build [L1]"
+    - "The generated file is committed and CI fails when it is stale [L0]"
+    - "Python and C# derive the same number for the same id, asserted from values computed independently of both [L1]"
+  status: done
+
+- id: C-01b
+  title: Catalogue validator, licence ledger and honest count
+  ms: M5
+  risk: med
+  deps: [C-01a]
+  refs: [adr ADR-11, au phase-04-05-07-foliage-architecture-import.md]
+  accept:
     - "Validator checks triangle and LOD budgets, texture sizes, bounds, closed geometry, collider and thumbnail presence, and fails CI [L0]"
-    - "Licence ledger generated from the catalogue; non-CC0 entries fail without a decision record [L0]"
-    - "Report prints distinct meshes and palette variants separately [L0]"
-  status: todo
+    - "Per-item budgets live in content/budgets.yaml as data; an LOD chain that does not actually reduce fails [L0]"
+    - "Licence ledger generated from the catalogue; a licence outside the allowlist fails, the allowlist cites the decision record that admits it, and the tool checks that record exists [L0]"
+    - "Report counts distinct meshes by asset checksum, not by catalogue entry, so two entries sharing a mesh count as one mesh and two variants [L0]"
+    - "One mesh shared across two kinds fails, because that is the shape the blueprint's dishonest count took [L0]"
+  status: done
 
 - id: C-02
   title: CC0 ingestion pipeline
   ms: M5
   risk: high
-  deps: [C-01]
+  deps: [C-01b]
   refs: [adr ADR-11]
   accept:
     - "Selected packs are fetched by pinned URL and checksum in CI; licences verified against the source page text and archived [L0]"
@@ -724,7 +793,7 @@ packages:
   title: Parametric generators — flowers, hedges, grass
   ms: M5
   risk: med
-  deps: [C-01]
+  deps: [C-01b]
   refs: [adr ADR-11, bp phase-04.md §4.2]
   accept:
     - "Generators produce closed or deliberately double-sided geometry within budget for at least 16 flower forms, 6 hedge and topiary forms and grass tufts [L0]"
@@ -796,7 +865,7 @@ packages:
   title: Inventory browser
   ms: M5
   risk: med
-  deps: [C-01, V-11]
+  deps: [C-01b, V-11]
   refs: [bp phase-03.md §3.1]
   accept:
     - "Categories, thumbnails, paging and favourites; built in code from the catalogue; selection feeds placement and scatter tools [L3]"
@@ -942,7 +1011,8 @@ packages:
     - "Parses container, JSON and PNG/JPEG/KTX2 headers without decoding payloads; computes triangles, primitives, max texture size and a memory estimate [L1]"
     - "Rule file (JSON) shared with the web converter defines limits per tier [L1]"
     - "Fuzzed and hostile fixtures (truncated, oversized lengths, external URIs, absurd counts) are rejected without exceptions escaping or unbounded allocation [L1]"
-  status: todo
+    - "glTF's node-tree rule is enforced, so a shared child cannot double the draw paths at every level [L1]"
+  status: done
 
 - id: I-02
   title: On-device loader
@@ -1163,13 +1233,14 @@ packages:
 - id: Q-04
   title: Onboarding, settings, accessibility
   ms: M9
-  risk: med
+  risk: high
   deps: [U-11, U-02]
   refs: [bp phase-03.md]
   accept:
     - "First-run flow teaches moving, sculpting, planting, building and saving; skippable and replayable [L3]"
     - "Settings cover comfort, handedness, audio, text size and seated play; all saved [L3]"
-    - "A first-time player gets through onboarding without help [L7]"
+    - "A first-time player gets through onboarding without help, and without being told anything beforehand [L7]"
+    - "The first five minutes are designed, not inherited: what the player sees on opening it, what they are invited to do first, and how they find out they can sculpt the ground at all [L7]"
   status: todo
 
 - id: Q-05
@@ -1179,8 +1250,8 @@ packages:
   deps: [M7-RETRO]
   refs: [adr ADR-21, au phase-06-companion.md]
   accept:
-    - "Independent security review of the relay, converter and on-device import path; every finding fixed or accepted with a decision record [L0]"
-    - "Dependency audit clean or exceptions recorded; third-party notices screen generated from the licence ledger [L0]"
+    - "Independent security review of the relay, converter and on-device import path; every finding fixed or accepted with a decision record. This matters whether or not anything is published: the app talks to a private media server holding a household's library [L0]"
+    - "Dependency audit clean or exceptions recorded; third-party notices screen generated from the licence ledger, honouring attribution for every asset that asks for it [L0]"
     - "A data-flow statement lists every network request the app can make and why [L0]"
   status: todo
 
@@ -1191,7 +1262,7 @@ packages:
   deps: [Q-02, Q-03, Q-04, Q-05]
   refs: [00-START-HERE.md §5]
   accept:
-    - "Alpha report lists every needs-device and needs-human criterion still open since M2 as the HG-3 checklist [L0]"
+    - "Report lists every needs-device and needs-human criterion still open since M2 as the HG-3 checklist [L0]"
     - "HG-3 issue opened; release cut [L0]"
   status: todo
 
@@ -1227,7 +1298,8 @@ packages:
   deps: [C-04]
   refs: [adr ADR-11]
   accept:
-    - "Trees, bushes and flowers reach the Beta targets in ADR-11; every item passes the validator; contact sheets attached [L0]"
+    - "Trees, bushes and flowers reach the ADR-11 target; every item passes the validator; contact sheets attached [L0]"
+    - "Style coherence is judged, not just counted: a contact sheet of everything together looks like one game [L7]"
   status: todo
 
 - id: C-11
@@ -1237,7 +1309,7 @@ packages:
   deps: [C-05]
   refs: [adr ADR-11, bp phase-05.md §5.2]
   accept:
-    - "Two further complete themes tile and assemble under the same tests as theme 1 [L0][L2]"
+    - "One further complete theme tiles and assembles under the same tests as theme 1. A second only if the first two still feel thin — coherence beats count (ADR-11) [L0][L2]"
   status: todo
 
 - id: C-12
@@ -1247,7 +1319,7 @@ packages:
   deps: [C-05]
   refs: [adr ADR-11]
   accept:
-    - "Category counts reach the Beta targets; every prop that the player can sit on, light or switch has its interaction [L0][L3]"
+    - "Category counts reach the ADR-11 target; every prop that the player can sit on, light or switch has its interaction [L0][L3]"
   status: todo
 
 - id: Q-10
@@ -1291,84 +1363,57 @@ packages:
   refs: [00-START-HERE.md §5]
   accept:
     - "All D-* packages from HG-3 are done or consciously deferred with a decision record [L0]"
-    - "HG-4 issue opened; release cut [L0]"
+    - "HG-4 issue opened; release cut. This is the last gate — there is no store submission after it [L0]"
   status: todo
 
-# ───────────────────────────── M11  RELEASE CANDIDATE ─────────────────────────────
+# ───────────────────────────── M11  FINISHED — ON THE HEADSET ─────────────────────────────
+# Not a store release. This is a gift for one person: a signed build that installs, and enough
+# written down that it can be looked after. See 02-ARCHITECTURE.md ADR-20.
 
 - id: R-01
-  title: Store compliance validator and evidence map
+  title: Signed, installable build
   ms: M11
   risk: med
   deps: [M10-RETRO]
   refs: [adr ADR-20]
   accept:
-    - "A CI check validates the built APK: SDK levels, 64-bit only, permissions, features, version code [L4]"
-    - "Every current store technical requirement is listed with the test, report or gate that evidences it; requirements re-read from the primary source at this point, not from this plan [L0]"
+    - "CI produces a signed APK from a key the owner supplies as secrets; the key never enters the repository or a session [L4]"
+    - "A CI check asserts the build is 64-bit only, targets the SDK levels ADR-20 states, and requests no permission the app does not use [L4]"
+    - "Upgrading over a previous install keeps the islands: a test asserts the save directory is untouched by reinstalling, and the signing key is recorded as the thing that must never change [L0]"
+    - "One command on the owner's PC installs the current release to a connected headset [L0]"
   status: todo
-
-- id: R-02
-  title: Signed release pipeline and release-channel upload
-  ms: M11
-  risk: med
-  deps: [R-01]
-  refs: [adr ADR-20, adr ADR-22]
-  accept:
-    - "Release builds are signed in CI from secrets the owner adds; the keystore never enters the repository or a session [L4]"
-    - "Upload to a Meta release channel is automated once the owner supplies an app id and credential [L4]"
-  status: needs-human
 
 - id: R-03
-  title: Privacy policy, data safety, relay production readiness
-  ms: M11
-  risk: med
-  deps: [Q-05, I-07]
-  refs: [adr ADR-21]
-  accept:
-    - "Draft privacy policy and data-safety answers generated from the data-flow statement for the owner to approve [L0]"
-    - "Relay has health checks, alerts, a cost cap and a documented shutdown procedure [L3]"
-  status: todo
-
-- id: R-04
-  title: Store listing kit
+  title: Relay readiness, only if the relay is used
   ms: M11
   risk: low
-  deps: [Q-10]
-  refs: []
+  deps: [I-07]
+  refs: [adr ADR-13, adr ADR-21]
   accept:
-    - "Description drafts, a capture shot-list with the in-app photo mode or script that sets up each shot, and a checklist of required asset sizes re-read from the primary source [L0]"
+    - "If the owner deployed the relay: it has a health check, a cost ceiling and a documented way to turn it off [L3]"
+    - "If they did not: the imports folder is the documented path and this package is closed as not needed [L0]"
+    - "A data-flow note lists every network request the app can make and why; there is no public privacy policy to write because there is no public [L0]"
+  status: todo
+
+- id: R-11
+  title: Hand-over notes and monthly upkeep
+  ms: M11
+  risk: low
+  deps: [R-01]
+  refs: [05-OPERATIONS.md]
+  accept:
+    - "docs/runbook/ covers: installing a new build, where saves live and how to back them up, renewing the Unity credentials, what to do when a dependency advisory appears, and how to turn the build automation off [L0]"
+    - "A page written for the person playing it, not the person who built it: what the island is, what the controllers do, how to reach their own media [L0]"
+    - "The build driver is replaced by a monthly maintenance task [L0]"
   status: todo
 
 - id: M11-RETRO
-  title: Release-candidate report, go/no-go pack and HG-5 issue
+  title: It is finished — report, retro, release
   ms: M11
   risk: low
-  deps: [R-02, R-03, R-04]
-  refs: [00-START-HERE.md §5]
+  deps: [R-01, R-03, R-11]
+  refs: [05-OPERATIONS.md §9]
   accept:
-    - "Full suite green on the candidate; a one-page go/no-go summary lists every open risk and every unverified claim [L0]"
-    - "HG-5 issue opened [L0]"
-  status: todo
-
-# ───────────────────────────── M12  LAUNCH AND LIVE ─────────────────────────────
-
-- id: R-10
-  title: Submission support
-  ms: M12
-  risk: med
-  deps: [M11-RETRO]
-  refs: []
-  accept:
-    - "Review feedback pasted into an issue by the owner is triaged into packages within one driver session [L0]"
-  status: needs-human
-
-- id: R-11
-  title: Live-operations runbook and maintenance task
-  ms: M12
-  risk: low
-  deps: [M11-RETRO]
-  refs: [05-OPERATIONS.md]
-  accept:
-    - "Runbook covers: editor patch updates, licence renewal, dependency audit, station-directory health, relay cost review, save-format migration policy [L0]"
-    - "The build driver is replaced by a monthly maintenance scheduled task [L0]"
+    - "A final report: what it does, what it does not, what is known to be rough, and what someone would need to know to pick it up later [L0]"
+    - "Release cut, APK attached, installed on the owner's headset [L6]"
   status: todo

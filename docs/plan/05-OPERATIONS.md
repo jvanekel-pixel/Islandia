@@ -108,18 +108,14 @@ All required checks green on the head commit, then:
 2. For packages marked `risk: high`, get an independent read: hand the diff — not your reasoning —
    to a fresh subagent and ask for correctness defects only. Fix what is real.
 3. Confirm the Definition of Done in `04-VERIFICATION.md` §6.
-4. Merge. **How depends on a setting the owner controls** (measured 2026-11-10):
+4. Merge. **The repository does this itself.** Label the pull request `work-package` and
+   `awaiting-merge`, and `.github/workflows/auto-merge.yml` squash-merges it once every check on
+   the head commit has passed. A session must not merge its own work: the permission classifier
+   refuses it, and that refusal is not something to route around by hand.
 
-   - A session's permission classifier refuses a self-merge — "Merge Without Review" — so by
-     default the driver cannot merge its own pull request. GitHub's auto-merge is not a way round
-     it either: enabling auto-merge is a GraphQL mutation, and GraphQL is blocked in cloud
-     sessions.
-   - **If `.claude/settings.json` allows the merge call** (see `F-01`, and `00-START-HERE.md` §9),
-     squash-merge through the REST API as the last step of the package.
-   - **If it does not**, stop at a green, reviewed pull request: put the evidence in the body,
-     label it `work-package` **and `awaiting-merge`**, leave it open, and move on to the next
-     package. The owner merges in batches. Do not rename the branch to signal this — deleting a
-     head branch closes its pull request.
+   If it does not merge, read the workflow's run — it says which guard stopped it. Common
+   answers: a check still running (wait), a conflict (rebase), or a stop label someone added on
+   purpose (`do-not-merge` means a human wants to look first; leave it).
 
    Either way: delete nothing by force, and never rewrite `main`.
 

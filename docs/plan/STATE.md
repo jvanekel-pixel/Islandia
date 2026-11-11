@@ -4,13 +4,13 @@
 
 | | |
 | :-- | :-- |
-| **Stage** | 1 — Inception |
-| **Current milestone** | M1 Factory online |
-| **In flight** | `F-01` is built, green and reviewed — [PR #1](https://github.com/jvanekel-pixel/Islandia/pull/1), labelled `awaiting-merge`. Merge it when convenient; nothing waits on it |
+| **Stage** | 2 — Construction |
+| **Current milestone** | M1 Factory online · M2 started on the engine-free track |
+| **In flight** | **Two pull requests stand between `main` and everything built today.** [#16](https://github.com/jvanekel-pixel/Islandia/pull/16) is the CI checks workflow, green and independent. [#19](https://github.com/jvanekel-pixel/Islandia/pull/19) is the whole stack — auto-merge, the gift re-plan, the Unity-project workflow, `V-07a`, `C-01a`, `C-01b` and the auto-merge fix — because auto-merge collapsed each stacked PR into its base branch rather than into `main`. #10 is superseded by #19 |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
-| **Driver** | **Paused 2026-11-10.** Scheduled task exists but is misconfigured — see below |
-| **Last updated** | 2026-11-10 (planning bundle, revised for the owner's decisions) |
-| **Target** | Quest 2 · public repository · StreamBox native in-world |
+| **Driver** | Paused. Being driven by an interactive session for now |
+| **Last updated** | 2026-11-11 (`I-01` — GLB import gatekeeper) |
+| **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## Open human gates
 
@@ -54,11 +54,51 @@ Collected here as packages merge; they become the checklist for the next human g
 
 ## Next up
 
-`F-03` (create the Unity project headlessly) → `F-04` → `F-05`. **The Unity track is open:**
-activation works, so the whole M1 chain can proceed.
+**Merge PR #10.** Then the `unity-create-project` workflow can be dispatched to finish `F-03`'s
+second half (generate the project, commit `ProjectSettings` and the manifest), and `F-04` → `F-05`
+follow.
 
-Also unblocked and needing no Unity: `V-06` (save system), `V-07` (budget ledger and device
-tiers), `SB-01c` (StreamBox client), `I-01` (model-import gatekeeper).
+Done so far: `F-01`, `F-02`, `F-08`, `F-13`, `SB-01a`, `SB-01b`, `V-02`, `V-06`, `V-07a`, `C-01a`,
+`C-01b`, `V-08`, `SB-01c`, `SB-01d`, `I-01`.
+
+Test counts: **323 Island.Core** (312 fast, 11 end-to-end against the mock gateway) **· 114 tooling
+· 30 StreamBox contract.**
+
+**CI is green on the chain**, end-to-end suite included: the `checks` workflow was folded into it,
+so the nine packages waiting to land are verified by a run rather than by a session's word.
+
+**CI now runs the non-Unity checks** (`F-07a`, PR #16) — before this, nothing did. Its first run
+went red on a real portability bug (issue #15), which is the best argument for it there is.
+
+**Auto-merge merged four pull requests on zero verification** before that landed, because "every
+check passed" is true of an empty set. The merges are sound but the mechanism was not; it now
+requires at least one check to have succeeded. See `DECISIONS.md`, 2026-11-10.
+
+**The content pipeline is ready for assets.** The catalogue, its schema, the validator, the licence
+ledger and the honest count all exist and are tested; `C-02` (fetch and normalise CC0 packs) and
+`C-03` (parametric generators) are what fill it. `C-02` needs headless Blender, which is the next
+thing to prove.
+
+Unblocked and needing no Unity: `C-03` (parametric generators, though its thumbnails need Blender),
+`I-04` (the browser converter — it reads the same `contract/import/limits.v1.json` the gatekeeper
+does). `V-07b` waits on the Unity project.
+
+StreamBox is now reachable end to end from `Island.Core`: pairing, browsing, playing, progress,
+music and remote control, all proven against the mock gateway in CI. What remains for media is
+`SB-02`, the player backend — and that is the one thing that cannot be settled without the headset
+(`RT-16`, the `V-14` probe).
+
+`C-02` (CC0 ingestion) needs **headless Blender**, which is not installed in a session container
+and has not been proven here. That is the next real unknown on the content track.
+
+**`F-03`'s second half cannot run yet for a mechanical reason:** `unity-create-project.yml` is not
+registered with Actions, because a workflow only becomes dispatchable once it has run or reached the
+default branch. Dispatching it returns 404 until the chain lands on `main`.
+
+**Open question from the owner, 2026-11-10:** whether to spend a small budget on asset production
+(a rented GPU, generated assets, or bought base meshes). This cuts across ADR-11, ADR-24 and the
+"nothing may cost money" rule, which currently forbids all three. Nothing is decided and no money
+has been spent; see the assessment recorded in `DECISIONS.md` when it lands.
 
 `F-10` stays `needs-human`: it needs an environment card only the owner can approve, and nothing
 waits on it.

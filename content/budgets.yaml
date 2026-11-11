@@ -1,0 +1,56 @@
+# Per-item budgets for the catalogue validator (C-01b), by category and kind.
+#
+# These are PLANNING FIGURES. Not one has been measured on a Quest 2, and the same caution applies
+# as to ADR-10's subsystem budgets: see DECISIONS.md, 2026-11-10, on how little headroom those
+# turned out to have. They are written down anyway, because a budget nobody can check is not a
+# budget, and because the validator needs a number to refuse an asset against.
+#
+# How they were chosen: the subsystem allowance from ADR-10 divided by roughly the number of
+# instances that subsystem is expected to carry, rounded to something memorable. Foliage gets 220K
+# triangles and is meant to hold thousands of instances, so a tree's LOD0 is in the low thousands
+# and grass is in the tens. They will be wrong. The first device gate replaces them with readings.
+#
+# triangles  — LOD0 triangle count. Each later LOD must be at most lod_reduction of the one before,
+#              so a chain that does not actually reduce fails: the blueprint shipped "LODs" that
+#              were the same mesh three times.
+# lods       — how many levels the chain must have, exactly. Fewer is a missing LOD; more is
+#              usually a sign something was generated without thinking about the budget.
+# texture    — largest permitted texture dimension in pixels, square.
+# bounds     — maximum size in metres, as x/y/z. An item bigger than this breaks placement and
+#              snapping regardless of its triangle count.
+
+lod_reduction: 0.6
+
+foliage:
+  tree:    { triangles: 1800, lods: 3, texture: 512,  bounds: [8, 14, 8] }
+  bush:    { triangles: 500,  lods: 2, texture: 512,  bounds: [3, 3, 3] }
+  flower:  { triangles: 150,  lods: 1, texture: 256,  bounds: [1, 1.5, 1] }
+  grass:   { triangles: 40,   lods: 1, texture: 256,  bounds: [1, 1, 1] }
+  vine:    { triangles: 300,  lods: 2, texture: 256,  bounds: [2, 6, 2] }
+
+architecture:
+  module:   { triangles: 900,  lods: 2, texture: 1024, bounds: [4, 4, 4] }
+  roof:     { triangles: 1200, lods: 2, texture: 1024, bounds: [6, 4, 6] }
+  stair:    { triangles: 700,  lods: 2, texture: 1024, bounds: [4, 4, 4] }
+  door:     { triangles: 500,  lods: 2, texture: 512,  bounds: [2, 3, 1] }
+  window:   { triangles: 400,  lods: 2, texture: 512,  bounds: [2, 3, 1] }
+  pavilion: { triangles: 4000, lods: 3, texture: 1024, bounds: [8, 6, 8] }
+
+props:
+  furniture: { triangles: 800, lods: 2, texture: 512, bounds: [3, 3, 3] }
+  lighting:  { triangles: 400, lods: 2, texture: 512, bounds: [1, 3, 1] }
+  garden:    { triangles: 600, lods: 2, texture: 512, bounds: [2, 2, 2] }
+  decor:     { triangles: 400, lods: 1, texture: 512, bounds: [1, 1, 1] }
+  toy:       { triangles: 500, lods: 1, texture: 512, bounds: [2, 2, 2] }
+
+rocks:
+  boulder:   { triangles: 600, lods: 2, texture: 512, bounds: [6, 5, 6] }
+  stone:     { triangles: 200, lods: 1, texture: 256, bounds: [2, 2, 2] }
+  cliff:     { triangles: 1500, lods: 3, texture: 1024, bounds: [12, 10, 12] }
+  driftwood: { triangles: 400, lods: 2, texture: 512, bounds: [4, 2, 4] }
+  shell:     { triangles: 120, lods: 1, texture: 256, bounds: [1, 1, 1] }
+
+media:
+  screen:  { triangles: 300, lods: 1, texture: 512, bounds: [4, 3, 1] }
+  speaker: { triangles: 500, lods: 2, texture: 512, bounds: [1, 2, 1] }
+  radio:   { triangles: 600, lods: 2, texture: 512, bounds: [1, 1, 1] }

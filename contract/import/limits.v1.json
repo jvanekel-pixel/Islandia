@@ -1,0 +1,55 @@
+{
+  "$comment": "Limits for models the player imports. Read by BOTH the headset's gatekeeper (Island.Core, work package I-01) and the browser converter (I-04), so a file the converter produces is one the headset will accept. Changing a number here changes both; do not fork it.",
+  "version": 1,
+
+  "notes": {
+    "whyTheHeadsetChecksAgain": "The converter runs in the player's browser and can be bypassed by dropping a file straight into the imports folder. The headset is the trust boundary (ADR-12), so it checks everything again and trusts nothing the file says about itself.",
+    "whyPerFileNotPerSubsystem": "ADR-10 gives imported models 25 draws, 120K triangles and 128 MB in total. These are per-file limits sized so that a handful of models fits inside that, not so that one may fill it.",
+    "unverified": "Like every other budget in this project, these have never been measured on a Quest 2. They are deliberately conservative; the first device gate replaces them with readings."
+  },
+
+  "allTiers": {
+    "maxFileBytes": 15728640,
+    "maxJsonBytes": 4194304,
+    "maxBuffers": 1,
+    "maxMeshes": 64,
+    "maxNodes": 512,
+    "maxImages": 16,
+    "maxNodeDepth": 32,
+    "allowExternalUris": false,
+    "allowedImageTypes": ["image/png", "image/jpeg", "image/ktx2"]
+  },
+
+  "tiers": {
+    "Quest2": {
+      "maxTriangles": 40000,
+      "maxPrimitives": 8,
+      "maxTextureDimension": 1024,
+      "maxEstimatedBytes": 25165824
+    },
+    "QuestPro": {
+      "maxTriangles": 40000,
+      "maxPrimitives": 8,
+      "maxTextureDimension": 1024,
+      "maxEstimatedBytes": 25165824
+    },
+    "Quest3S": {
+      "maxTriangles": 80000,
+      "maxPrimitives": 12,
+      "maxTextureDimension": 2048,
+      "maxEstimatedBytes": 50331648
+    },
+    "Quest3": {
+      "maxTriangles": 80000,
+      "maxPrimitives": 12,
+      "maxTextureDimension": 2048,
+      "maxEstimatedBytes": 50331648
+    },
+    "Editor": {
+      "maxTriangles": 200000,
+      "maxPrimitives": 32,
+      "maxTextureDimension": 4096,
+      "maxEstimatedBytes": 201326592
+    }
+  }
+}

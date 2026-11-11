@@ -30,12 +30,12 @@ deps:  ## Install the Python packages the tooling needs
 # ----------------------------------------------------------------------- gates
 
 .PHONY: check
-check: lint tools-test core-test mock-test companion-test  ## Everything provable without Unity. Run before every push.
+check: lint tools-test core-test mock-test streambox-e2e companion-test  ## Everything provable without Unity. Run before every push.
 	@echo
 	@echo "check: all local gates passed"
 
 .PHONY: lint
-lint: lint-plan lint-privacy lint-markdown lint-meta lint-layering  ## Static checks (verification level L0)
+lint: lint-plan lint-privacy lint-markdown lint-meta lint-layering lint-content  ## Static checks (verification level L0)
 
 .PHONY: lint-plan
 lint-plan:  ## The backlog and plan are internally consistent
@@ -58,6 +58,13 @@ lint-meta:  ## Every generated Unity .meta is present and current
 lint-layering:  ## Island.Core stays engine-free, so the fast tests keep working
 	@$(PY) tools/lint/check_layering.py
 
+.PHONY: lint-content
+lint-content:  ## The catalogue is valid, within budget, licensed, and its generated files current
+	@$(PY) tools/content/generate_ids.py --check
+	@$(PY) tools/content/validate.py
+	@$(PY) tools/content/ledger.py --check
+	@$(PY) tools/content/report.py --check
+
 # ------------------------------------------------------------------- the tests
 
 .PHONY: tools-test
@@ -75,7 +82,7 @@ core-test:  ## Island.Core tests — engine-free C#, about a second (level L1)
 	  echo "  curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 9.0 --install-dir \$$HOME/.dotnet"; \
 	  exit 1; \
 	fi
-	@"$(DOTNET)" test dotnet/Island.Core.Tests --nologo --verbosity quiet
+	@"$(DOTNET)" test dotnet/Island.Core.Tests --nologo --verbosity quiet --filter "TestCategory!=EndToEnd"
 
 .PHONY: core-build
 core-build:  ## Compile Island.Core alone, the way Unity will (netstandard2.1)
@@ -97,6 +104,10 @@ mock-test:  ## The mock StreamBox gateway matches contract/streambox (level L1/L
 	  echo "mock-test: run 'make mock-install' first"; exit 1; \
 	fi
 
+.PHONY: streambox-e2e
+streambox-e2e: mock-install  ## The StreamBox client against the running mock gateway (level L3)
+	@"$(DOTNET)" test dotnet/Island.Core.Tests --nologo --verbosity quiet --filter "TestCategory=EndToEnd"
+
 .PHONY: mock-install
 mock-install:  ## Install the mock gateway's one dependency
 	@npm --prefix tools/mock-streambox install --silent --no-audit --no-fund
@@ -106,6 +117,15 @@ mock:  ## Run the mock StreamBox gateway on http://localhost:8787
 	@npm --prefix tools/mock-streambox start
 
 # ------------------------------------------------------------------- utilities
+
+.PHONY: content
+content:  ## Regenerate what the catalogue derives — run after editing content/catalogue
+	@$(PY) tools/content/generate_ids.py
+	@$(PY) tools/content/ledger.py
+
+.PHONY: content-report
+content-report:  ## What is in the catalogue: distinct meshes and palette variants, counted honestly
+	@$(PY) tools/content/report.py
 
 .PHONY: meta
 meta:  ## Write any missing or stale Unity .meta files

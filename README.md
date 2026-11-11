@@ -3,6 +3,8 @@
 A Meta Quest 2 island sandbox — sculpt, plant, build, keep pets, and watch your own media library
 in the world — built autonomously by Claude Code in the cloud.
 
+A personal project, made as a gift. Not published, not for sale.
+
 | If you are… | Read |
 | :-- | :-- |
 | **The owner** | [`docs/plan/00-START-HERE.md`](docs/plan/00-START-HERE.md), then [`docs/plan/STATE.md`](docs/plan/STATE.md) whenever you want to know where things stand |
