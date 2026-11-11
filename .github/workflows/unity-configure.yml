@@ -1,18 +1,28 @@
 # Runs the project configurator and commits what it generates.
 #
-# Work package F-04. Deliberately dispatch-only, for the same reason as the project workflow: it
-# writes to the repository, and a workflow that commits should be one a person asked for.
+# Work package F-04. It runs on two triggers, and only one of them commits.
 #
-# Being dispatch-only also means it reports no check against a commit, so auto-merge never waits on
-# it — which is why it is absent from auto-merge's workflow_run list, and why
-# tools/lint/check_workflows.py does not require it there.
+# On **push**, when the configurator or this workflow changes, it applies the configuration and
+# does NOT commit. That is a real check — it proves the configurator still compiles and still runs
+# to completion — and it is also the only way the workflow becomes dispatchable at all: GitHub does
+# not register a dispatch-only workflow until it reaches the default branch, so the first attempt
+# to dispatch this from a branch returned 404.
 #
-# The proof is not this workflow. It commits the assets; `unity-tests` then reads them back and
-# asserts every ADR-03 item against what is on disk, which is what a build will load.
+# On **dispatch**, it commits what it generated, because a workflow that writes to the repository
+# should be one a person asked for.
+#
+# The proof of the configuration is not this workflow either way. It writes the assets; `unity-tests`
+# then reads them back and asserts every ADR-03 item against what is on disk, which is what a build
+# will load.
 
 name: unity-configure
 
 on:
+  push:
+    paths:
+      - 'Assets/Island/Editor/ProjectConfigurator.cs'
+      - 'Assets/Island/Tests/Editor/**'
+      - '.github/workflows/unity-configure.yml'
   workflow_dispatch:
     inputs:
       commit:
@@ -85,8 +95,10 @@ jobs:
         run: |
           git status --porcelain Assets ProjectSettings || true
 
+      # Only a dispatch commits. A push proves the configurator runs; it does not write to the
+      # branch, because a push that rewrites the branch it was triggered by is a surprise.
       - name: Commit it
-        if: ${{ inputs.commit }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.commit }}
         run: |
           set -e
           git config user.name "Islandia CI"
