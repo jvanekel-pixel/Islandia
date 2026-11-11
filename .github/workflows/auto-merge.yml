@@ -38,7 +38,7 @@ on:
     # the omission is silent: adding a workflow gives no hint that a different one needs editing.
     # It has already cost two hours of pull requests sitting green — once for relying on
     # `check_suite` at all, then again when `unity-tests` was added and not listed.
-    workflows: ["checks", "content", "unity-tests", "unity-package-sources", "Unity licence"]
+    workflows: ["checks", "content", "unity-tests", "unity-package-sources", "unity-configure", "Unity licence"]
     types: [completed]
   check_suite:
     types: [completed]

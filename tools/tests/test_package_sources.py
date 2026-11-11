@@ -107,6 +107,20 @@ class TheCollector(unittest.TestCase):
         self.assertIn("com.unity.ide.rider", index)
         self.assertIn("3.0.0", index)
 
+    def test_it_keeps_assembly_definitions(self) -> None:
+        # The name an asmdef must reference is in the asmdef, not in the C#, and cannot be guessed
+        # from the namespace. Leaving these out was the first question the artefact could not
+        # answer.
+        package(self.cache, "com.unity.render-pipelines.universal", "17.3.0", {
+            "Runtime/A.cs": "class A {}",
+            "Runtime/Unity.RenderPipelines.Universal.Runtime.asmdef":
+                '{"name":"Unity.RenderPipelines.Universal.Runtime"}',
+        })
+        run(self.cache, self.out)
+
+        kept = self.out / "com.unity.render-pipelines.universal@17.3.0"
+        self.assertTrue((kept / "Runtime/Unity.RenderPipelines.Universal.Runtime.asmdef").is_file())
+
     def test_the_index_records_versions(self) -> None:
         package(self.cache, "com.unity.cloud.gltfast", "6.20.0", {"Runtime/G.cs": "class G {}"})
         run(self.cache, self.out)

@@ -693,6 +693,59 @@ its version even when its sources were not kept, so the index never implies a pa
 **Keeping nothing fails.** An empty artefact uploads perfectly happily, and the next session would
 download it, find nothing, and have no way to tell whether that is the truth.
 
+## 2026-11-11 — ADR-03 in code, and four things the real URP sources corrected
+
+**`F-04`.** The configurator sets every ADR-03 item and `ProjectConfigurationTests` asserts each one
+by loading the committed assets from disk — not by checking the objects the configurator returned.
+ADR-06 notes batchmode builds have historically reset generated settings, so what matters is what a
+build will load. **334 EditMode tests pass in CI**, 312 from `Island.Core` and 22 of these.
+
+Everything was read out of URP 17.3.0 via `F-07c`'s artefact rather than recalled, and four of those
+readings changed what I would otherwise have written:
+
+**Most of those properties have public setters.** I expected several to need `SerializedObject`.
+Exactly three do: `mainLightRenderingMode`, `additionalLightsRenderingMode` and
+`supportsMainLightShadows` have `internal set`, so they go through `SerializedObject` by their
+serialised names. Reflection on the private field would set the value in memory, lose it on the next
+write, and keep reading correctly in the same session — which is the fault the criterion exists to
+prevent, and why a test compares the serialised value against the property rather than trusting
+either.
+
+**Render Graph cannot be set.** In this editor version `enableRenderCompatibilityMode` reads `false`
+unconditionally and its setter carries `[Obsolete(..., error: true)]`; assigning it does not compile.
+So Render Graph is simply on, and the test asserts it. If a later URP makes it settable, that test is
+what will notice the default moved.
+
+**`GPUResidentDrawerMode` lives in a third assembly** — `Unity.RenderPipelines.GPUDriven.Runtime`,
+not URP's own or core's. A property on `UniversalRenderPipelineAsset` whose type is in neither was
+not a shape I expected, and it cost the one compile error of this package.
+
+**ASTC has two settings and only one of them travels.**
+`EditorUserBuildSettings.androidBuildSubtarget` lives in `Library/`, which is not committed, so a
+test asserting it would pass on the machine that ran the configurator and fail on every fresh
+checkout — including the CI run meant to prove it. `PlayerSettings.Android.textureCompressionFormats`
+is the one that is serialised into `ProjectSettings`.
+
+**URP creates assets of its own accord.** The first successful run put
+`UniversalRenderPipelineGlobalSettings.asset` and `DefaultVolumeProfile.asset` at the `Assets` root.
+The first of those is where `RenderGraphSettings` lives, so committing only
+`Assets/Island/Generated` would have left the Render Graph assertion passing locally and failing
+everywhere else. They are committed where URP puts them rather than moved into
+`Assets/Island/Generated`: `GraphicsSettings.asset` references them by GUID, and relocating them is
+a cosmetic gain against a real risk. A declared deviation from ADR-06's folder convention.
+
+## 2026-11-11 — A workflow that commits cannot trigger the workflow that checks it
+
+Found finishing `F-04`. `unity-configure` committed the generated assets and pushed them, and
+`unity-tests` did not run — because the push used `GITHUB_TOKEN`, and GitHub does not start a
+workflow run from an event created with it. The same rule that made `check_suite` useless for
+auto-merge.
+
+So **after running a workflow that commits, the workflow that verifies the commit has to be
+dispatched by hand.** That is now in `05-OPERATIONS.md`. It is not worth a deploy key or a bot
+token to automate: the generating workflows are dispatch-only and rare, and a session that has just
+asked for one can ask for the other.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

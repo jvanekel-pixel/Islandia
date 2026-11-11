@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import re
 import sys
 from pathlib import Path
 
@@ -33,6 +34,10 @@ SKIP_DIRS = {".git", "Library", "Temp", "obj", "bin", "Logs", "UserSettings", "n
 
 #: Extensions Unity imports but which carry no .meta of their own.
 NOT_ASSETS = {".meta"}
+
+
+#: A .meta carrying one of these is authoritative, whoever wrote it.
+GUID_LINE = re.compile(r"^guid: [0-9a-f]{32}$", re.M)
 
 
 def guid_for(relative_path: str) -> str:
@@ -149,6 +154,16 @@ def run(repo_root: Path, roots: list[str], check_only: bool) -> int:
             continue  # An importer we do not write; Unity will create it.
         meta_path = repo_root / (relative + ".meta")
         current = meta_path.read_text(encoding="utf-8") if meta_path.exists() else None
+
+        # An existing .meta that already carries a well-formed GUID is left alone, whoever wrote
+        # it. The point of this tool is that a GUID is *stable*, not that it came from here —
+        # and rewriting one that is already committed is the opposite of stable. Unity creates
+        # .meta files of its own accord for the folders and assets its generators produce
+        # (`unity-configure` does exactly that), and before this check those were reported stale
+        # every run and then overwritten with a different GUID.
+        if current is not None and GUID_LINE.search(current):
+            continue
+
         if current == body:
             continue
         if check_only:

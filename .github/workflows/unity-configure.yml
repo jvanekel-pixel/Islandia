@@ -1,0 +1,142 @@
+# Runs the project configurator and commits what it generates.
+#
+# Work package F-04. It runs on two triggers, and only one of them commits.
+#
+# On **push**, when the configurator or this workflow changes, it applies the configuration and
+# does NOT commit. That is a real check — it proves the configurator still compiles and still runs
+# to completion — and it is also the only way the workflow becomes dispatchable at all: GitHub does
+# not register a dispatch-only workflow until it reaches the default branch, so the first attempt
+# to dispatch this from a branch returned 404.
+#
+# On **dispatch**, it commits what it generated, because a workflow that writes to the repository
+# should be one a person asked for.
+#
+# The proof of the configuration is not this workflow either way. It writes the assets; `unity-tests`
+# then reads them back and asserts every ADR-03 item against what is on disk, which is what a build
+# will load.
+
+name: unity-configure
+
+on:
+  push:
+    paths:
+      - 'Assets/Island/Editor/ProjectConfigurator.cs'
+      - 'Assets/Island/Tests/Editor/**'
+      - '.github/workflows/unity-configure.yml'
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Commit what the configurator generates
+        type: boolean
+        default: true
+
+concurrency:
+  group: unity-licence
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  configure:
+    name: Apply ADR-03 and commit the result
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    container:
+      image: unityci/editor:ubuntu-6000.3.28f1-base-3
+      options: --user root
+
+    env:
+      LICENSING_CLIENT: /opt/unity/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Let git use this checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Take a Personal seat
+        id: activate
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set +e
+          output="$("$LICENSING_CLIENT" --activate-all --include-personal \
+                      --username "$UNITY_EMAIL" --password "$UNITY_PASSWORD" 2>&1)"
+          echo "$output" | grep -viE 'password|token'
+          echo "activated=true" >> "$GITHUB_OUTPUT"
+          echo "$output" | grep -q 'Activation processed successfully' || {
+            echo "::error title=Unity licence failed::no seat. Run the 'Unity licence' workflow for the reason."
+            exit 1
+          }
+
+      - name: Apply the configuration
+        run: |
+          set +e
+          # ApplyAndExit sets the exit code itself, so no -quit: the method decides.
+          unity-editor -batchmode -nographics -projectPath . \
+            -executeMethod Island.Editor.ProjectConfigurator.ApplyAndExit \
+            -logFile /tmp/configure.log
+          code=$?
+          echo "::group::Unity log (tail)"; tail -150 /tmp/configure.log || true; echo "::endgroup::"
+
+          if [ "$code" -ne 0 ]; then
+            echo "::error title=Configuration failed::the configurator exited $code"
+            exit 1
+          fi
+          grep -iE 'error CS[0-9]+' /tmp/configure.log && {
+            echo "::error title=Compile errors::the editor could not build the configurator"
+            exit 1
+          }
+          echo "Configurator ran."
+
+      - name: Show what it changed
+        run: |
+          git status --porcelain Assets ProjectSettings || true
+
+      # Only a dispatch commits. A push proves the configurator runs; it does not write to the
+      # branch, because a push that rewrites the branch it was triggered by is a surprise.
+      - name: Commit it
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.commit }}
+        run: |
+          set -e
+          git config user.name "Islandia CI"
+          git config user.email "noreply@anthropic.com"
+          # Everything in the project the configurator touched, not just our own folder. URP
+          # creates UniversalRenderPipelineGlobalSettings.asset and DefaultVolumeProfile.asset at
+          # the Assets root of its own accord, and the first of those is where RenderGraphSettings
+          # lives — so leaving it out would mean the Render Graph assertion passed on the machine
+          # that generated it and failed on a fresh checkout. Library/ is gitignored, so this
+          # cannot pick up build state.
+          git add Assets ProjectSettings 2>/dev/null || true
+
+          if git diff --cached --quiet; then
+            echo "Nothing to commit: the configuration already matches, which is what idempotent means."
+            exit 0
+          fi
+
+          {
+            printf 'F-04: the rendering configuration, generated\n\n'
+            printf 'Written by Island.Editor.ProjectConfigurator, not by hand. ADR-06 forbids\n'
+            printf 'hand-writing Unity YAML: a hand-made settings file opens fine and is subtly\n'
+            printf 'wrong in ways that only appear on a device.\n\n'
+            printf 'ProjectConfigurationTests reads these back and asserts every ADR-03 item.\n\n'
+            printf 'Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>\n'
+          } > /tmp/configure-message.txt
+
+          git commit -q -F /tmp/configure-message.txt
+          git push origin HEAD
+          echo "Committed and pushed."
+
+      - name: Give the seat back
+        if: always() && steps.activate.outputs.activated == 'true'
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set +e
+          "$LICENSING_CLIENT" --deactivate-all \
+            --username "$UNITY_EMAIL" --password "$UNITY_PASSWORD" 2>&1 \
+            | grep -viE 'password|token' | tail -5
+          echo "Seat returned."
