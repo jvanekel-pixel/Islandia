@@ -6,7 +6,7 @@
 | :-- | :-- |
 | **Stage** | 2 — Construction |
 | **Current milestone** | M1 Factory online · engine-free work ahead of it on M2, M4, M5 and M10 |
-| **In flight** | Nothing once the 2026-11-11 re-plan pull request lands |
+| **In flight** | `F-05` OpenXR and Meta feature configuration (branch `claude/wp-F-05-openxr-meta`) |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | **Paused** (2026-11-11). The old scheduled task fired into one long-lived chat that was near its context limit and also had the StreamBox repository attached. It waits for the owner to re-point it: a new session each run, this repository only, Opus, and the prompt in `docs/plan/prompts/driver.md` — set at <https://claude.ai/code/routines> |
 | **Last updated** | 2026-11-11 — the owner's re-plan: trains, roller coasters, endless islands, a stray cat, painting, premade packs |
