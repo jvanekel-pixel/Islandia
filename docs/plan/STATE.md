@@ -9,7 +9,7 @@
 | **In flight** | **Two pull requests stand between `main` and everything built today.** [#16](https://github.com/jvanekel-pixel/Islandia/pull/16) is the CI checks workflow, green and independent. [#19](https://github.com/jvanekel-pixel/Islandia/pull/19) is the whole stack — auto-merge, the gift re-plan, the Unity-project workflow, `V-07a`, `C-01a`, `C-01b` and the auto-merge fix — because auto-merge collapsed each stacked PR into its base branch rather than into `main`. #10 is superseded by #19 |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | Paused. Being driven by an interactive session for now |
-| **Last updated** | 2026-11-11 (the ingestion package split; RT-06 fired) |
+| **Last updated** | 2026-11-11 (`F-03` done — the Unity project exists) |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## Open human gates
@@ -61,6 +61,10 @@ follow.
 
 Done so far: `F-01`, `F-02`, `F-08`, `F-13`, `SB-01a`, `SB-01b`, `V-02`, `V-06`, `V-07a`, `C-01a`,
 `C-01b`, `V-08`, `SB-01c`, `SB-01d`, `I-01`, `F-03`, `C-02a`.
+
+**The Unity project is on `main`** (`5ae50c2`), generated and committed by its own workflow: editor
+`6000.3.28f1`, 67 packages locked at resolver-chosen versions, and a second import that changes
+nothing. `F-04`, `F-05` and `V-07b` are unblocked.
 
 Test counts: **323 Island.Core** (312 fast, 11 end-to-end against the mock gateway) **· 114 tooling
 · 30 StreamBox contract.**

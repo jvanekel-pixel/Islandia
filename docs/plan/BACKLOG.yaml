@@ -81,7 +81,7 @@ packages:
     - "Project created in CI with -createProject; ProjectSettings/, Packages/manifest.json and packages-lock.json committed by the workflow [L2]"
     - "All ADR-01 packages resolve; resolved versions written to docs/plan/DECISIONS.md [L2]"
     - "A second CI import of the committed project produces no uncommitted changes [L2]"
-  status: todo
+  status: done
 
 - id: F-04
   title: Player, graphics and URP configuration as code, with assertion tests
