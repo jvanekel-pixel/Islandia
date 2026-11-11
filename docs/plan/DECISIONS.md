@@ -459,6 +459,46 @@ both cases, because inconsistent cancellation is worse than either choice.
 The no-token path also no longer claims a close code. Setting `FinalCloseCode` to 4401 when the
 gateway never sent one puts a fiction in front of whoever reads it to find out why Connect stopped.
 
+## 2026-11-11 — The import gatekeeper enforces glTF's node-tree rule
+
+**`I-01`.** ADR-12 makes the headset the trust boundary: the browser converter checks a file too,
+but it runs in the player's own browser and can be bypassed by dropping a file straight into the
+imports folder. So the gatekeeper believes nothing a file says about itself, validates every length
+against the bytes actually present before using it, and never allocates to a size the file asked
+for.
+
+**The limits are a shared rule file** (`contract/import/limits.v1.json`), read by both the
+gatekeeper and the converter (`I-04`). Two copies would drift, and the symptom would be a player
+watching the converter say "ready" and the headset say "no". `allowExternalUris` is checked and
+refused on load rather than merely defaulted to false: honouring a file's URIs would let a dropped
+model make the headset fetch whatever it named, from inside the player's home network.
+
+**Image headers are read, not file sizes.** A 16,384 × 16,384 PNG is a few hundred kilobytes on
+disk and about a gigabyte decoded, so size is no guide at all to cost. The declared `mimeType` is
+not trusted either — a decoder acts on the magic bytes, so the magic bytes are what is read, and a
+label that disagrees with the content is itself a refusal.
+
+**The real finding was a dead guard.** The node walk pushed every node as a root, so each was
+visited at depth zero and the depth limit could never fire. A rule that cannot fire is worse than no
+rule, because it reads as handled — the same fault the budget work turned up in the device-tier
+table, and the test that was meant to prove the limit worked is what caught it.
+
+Fixing it properly meant enforcing what glTF actually says: **nodes form a disjoint union of trees,
+so a node has at most one parent.** That is not pedantry. A shared child is drawn once per path to
+it, so a file can double the number of paths at every level — forty levels is a trillion draw paths
+described in a few kilobytes, and counting them *is* the denial of service. Enforcing the tree
+property refuses that outright, kills cycles, makes each node visited exactly once so the triangle
+and draw counts are exact, and makes the depth limit mean something.
+
+**Refusals say what to do.** "This model has 92,000 triangles and the limit is 40,000. The converter
+can simplify it" rather than "validation failed" — `RT-09` is that people cannot tell why a file was
+rejected, and the person reading this is the one who will be wearing the headset.
+
+**Nothing escapes as an exception.** A hostile file is a verdict. The caller is an import screen,
+and a throw there is someone watching their world disappear. Covered by 2,000 randomised inputs,
+500 bit-flipped copies of a valid file, and truncation at every length from zero to the whole file —
+each of which must return a refusal with a reason, not throw.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

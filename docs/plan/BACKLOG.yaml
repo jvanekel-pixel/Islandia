@@ -1011,7 +1011,8 @@ packages:
     - "Parses container, JSON and PNG/JPEG/KTX2 headers without decoding payloads; computes triangles, primitives, max texture size and a memory estimate [L1]"
     - "Rule file (JSON) shared with the web converter defines limits per tier [L1]"
     - "Fuzzed and hostile fixtures (truncated, oversized lengths, external URIs, absurd counts) are rejected without exceptions escaping or unbounded allocation [L1]"
-  status: todo
+    - "glTF's node-tree rule is enforced, so a shared child cannot double the draw paths at every level [L1]"
+  status: done
 
 - id: I-02
   title: On-device loader

@@ -9,7 +9,7 @@
 | **In flight** | **Two pull requests stand between `main` and everything built today.** [#16](https://github.com/jvanekel-pixel/Islandia/pull/16) is the CI checks workflow, green and independent. [#19](https://github.com/jvanekel-pixel/Islandia/pull/19) is the whole stack — auto-merge, the gift re-plan, the Unity-project workflow, `V-07a`, `C-01a`, `C-01b` and the auto-merge fix — because auto-merge collapsed each stacked PR into its base branch rather than into `main`. #10 is superseded by #19 |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | Paused. Being driven by an interactive session for now |
-| **Last updated** | 2026-11-11 (`SB-01d` — Connect socket) |
+| **Last updated** | 2026-11-11 (`I-01` — GLB import gatekeeper) |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## Open human gates
@@ -59,9 +59,9 @@ second half (generate the project, commit `ProjectSettings` and the manifest), a
 follow.
 
 Done so far: `F-01`, `F-02`, `F-08`, `F-13`, `SB-01a`, `SB-01b`, `V-02`, `V-06`, `V-07a`, `C-01a`,
-`C-01b`, `V-08`, `SB-01c`, `SB-01d`.
+`C-01b`, `V-08`, `SB-01c`, `SB-01d`, `I-01`.
 
-Test counts: **269 Island.Core** (258 fast, 11 end-to-end against the mock gateway) **· 114 tooling
+Test counts: **323 Island.Core** (312 fast, 11 end-to-end against the mock gateway) **· 114 tooling
 · 30 StreamBox contract.**
 
 **CI is green on the chain**, end-to-end suite included: the `checks` workflow was folded into it,
@@ -79,8 +79,9 @@ ledger and the honest count all exist and are tested; `C-02` (fetch and normalis
 `C-03` (parametric generators) are what fill it. `C-02` needs headless Blender, which is the next
 thing to prove.
 
-Unblocked and needing no Unity: `I-01` (GLB gatekeeper), `C-03` (parametric generators, though its
-thumbnails need Blender). `V-07b` waits on the Unity project.
+Unblocked and needing no Unity: `C-03` (parametric generators, though its thumbnails need Blender),
+`I-04` (the browser converter — it reads the same `contract/import/limits.v1.json` the gatekeeper
+does). `V-07b` waits on the Unity project.
 
 StreamBox is now reachable end to end from `Island.Core`: pairing, browsing, playing, progress,
 music and remote control, all proven against the mock gateway in CI. What remains for media is
