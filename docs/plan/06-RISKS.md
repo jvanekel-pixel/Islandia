@@ -29,8 +29,7 @@ Likelihood and impact: H / M / L. "Signal" is the earliest thing that would tell
 | RT-02 | Burst jobs behave differently from the Core reference | L | M | `V-03` differential tests | Differential tests on random input | Use the managed reference where the difference cannot be closed, if it meets the time budget |
 | RT-03 | Collider updates hitch on device | M | M | HG-1 | Truly asynchronous bake; update on stroke end | Coarser collision mesh than render mesh |
 | RT-04 | Custom foliage instancing underperforms or mis-renders under multiview | M | H | HG-1, HG-3 | Bucket by mesh; stereo-safe culling | GameObjects with LOD groups and instanced materials for trees and bushes; custom path only for grass and flowers |
-| RT-05 | CC0 packs do not cover the catalogue, or the mixed styles look incoherent | M | H | `C-02`, `C-04` contact sheets | Palette unification; generators for families | Smaller, coherent catalogue from one creator's packs; owner decides at HG-4 |
-| RT-06 | Asset source sites change URLs or terms | M | L | `C-02` checksum failures | Pin URLs and checksums; archive the licence text | Substitute pack; cached copy in CI storage |
+| RT-05 | CC0 packs do not cover the catalogue, or the mixed styles look incoherent | M | H | `C-02b`, `C-04` contact sheets | Palette unification; generators for families | Smaller, coherent catalogue from one creator's packs; owner decides at HG-4 |
 | RT-07 | Live audio streaming cannot be made reliable on Quest | H | L | `A-03` spike, if ever built | Not needed: StreamBox music is fetched to a cache and played from it | Leave internet radio unbuilt |
 | RT-08 | glTFast on device: stripped decoders, missing shaders, memory spikes | M | H | `I-02` build-report check; HG-3 | Preserve assemblies; always-include shaders; gatekeeper before decode | Restrict imports to uncompressed-texture GLB under a tighter size cap |
 | RT-09 | Browser-side conversion is too slow or fails on large or exotic files | M | M | `I-04` fixture corpus | Workers; clear limits; tell the user why | Accept only glTF/GLB in v1; document exporting from each tool |
@@ -60,4 +59,28 @@ Likelihood and impact: H / M / L. "Signal" is the earliest thing that would tell
 
 ## Fired
 
-*(none yet — when a risk fires, move its row here with the date, what happened and what was done)*
+### RT-06 — asset sources cannot be fetched by a pinned URL · 2026-11-11
+
+Originally written as *"asset source sites change URLs or terms"*, likelihood M, impact L. It fired
+**before `C-02b` began rather than during it**, and in a different shape than written: the URLs were
+never pinnable in the first place.
+
+`kenney.nl` states `CC0` plainly and correctly — the licence is not the problem. But its asset pages
+carry no archive link at all; the download runs through JavaScript behind a donation interstitial.
+So "fetched by pinned URL and checksum in CI" was never achievable for that source.
+
+**The pre-agreed fallback did not apply.** It read *"substitute pack; cached copy in CI storage"*.
+Substituting a pack does not help when the obstacle is the delivery mechanism rather than one pack's
+availability, and a cached copy in CI storage is a raw download, which `C-02c`'s own criteria forbid
+committing.
+
+**What was done.** The ingestion package was split. `C-02b` is the Blender normalisation pipeline, which works on any
+input archive and is provable against a synthetic one, so it is not blocked. `C-02c` carries the
+ingestion and is `needs-human` pending the owner's answer on how archives reach the pipeline
+(issue #25). Kenney's interstitial was **not** scripted past: it asks people to consider donating to
+someone who gives their work away, and this project can manage a click.
+
+**What it changes about the plan.** The impact rating was wrong — L assumed a substitute would be at
+hand. The real impact is that unattended ingestion of third-party packs may not be possible at all,
+which makes `C-03`'s parametric generators more load-bearing than they looked, since what they
+produce needs no download.

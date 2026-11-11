@@ -9,7 +9,7 @@
 | **In flight** | **Two pull requests stand between `main` and everything built today.** [#16](https://github.com/jvanekel-pixel/Islandia/pull/16) is the CI checks workflow, green and independent. [#19](https://github.com/jvanekel-pixel/Islandia/pull/19) is the whole stack — auto-merge, the gift re-plan, the Unity-project workflow, `V-07a`, `C-01a`, `C-01b` and the auto-merge fix — because auto-merge collapsed each stacked PR into its base branch rather than into `main`. #10 is superseded by #19 |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | Paused. Being driven by an interactive session for now |
-| **Last updated** | 2026-11-11 (`C-02a` — pinned headless Blender) |
+| **Last updated** | 2026-11-11 (the ingestion package split; RT-06 fired) |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## Open human gates
@@ -17,6 +17,7 @@
 | Gate | What is needed | Issue |
 | :-- | :-- | :-- |
 | HG-0 | **Done** 2026-11-10, Unity included | — |
+| — | **How CC0 pack archives reach the ingestion pipeline.** `RT-06` fired: the sources ADR-11 names have no download URL that can be pinned, so unattended fetching may not be possible. `C-02c` is `needs-human` until this is answered. Nothing else is blocked by it — `C-02b` and `C-03` both proceed | [#25](https://github.com/jvanekel-pixel/Islandia/issues/25) |
 
 If `F-02` fails because `UNITY_LICENSE`, `UNITY_EMAIL` or `UNITY_PASSWORD` is missing, that is the
 tail of HG-0, not a new problem: open a `human-gate` issue pointing at `00-START-HERE.md` §2 step 4
@@ -75,9 +76,8 @@ check passed" is true of an empty set. The merges are sound but the mechanism wa
 requires at least one check to have succeeded. See `DECISIONS.md`, 2026-11-10.
 
 **The content pipeline is ready for assets.** The catalogue, its schema, the validator, the licence
-ledger and the honest count all exist and are tested; `C-02` (fetch and normalise CC0 packs) and
-`C-03` (parametric generators) are what fill it. `C-02` needs headless Blender, which is the next
-thing to prove.
+ledger and the honest count all exist and are tested; `C-02b` (normalise) and `C-03` (parametric
+generators) are what fill it, and the Blender toolchain they both need is proven (`C-02a`).
 
 Unblocked and needing no Unity: `C-03` (parametric generators, though its thumbnails need Blender),
 `I-04` (the browser converter — it reads the same `contract/import/limits.v1.json` the gatekeeper
@@ -88,8 +88,9 @@ music and remote control, all proven against the mock gateway in CI. What remain
 `SB-02`, the player backend — and that is the one thing that cannot be settled without the headset
 (`RT-16`, the `V-14` probe).
 
-`C-02` (CC0 ingestion) needs **headless Blender**, which is not installed in a session container
-and has not been proven here. That is the next real unknown on the content track.
+`C-02b` (the normalisation pipeline) and `C-03` (parametric generators) are the next content work,
+and both are unblocked now that `C-02a` has pinned and proven headless Blender. `C-02c` — getting
+the pack archives in the first place — is `needs-human`: see the gate above.
 
 **`F-03`'s second half cannot run yet for a mechanical reason:** `unity-create-project.yml` is not
 registered with Actions, because a workflow only becomes dispatchable once it has run or reached the
