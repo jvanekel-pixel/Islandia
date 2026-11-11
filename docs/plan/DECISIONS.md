@@ -279,7 +279,7 @@ that.
 That trades a real risk — facts can say anything — for a cheap one. Every facts file carries the
 CRC-32 of its asset and the validator recomputes it from the file on disk, so facts and asset are
 bound together or the item is refused. There is no legitimate way for them to disagree, because
-`C-02`'s pipeline is deterministic; a mismatch means the asset changed without the pipeline
+`C-02b`'s pipeline is deterministic; a mismatch means the asset changed without the pipeline
 re-running, or someone edited the facts by hand.
 
 **Four checks are there because the blueprint failed them.** An LOD chain whose levels do not
@@ -501,7 +501,7 @@ each of which must return a refusal with a reason, not throw.
 
 ## 2026-11-11 — Blender is pinned to 4.5.16 LTS, and it can do the work
 
-**`C-02a`.** The content track's last unknown. `C-02` and `C-03` both need headless Blender, nothing
+**`C-02a`.** The content track's last unknown. `C-02b` and `C-03` both need headless Blender, nothing
 had ever run it here, and four separate things were open questions — three of which could only be
 answered by running it in a container with no display and no GPU. All four now pass, in CI:
 
@@ -519,7 +519,7 @@ thumbnails go through Cycles on the CPU. Slower, and it works, which beats faste
 `tools/blender/install.sh`, and an archive that does not match is not unpacked — the script runs as
 root in CI and extracts a few gigabytes of executables, so "probably the right file" is not good
 enough. Not from apt, either: the distribution's version moves with the runner image and nothing
-announces it. `C-02` requires that a rerun produce byte-identical files, and Blender's mesh
+announces it. `C-02b` requires that a rerun produce byte-identical files, and Blender's mesh
 operators, glTF exporter and renderer all change between releases, so "whatever Blender is
 available" is not a pipeline but a lottery whose result gets committed.
 
