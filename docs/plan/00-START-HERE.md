@@ -126,7 +126,7 @@ Defaults chosen for you — change any of them by saying so:
 
 | # | Decision | Default | Change it if… |
 | :-- | :-- | :-- | :-- |
-| **D3** | Name and package id | *Islandia*, `dev.islandia.app` (placeholder) | You want a different package id. It must be final before the first upload to Meta and cannot change after |
+| **D3** | Name and package id | *Islandia*, `dev.islandia.app` — **final** (2026-11-11) | The display name can change any time; the package id never can |
 | **D7** | Other cuts | No `.blend` upload, no hosted Blender converter, SpaceWarp off, internet radio not built unless you ask | See `01-AUDIT.md` |
 | **D8** | Who it is for | **A gift for your partner.** Never published, never sold | Settled 2026-11-10. The store track is cut; M14 is a signed build you install over USB |
 

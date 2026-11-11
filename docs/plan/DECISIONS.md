@@ -967,6 +967,26 @@ The guard is unchanged and still fails on any modified, deleted or new file unde
 **Evidence:** `unity-tests` run 43102051087 — EditMode and PlayMode passed, and the guard listed
 exactly those three paths as `??`, with no `M` or `D` lines.
 
+## 2026-11-11 — The player thinks VR is dumb, and that is the brief
+
+From the owner, answering the naming question: the headset is theirs, and the person it is for
+thinks VR is dumb. They asked him what game he would want to play, and this is it.
+
+That sharpens what "a nice thing to be given" means. He is not someone who will forgive a rough
+first minute because VR is novel. So, wherever a package leaves room for judgement:
+
+- **Comfort beats spectacle.** Seated play works everywhere; snap turn and teleport are the
+  defaults; nothing moves the camera that he did not ask to move. Rides (`RC-*`, `TR-*`) open at
+  their gentlest settings, with a vignette and a fixed horizon cue on by default, and a "watch
+  from outside" option is never more than one button away. One queasy coaster ends the gift.
+- **The first five minutes are the product.** No account, no tutorial wall, no menu before the
+  island. He arrives by train at a station, sees a coaster he can ride, and finds out by doing
+  that he can build one (`Q-04`'s criteria already ask for this; this is why it matters).
+- **Controls he does not have to learn.** Few buttons, the same meaning everywhere, and hands
+  where they work.
+
+Package id `dev.islandia.app` is final and the display name stays *Islandia* (ADR-22, D3).
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

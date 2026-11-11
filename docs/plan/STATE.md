@@ -6,7 +6,7 @@
 | :-- | :-- |
 | **Stage** | 2 — Construction |
 | **Current milestone** | M1 Factory online · engine-free work ahead of it on M2, M4, M5 and M10 |
-| **In flight** | Nothing once `F-05` (PR #36) lands |
+| **In flight** | Nothing. `F-05` landed in #36 — the first work package from the new scheduled driver |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | **Running** on a schedule, a new session each run. Its first run (2026-11-11) was **not** on the `islandia` environment: no .NET, no setup script, unrestricted network. Point the routine at that environment at <https://claude.ai/code/routines> |
 | **Last updated** | 2026-11-11 — the owner's re-plan: trains, roller coasters, endless islands, a stray cat, painting, premade packs |
@@ -36,10 +36,21 @@ Being walked through one at a time in the planning conversation. None blocks the
 | What | Unblocks |
 | :-- | :-- |
 | Point the scheduled driver at the `islandia` environment (above) | `F-10`, and sessions that start with the toolchain installed |
-| Create the Android signing key and add it as repository secrets | Installable builds that upgrade without losing saves (`R-01`, but useful from HG-1) |
-| Confirm the package id (`dev.islandia.app` or another) — final before the first install on the headset | Same |
 | Headset developer setup: Meta developer organisation, Developer Mode, `adb` on the PC | HG-1 |
 | Unity credentials in the cloud environment, if the owner wants sessions to run Unity directly | `S-01`'s optional accelerator |
+
+## Settled with the owner on 2026-11-11
+
+- **Scheduled driver:** a new routine, a fresh session each run, this repository only, Opus,
+  daily at 01:05 America/Denver. The owner may move it to hourly after the weekly usage reset; the
+  lease check makes hourly runs back-to-back rather than overlapping. Its environment should be
+  `islandia`, not Default — the owner is switching it.
+- **Signing key:** made on the owner's PC with `tools/owner/new-signing-key.ps1`; the four
+  `ANDROID_*` secrets open it in CI (`Signing key` workflow). Fingerprint in `R-01`'s note.
+- **Identity:** package id `dev.islandia.app` is final; the name under the icon is *Islandia*
+  (ADR-22).
+- **Who plays it:** the owner's own Quest 2, played by their partner, who thinks VR is dumb and
+  asked for exactly this game. See `DECISIONS.md`.
 
 ## Asset wave 1 is uploaded (2026-11-11)
 
