@@ -103,16 +103,52 @@ jobs:
       - name: Add the packages the project needs
         run: |
           set -e
-          unity-editor -batchmode -nographics -quit -projectPath . \
+          # Resolved in the throwaway project, NOT in this repository, and this is the whole
+          # trick. Opening the editor on the repository compiles Packages/com.island.core first,
+          # that code needs Newtonsoft.Json, Newtonsoft.Json arrives as one of the packages this
+          # step is here to add, and the compile error aborts batchmode before AddPackages ever
+          # runs. The first attempt at this failed exactly that way.
+          #
+          # The throwaway project has none of our runtime code, so nothing has to compile for the
+          # resolver to do its work. Only the bootstrap script is copied across, and it touches
+          # UnityEditor.PackageManager and nothing else of ours.
+          mkdir -p /tmp/fresh/Assets/Editor
+          cp Assets/Island/Editor/ProjectBootstrap.cs /tmp/fresh/Assets/Editor/ProjectBootstrap.cs
+
+          unity-editor -batchmode -nographics -quit -projectPath /tmp/fresh \
             -executeMethod Island.Editor.ProjectBootstrap.AddPackages \
             -logFile /tmp/packages.log || {
               echo "::group::Unity log"; tail -200 /tmp/packages.log || true; echo "::endgroup::"
               echo "::error title=Packages failed::a package could not be resolved; the log names it"
               exit 1
             }
+
+          # Take what the resolver chose. The lock file is the pin — a version this workflow
+          # typed in would be a guess that ages, which is why nothing here names one.
+          cp /tmp/fresh/Packages/manifest.json Packages/manifest.json
+          cp /tmp/fresh/Packages/packages-lock.json Packages/packages-lock.json
+          echo "Took the resolved manifest and lock file from the fresh project."
+
           echo "::group::what the resolver chose"
           grep -A40 'resolved packages' /tmp/packages.log || true
           echo "::endgroup::"
+
+      - name: Open this repository, now that its packages resolve
+        run: |
+          set -e
+          # The first time the editor sees our own code. Until the step above, Newtonsoft.Json was
+          # not in the project at all, so this is where a compile error in Island.Core would show
+          # up — and it is a failure, not a warning.
+          unity-editor -batchmode -nographics -quit -projectPath . -logFile /tmp/import.log || {
+            echo "::group::Unity log"; tail -300 /tmp/import.log || true; echo "::endgroup::"
+            echo "::error title=Import failed::the project would not compile with its own packages"
+            exit 1
+          }
+          grep -iE 'error CS[0-9]+' /tmp/import.log && {
+            echo "::error title=Compile errors::the editor reported errors while importing"
+            exit 1
+          }
+          echo "The project imports and compiles."
 
       - name: Import once more, and check nothing drifts
         run: |
