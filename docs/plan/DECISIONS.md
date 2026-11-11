@@ -893,6 +893,30 @@ the choices made on that instruction.
 
 `07-STREAMBOX.md` §9 and ADR-23 updated.
 
+## 2026-11-11 — The cloud environment, and the hosts it allows
+
+`F-10`. The owner approved a personal environment, `islandia`, proposed from a session that had
+only this repository attached. Its setup script installs the .NET 9 SDK system-wide
+(`/usr/share/dotnet`, symlinked into `/usr/local/bin` so it works whatever `HOME` is), the Python
+tooling requirements, and the mock gateway's npm packages, and restores the core test project. It
+is idempotent and every step is non-fatal, because a failing setup script stops a session from
+starting. Measured in a session: 25 s cold, 2 s warm; `make check` then passed (7 lint checks,
+134 tooling, 312 core, 30 contract, 11 end-to-end).
+
+Network is **limited**. Package registries and MCP servers are allowed by default; beyond them:
+
+| Host | Why |
+| :-- | :-- |
+| `dot.net` | Serves `dotnet-install.sh` (redirects) |
+| `aka.ms` | The installer reads the channel-9.0 link from it to find the latest SDK |
+| `builds.dotnet.microsoft.com` | The installer script and the SDK tarball |
+| `api.nuget.org` | NuGet restore; the proxy's default registry list does not include NuGet |
+| `api.github.com` | `gh api` REST calls the driver loop runs on (`05-OPERATIONS.md` §6) |
+| `github.com` | Release-asset downloads and git over HTTPS |
+
+The Default environment was unrestricted; this is narrower on purpose. If a session needs another
+host, it says which and why, and the owner approves that one host.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

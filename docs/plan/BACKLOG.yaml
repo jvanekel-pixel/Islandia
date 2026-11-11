@@ -196,13 +196,12 @@ packages:
     - "A fresh session can run `make core-test` and `make companion-test` with no manual installation [L1]"
     - "Allowed hosts are the minimum the measured needs show; each is listed with its reason in DECISIONS.md [L0]"
   note: >-
-    Parked 2026-11-10, twice over. Creating an environment needs the owner to
-    approve a card, and the kickoff session's container had a second, unrelated
-    repository attached, so an environment proposed from it would have covered
-    that project too. Neither is urgent: the Default environment has unrestricted
-    network access and the only cost is reinstalling the .NET SDK each session,
-    about forty seconds. Take it from a session that has only this repository.
-  status: needs-human
+    Environment `islandia` created and approved by the owner on 2026-11-11, from a
+    session with only this repository attached; hosts and timings are in
+    DECISIONS.md. What remains is the second criterion: the first fresh session on
+    that environment runs `make check` with no installs and records the result
+    here. The scheduled driver's first run is that session.
+  status: todo
 
 - id: F-13
   title: Auto-merge finished work
