@@ -1808,6 +1808,11 @@ packages:
     - "A CI check asserts the build is 64-bit only, targets the SDK levels ADR-20 states, and requests no permission the app does not use [L4]"
     - "Upgrading over a previous install keeps the islands: a test asserts the save directory is untouched by reinstalling, and the signing key is recorded as the thing that must never change [L0]"
     - "One command on the owner's PC installs the current release to a connected headset [L0]"
+  note: >-
+    The key is made before this package starts, by the owner running
+    tools/owner/new-signing-key.ps1 on their PC, which sets the repository secrets
+    ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS (islandia)
+    and ANDROID_KEY_PASSWORD. Build signing reads those names; nothing else does.
   status: todo
 
 - id: R-03
