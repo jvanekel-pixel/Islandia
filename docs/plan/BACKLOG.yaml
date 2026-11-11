@@ -1813,6 +1813,9 @@ packages:
     tools/owner/new-signing-key.ps1 on their PC, which sets the repository secrets
     ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS (islandia)
     and ANDROID_KEY_PASSWORD. Build signing reads those names; nothing else does.
+    Proven 2026-11-11 by the Signing key workflow: the key opens, and its certificate
+    SHA-256 is BC:F6:A7:C4:99:F5:B4:AF:8D:37:4D:92:64:92:62:0F:02:2E:8D:C2:1A:67:48:02:19:14:B6:81:75:00:7D:3A.
+    Every build installed on the headset must carry that fingerprint; R-01's CI check asserts it.
   status: todo
 
 - id: R-03
