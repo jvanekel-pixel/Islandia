@@ -265,3 +265,72 @@ class ScriptsRunCleanTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MetaFilesUnityWroteAreLeftAlone(unittest.TestCase):
+    """gen_meta supplies a GUID when there is none; it does not replace one that exists.
+
+    `unity-configure` and `unity-create-project` make Unity generate assets and folders, and Unity
+    writes its own .meta files with random GUIDs. Before this, every such file was reported stale on
+    the next run and then overwritten with a different GUID — which is the opposite of the stability
+    the tool exists for, since a committed GUID is already stable.
+    """
+
+    def test_an_existing_guid_is_authoritative(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            repo = Path(raw)
+            folder = repo / "Assets" / "Island" / "Generated"
+            folder.mkdir(parents=True)
+            (folder / "Thing.cs").write_text("class Thing {}", encoding="utf-8")
+
+            unity_guid = "aebaa3729a7bd8a6a8a7b6f718e6c71d"
+            # Every folder on the way down needs one, or the tool rightly reports the gap and this
+            # test would be measuring an incomplete fixture rather than the behaviour.
+            (repo / "Assets/Island.meta").write_text(
+                "fileFormatVersion: 2\nguid: 11111111111111111111111111111111\nfolderAsset: yes\n",
+                encoding="utf-8")
+            (repo / "Assets/Island/Generated.meta").write_text(
+                f"fileFormatVersion: 2\nguid: {unity_guid}\nfolderAsset: yes\n", encoding="utf-8")
+            (folder / "Thing.cs.meta").write_text(
+                "fileFormatVersion: 2\nguid: ef9970511c323d450a3d7a48a2fb1883\n", encoding="utf-8")
+
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = gen_meta.run(repo, ["Assets"], check_only=True)
+
+            self.assertEqual(code, 0, out.getvalue())
+            self.assertIn(unity_guid, (repo / "Assets/Island/Generated.meta").read_text(),
+                          "the GUID Unity wrote must survive")
+
+    def test_a_missing_meta_is_still_generated(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            repo = Path(raw)
+            folder = repo / "Assets" / "Island"
+            folder.mkdir(parents=True)
+            (folder / "Thing.cs").write_text("class Thing {}", encoding="utf-8")
+
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                gen_meta.run(repo, ["Assets"], check_only=False)
+
+            self.assertTrue((repo / "Assets/Island.meta").is_file(),
+                            "the folder on the way down gets one too")
+
+            self.assertTrue((folder / "Thing.cs.meta").is_file())
+            self.assertRegex((folder / "Thing.cs.meta").read_text(), r"guid: [0-9a-f]{32}")
+
+    def test_a_meta_with_no_guid_is_still_corrected(self) -> None:
+        # Corrupt rather than merely foreign: there is no GUID to preserve.
+        with tempfile.TemporaryDirectory() as raw:
+            repo = Path(raw)
+            folder = repo / "Assets" / "Island"
+            folder.mkdir(parents=True)
+            (folder / "Thing.cs").write_text("class Thing {}", encoding="utf-8")
+            (folder / "Thing.cs.meta").write_text("fileFormatVersion: 2\n", encoding="utf-8")
+
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = gen_meta.run(repo, ["Assets"], check_only=True)
+
+            self.assertEqual(code, 1, "a .meta with no GUID is not usable and must be reported")
+            self.assertIn("stale", out.getvalue())

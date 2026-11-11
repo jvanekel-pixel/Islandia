@@ -118,6 +118,11 @@ All required checks green on the head commit, then:
    while a second commit was still being pushed to the same branch: it landed with one commit, the
    rest was stranded, and recovering it took a second pull request.
 
+   **A commit made by a workflow triggers nothing.** Pushes from `GITHUB_TOKEN` do not start
+   workflow runs, so after dispatching `unity-configure` or `unity-create-project`, dispatch
+   `unity-tests` by hand on the same branch — otherwise what the generating workflow committed is
+   unverified and nothing says so.
+
    If it does not merge, read the workflow's run — it says which guard stopped it. Common
    answers: a check still running (wait), a conflict (rebase), a commit with no checks at all
    (the `checks` workflow is not running on that branch — fix that, not this), or a stop label

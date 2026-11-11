@@ -120,7 +120,8 @@ packages:
     - "`Island.Editor.ProjectConfigurator.Apply` is idempotent, runs with -executeMethod, creates the URP asset and renderer, and throws on failure [L2]"
     - "ProjectConfigurationTests asserts every ADR-03 item by reading the committed assets back [L2]"
     - "Internal-setter properties are written through SerializedObject, not reflection hacks [L0]"
-  status: todo
+    - "Every asset the configuration depends on is committed, including the ones URP creates itself [L2]"
+  status: done
 
 - id: F-05
   title: OpenXR and Meta feature configuration, headless and committed
