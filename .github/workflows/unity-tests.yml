@@ -44,8 +44,10 @@ jobs:
     name: EditMode and PlayMode
     runs-on: ubuntu-24.04
     timeout-minutes: 45
+    # The Android image (DECISIONS.md, 2026-11-10): the XR settings are per build target, and an
+    # editor without the Android module does not treat Android's as live (F-05).
     container:
-      image: unityci/editor:ubuntu-6000.3.28f1-base-3
+      image: unityci/editor:ubuntu-6000.3.28f1-android-3
       options: --user root
 
     env:
@@ -136,6 +138,22 @@ jobs:
             echo "::error title=PlayMode tests failed::editor exit $code, summary exit $summary"
             exit 1
           fi
+
+      # ADR-06: batchmode runs have historically reset XR settings. Two editor sessions have just
+      # opened this project; if either rewrote the committed XR assets, the settings a build would
+      # use are not the ones the tests read, so the run fails here and shows the change.
+      - name: The committed XR settings survived the editor
+        if: always() && steps.editmode.outcome != 'skipped'
+        run: |
+          changed="$(git status --porcelain -- Assets/XR ProjectSettings/EditorBuildSettings.asset)"
+          if [ -n "$changed" ]; then
+            echo "$changed"
+            git --no-pager diff --stat -- Assets/XR ProjectSettings/EditorBuildSettings.asset || true
+            git --no-pager diff -- Assets/XR ProjectSettings/EditorBuildSettings.asset | head -200 || true
+            echo "::error title=XR settings rewritten::an editor run changed the committed XR settings"
+            exit 1
+          fi
+          echo "Assets/XR and the build's config-object registry are unchanged."
 
       - name: Keep the results
         if: always()

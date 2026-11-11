@@ -8,6 +8,15 @@
 /[Uu]ser[Ss]ettings/
 /[Mm]emoryCaptures/
 /[Rr]ecordings/
+# Editor-only XR state the editor creates on first open (F-05). None of it reaches a player build:
+# OpenXR's per-editor settings, and AR Foundation's per-user XR Simulation settings and preferences
+# (its build processor strips the simulation files). DECISIONS.md 2026-11-11.
+/Assets/XR/Settings/OpenXR Editor Settings.asset
+/Assets/XR/Settings/OpenXR Editor Settings.asset.meta
+/Assets/XR/UserSimulationSettings/
+/Assets/XR/UserSimulationSettings.meta
+/Assets/XR/Resources/
+/Assets/XR/Resources.meta
 /*.csproj
 /*.sln
 *.pidb

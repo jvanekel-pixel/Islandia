@@ -6,9 +6,9 @@
 | :-- | :-- |
 | **Stage** | 2 — Construction |
 | **Current milestone** | M1 Factory online · engine-free work ahead of it on M2, M4, M5 and M10 |
-| **In flight** | Nothing once the 2026-11-11 re-plan pull request lands |
+| **In flight** | Nothing. `F-05` landed in #36 — the first work package from the new scheduled driver |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
-| **Driver** | **Paused** (2026-11-11). The old scheduled task fired into one long-lived chat that was near its context limit and also had the StreamBox repository attached. It waits for the owner to re-point it: a new session each run, this repository only, Opus, and the prompt in `docs/plan/prompts/driver.md` — set at <https://claude.ai/code/routines> |
+| **Driver** | **Running** on a schedule, a new session each run. Its first run (2026-11-11) was **not** on the `islandia` environment: no .NET, no setup script, unrestricted network. Point the routine at that environment at <https://claude.ai/code/routines> |
 | **Last updated** | 2026-11-11 — the owner's re-plan: trains, roller coasters, endless islands, a stray cat, painting, premade packs |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
@@ -35,6 +35,7 @@ Being walked through one at a time in the planning conversation. None blocks the
 
 | What | Unblocks |
 | :-- | :-- |
+| Point the scheduled driver at the `islandia` environment (above) | `F-10`, and sessions that start with the toolchain installed |
 | Headset developer setup: Meta developer organisation, Developer Mode, `adb` on the PC | HG-1 |
 | Unity credentials in the cloud environment, if the owner wants sessions to run Unity directly | `S-01`'s optional accelerator |
 
@@ -80,13 +81,13 @@ link `kenney.nl/assets/mini-forest` but no archive for it was uploaded.
 ## Next up
 
 Take the first `todo` package in `BACKLOG.yaml` whose dependencies are `done` — `make next` prints
-them. As of this writing: **`F-05`** (OpenXR and Meta features), **`C-02b`** (the Blender
+them. As of this writing: **`F-06`** (assemblies, composition root, boot scene — the next M1 step), **`C-02b`** (the Blender
 normalisation pipeline), **`V-07b`**, and the engine-free starts of the new features — **`TR-01`**
 (the world of islands), **`RC-01`** (coaster track model), **`PNT-01`** (paint segmentation) — plus
 `I-04` and `I-05`. Prefer the current milestone; take an engine-free package when it is waiting
 on CI.
 
-**21 of 134 live packages are done** (7 more were cut on 2026-11-11). `F-01`–`F-04`,
+**22 of 134 live packages are done** (7 more were cut on 2026-11-11). `F-01`–`F-05`,
 `F-07a`–`F-07c`, `F-08`, `F-13`, `V-02`, `V-06`, `V-07a`, `V-08`, `SB-01a`–`SB-01d`, `C-01a`,
 `C-01b`, `C-02a`, `I-01`.
 
@@ -105,7 +106,7 @@ on CI.
   count, and a pinned headless Blender proven to script, measure, export GLB and render a thumbnail
   with no GPU.
 
-### Three things a new session should know
+### Four things a new session should know
 
 1. **Label last.** `awaiting-merge` means *land this now*; do not push to a branch after labelling
    its pull request. Auto-merge has squashed a PR mid-push and stranded the rest.
@@ -125,6 +126,7 @@ on CI.
 
 ## Recently merged
 
+- `F-05` OpenXR for the Quest 2 in code, asserted from disk (2026-11-11, PR #36)
 - The owner's re-plan (2026-11-11)
 - `F-04` ADR-03 set in code and asserted (2026-11-11, PR #32)
 - `F-07c` package sources uploaded from the resolved project (2026-11-11, PR #31)
@@ -142,7 +144,8 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 | Fact | Value | Source |
 | :-- | :-- | :-- |
 | Local gate `make check` | 7 lint checks, 134 tooling tests, 312 core tests, 30 contract tests, 11 end-to-end — about 40 s | everything merged to 2026-11-11 |
-| Unity EditMode tests in CI | **334** — the 312 `Island.Core` ones plus 22 asserting ADR-03 | F-04, F-07b |
+| Unity EditMode tests in CI | **349** — the 312 `Island.Core` ones, 22 asserting ADR-03, 15 asserting the XR setup | F-04, F-05, F-07b |
+| Unity image for configure and tests | `ubuntu-6000.3.28f1-android-3` — OpenXR needs the Android module to write Android settings. Pulled and ran without disk trouble | F-05 |
 | .NET SDK in a cloud session | not present; installs to `~/.dotnet` in ~40 s | F-08 |
 | Unity editor pinned | `6000.3.28f1` — the newest 6000.3 tag with an Android module | F-02 |
 | Unity licence in CI | **works.** Seat request with account credentials; no licence file. 104 s end to end | F-02 |

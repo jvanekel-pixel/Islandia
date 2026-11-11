@@ -134,7 +134,14 @@ packages:
     - "Assets/XR/** committed; a test asserts the feature set and fails if a batchmode build resets it [L2]"
     - "Interaction profiles for Touch controllers and hands are present in the settings asset [L2]"
     - "Headset shows a stereo image with tracking [L6]"
-  status: todo
+  note: >-
+    Done 2026-11-11 (PR #36). XrConfigurator, called from ProjectConfigurator.Apply;
+    XrConfigurationTests (15) read Assets/XR back; unity-tests fails if an editor run
+    changes Assets/XR or EditorBuildSettings. The headset criterion is needs-device,
+    for HG-1. Review follow-ups for F-06: Apply does not itself remove other Android
+    loaders, clear Standalone loaders or verify that a disable took effect (the tests
+    catch all three); XRGeneralSettings.k_SettingsKey is obsolete, use settingsKey.
+  status: done
 
 - id: F-06
   title: Assemblies, composition root, boot scene builder, simulation mode
@@ -171,6 +178,7 @@ packages:
     - "An android-build workflow, on merge to main and on demand, path-filtered and concurrency-cancelled [L4]"
     - "Runner pinned to ubuntu-24.04; free-disk-space step; Library cached by lockfile hash; warm test run under 15 minutes [L4]"
     - "CI fails if import leaves uncommitted .meta or settings changes [L2]"
+    - "After the Android build, the committed Assets/XR and ProjectSettings/EditorBuildSettings.asset are unchanged — the same check unity-tests runs since F-05 (ADR-06: batchmode builds have reset XR settings) [L4]"
     - "The APK from main is downloadable as an artefact — unless the build holds a private-use pack, when it goes to a draft release instead (ADR-11) [L4]"
   status: todo
 
@@ -201,7 +209,13 @@ packages:
     DECISIONS.md. What remains is the second criterion: the first fresh session on
     that environment runs `make check` with no installs and records the result
     here. The scheduled driver's first run is that session.
-  status: todo
+    2026-11-11, first scheduled run: NOT on that environment. It had no .NET SDK,
+    no Python requirements and no npm packages, and its network reached
+    example.com, so it ran on an unrestricted environment without the setup
+    script. It installed by hand and `make check` passed. The routine has to be
+    pointed at the `islandia` environment (owner, at claude.ai/code/routines);
+    the next run on it closes this.
+  status: needs-human
 
 - id: F-13
   title: Auto-merge finished work
