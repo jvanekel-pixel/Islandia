@@ -20,11 +20,17 @@ The person playing it is not a developer and will not be reading instructions.
 
 ## Product in one paragraph
 
-**Islandia** — a single-player Meta Quest sandbox. The player stands on a one-acre island, sculpts
-its terrain, plants it, builds on it from a modular kit, brings in their own 3D models, keeps a few
-pets, and watches and listens to their own media library — served by the owner's StreamBox — on
-screens and speakers placed in the world. Two interaction depths, a forgiving *toybox* mode and a
-precise *studio* mode, and two scales, life-size and tabletop.
+**Islandia** — a single-player Meta Quest sandbox. The player arrives by train at a small island,
+sculpts its terrain, plants it, builds on it, **builds a roller coaster and rides it**, brings in
+their own 3D models and **paints anything**, befriends the island's stray cat, and watches and
+listens to their own media library — served by the owner's StreamBox — on screens and speakers
+placed in the world. **Every island has a station, and the train runs to as many more islands as
+they want to make**, so each one stays small and can be its own idea. Two interaction depths, a
+forgiving *toybox* mode and a precise *studio* mode, and two scales, life-size and tabletop.
+
+**Trains and roller coasters are the point.** The person this is for loves both (owner,
+2026-11-11). Where a judgement call is close, it goes to whatever makes riding and building them
+better.
 
 ## ADR-01 — Engine and packages
 
@@ -132,6 +138,11 @@ Defined once, in `Island.Core.IslandConstants`. Nothing else may hard-code them.
 Derived thresholds (sand line, scatter cut-off, cliff angle) are defined relative to these in the
 same file, once.
 
+These are **per island** (ADR-24): every island in the world has the same extent and grid, which
+is what keeps one island at a time within the Quest 2's budgets. The station footprint and the
+train's corridor off the island are constants here too, and are reserved from sculpting and
+placement.
+
 ## ADR-09 — Persistence
 
 Designed first; nothing is "done" until it round-trips.
@@ -146,7 +157,10 @@ Designed first; nothing is "done" until it round-trips.
   use them.
 - Terrain stored as quantised heights and weights with explicit resolution and scale, compressed.
 - Save and load are off the main thread where the data allows.
-- Multiple island slots; autosave; export/import of a save file.
+- **A world of islands** (ADR-24): a small world index lists every island; each island is its own
+  save file in this container, so an island loads, saves and is deleted on its own, and a damaged
+  island cannot take the others with it. Autosave on a timer, on pause and on leaving an island;
+  export/import of a save file. (Before 2026-11-11 this read "multiple island slots".)
 
 ## ADR-10 — Budgets
 
@@ -161,10 +175,17 @@ and by tests.
 | Foliage | 45 draws · 220K tris · 48 MB | |
 | Architecture and props | 35 draws · 180K tris · 64 MB | |
 | Imported models | 25 draws · 120K tris · 128 MB | 15 MB per file |
-| Pets, media, UI | 18 draws · 60K tris · 96 MB | |
+| Cat, media, UI | 18 draws · 60K tris · 96 MB | Was "pets"; one cat now uses far less than four pets did |
 | **Busy-scene total** | **≤ 140 draws · ≤ 711K tris · 368 MB** | Hard caps: 200 draws, 750K triangles, 368 MB |
 
-Hard caps: **4 active pets, 1 active video screen, 1 audio decoder.**
+Hard caps: **1 cat per island, 1 active video screen, 1 audio decoder.** (Was four active pets;
+`CAT-02` changes the ledger's cap in code and its test.)
+
+**Rides** — the station, the train, coaster track and cars — are accounted under *Architecture and
+props* until measured. `RC-03` measures a 200-piece coaster; if rides need their own row, it is
+carved out of the existing allowances by decision record, not added on top, because there is no
+slack to add it from. **Only one island is ever resident** (ADR-24), so these numbers are per
+island and the number of islands costs storage, not frame time.
 Per-frame managed allocation in steady state: 0 bytes, asserted in PlayMode tests.
 
 A playing 1080p video is one hardware decode plus one texture; its cost on a busy island is
@@ -188,24 +209,31 @@ The inventory is a **data-driven catalogue**, not code.
 
 - `content/catalogue/*.yaml` is the source of truth: id, category, source, licence, LOD budget,
   sockets, palette set. Generated C# ids and Unity assets derive from it.
-- **Sources, in order:** (1) CC0 packs — Kenney, Quaternius, KayKit — pinned by URL and checksum,
-  normalised by a headless Blender pipeline (scale, pivot, LODs, vertex-colour bake, palette
-  unification); (2) parametric generators for families that vary by parameter (flowers, hedges,
-  walls, roofs, fences); (3) nothing else without a decision record.
-- A **licence ledger** is generated from the catalogue and shipped as the in-app notices screen.
-  CC0 and attribution-licensed assets are both admitted, because this is never distributed
-  commercially — which roughly triples the usable art. Attribution is honoured in the notices
-  screen, not treated as optional. Anything forbidding redistribution in a built application is
-  still refused, and a non-commercial licence is recorded as such so the position stays honest if
-  the project's purpose ever changes.
+- **Source (owner, 2026-11-11): premade packs of free assets, and nothing else.** The owner chooses
+  and downloads the packs — the coaster cars and track, the avatar, and everything else — and
+  uploads the archives to a **draft GitHub Release** tagged `assets-wave-<n>`, which only the owner
+  can see. The ingestion workflow (`C-02c`) fetches them by asset id with `GITHUB_TOKEN`, records
+  each archive's checksum, and normalises it with the headless Blender pipeline (scale, pivot,
+  LODs, ambient-occlusion bake; palette mapping for flat-colour packs, textures kept within budget
+  for textured ones). Parametric generators are no longer a content source. Nothing scripts past
+  a download page.
+- **Licences.** A pack is admitted if its licence allows use in a private gift that is never
+  distributed. A **licence ledger** is generated from the catalogue and shipped as the in-app
+  notices screen; attribution is honoured there, not treated as optional. A pack whose licence
+  cannot be read is not guessed at: it goes to the owner in a `human-gate` issue.
+- **The repository is public, and that is where licences bite.** Each pack is classified
+  *redistributable* (CC0, CC-BY and the like) or *private-use-only*. Only redistributable processed
+  output is ever committed. Private-use output never enters git, a published release or a workflow
+  artefact; CI fetches it at build time, and any APK containing it goes only to a draft release
+  (`C-02d`). Raw archives are never committed, whatever their licence.
 - A **validator** fails CI if any item exceeds its triangle, LOD, texture or bounds budget, lacks a
   collider or thumbnail, or has open or single-sided geometry where the camera can get behind it.
 - **Counting is honest.** Reports state distinct meshes and palette variants separately.
-- Target **(owner, 2026-11-10)**: **≈ 120 distinct meshes**, final rather than a waypoint — enough
-  that a building sandbox feels generous without a catalogue's worth of grinding. Palette variants
-  on top are free and counted separately. The blueprint's 631 is not a goal.
-- Coherence beats count. Twenty things that look like they belong together are worth more than
-  sixty that do not, and the validator's style checks matter more than its totals.
+- **No fixed count (owner, 2026-11-11).** The ≈ 120-mesh target of 2026-11-10 is lifted: what is in
+  the catalogue is what the owner's packs provide and what passes the validator and the eye.
+- **Coherence beats count, per island.** Islands can have themes, so packs in different styles can
+  live on different islands without clashing. Items are admitted per theme from a contact sheet,
+  not wholesale; twenty things that belong together still beat sixty that do not.
 
 ## ADR-12 — Importing the player's own models
 
@@ -218,6 +246,9 @@ The inventory is a **data-driven catalogue**, not code.
 - **Two delivery paths:** an imports folder on the device (works with no infrastructure), and the
   relay (ADR-13).
 - `.blend` is not accepted in v1. Users export glTF from their tool.
+- **Imported models are first-class (owner, 2026-11-11):** once placed they are paintable like
+  everything else (ADR-26). Segmentation into paint regions runs on the headset after the
+  gatekeeper, off the main thread, using the same `Island.Core` code that segments pack assets.
 
 ## ADR-13 — Companion
 
@@ -227,8 +258,10 @@ The inventory is a **data-driven catalogue**, not code.
 - A **thin relay** stores opaque blobs for at most 24 hours. The headset generates a high-entropy
   token and shows it as a QR code; the browser uploads against the token; the headset polls. The
   relay checks size and GLB magic bytes and **never parses a file**. No accounts.
-- Everything runs locally in Docker for CI. Production deployment is a human gate **(owner, D6)**;
-  the default target is Google Cloud Run with scale-to-zero.
+- Everything runs locally in Docker for CI. **The relay is deployed (owner, D6, 2026-11-11).**
+  Hosting must be a free tier, and preferably one that needs **no payment card**, so that it cannot
+  run up a bill at all; Google Cloud Run's free tier, the earlier default, requires a billing
+  account. `I-07` chooses the provider and the owner creates the account at a human gate.
 - A server-side Blender converter is out of scope for v1. If added later it is a per-job container
   with no network, read-only root, non-root user and hard resource limits.
 
@@ -256,16 +289,23 @@ The inventory is a **data-driven catalogue**, not code.
 - **No in-world web browser.** No paid media dependency of any kind.
 - No feature is described to players as supporting any DRM-protected service.
 
-## ADR-16 — Pets
+## ADR-16 — The island cat **(owner, 2026-11-11)**
 
-- Models and clips come from CC0 rigged animal packs where they exist; `Animator` controllers are
-  generated by editor code. Where no rigged source exists the pet is an honest rigid-part creature.
-- Customisation: colours, pattern, proportions within what the rig supports, name rendered as real
-  text. Patterns are computed in bind space from a baked channel.
+Replaces adoptable, customisable pets. There is no pet generator and no pet studio.
+
+- **One stray cat lives on each island**, created with the island. Each island's cat looks
+  different: coat colour and pattern derive from the island's seed, within what the model supports.
+- The player can approach and pet it. **If they choose to feed it, it gets a collar, and a food
+  dish and a water dish appear** as ordinary placeable objects — movable, paintable, saved and
+  undoable. Once befriended it can be named, and the name is shown on the collar tag as real text.
+  Its state (stray, fed, befriended) is saved with the island.
+- The model and clips come from the owner's packs; `Animator` controllers are generated by editor
+  code. If no rigged cat is available, a free pack is proposed to the owner; a rigid-part cat is
+  the honest last resort.
 - Behaviour is a deterministic, seeded utility AI in `Island.Core`, ticked at 4 Hz.
-- Movement follows real paths: navigation data rebuilt per changed region, obstacles from placed
-  structures, water rules per species.
-- Comfort locomotion and hand interaction use stock XR Interaction Toolkit providers.
+- Movement follows real paths around structures, water, the station and coaster supports, rebuilt
+  per changed region.
+- Petting and feeding use stock XR Interaction Toolkit providers, with controllers and with hands.
 
 ## ADR-17 — Draw-call strategy
 
@@ -288,6 +328,10 @@ passes. No automatic trigger.
 - Because the repository is public: workflows from forks need approval and never receive secrets;
   **no self-hosted runner is ever attached**; nothing private is committed — no server address, no
   account detail, no paid asset, no keystore. A scan enforces the first two.
+- **Nothing from a private-use asset pack is ever public** (ADR-11): not in git, not in a published
+  release, not in a workflow artefact. The owner's raw pack archives live on draft releases, which
+  only the owner can see. Whenever a build contains private-use assets, its APK goes only to a
+  draft release.
 - Pull requests run: core tests, lint, EditMode and PlayMode tests, companion suites — each only
   when its paths change. The IL2CPP Android build runs on merge to `main` and on demand.
 - Trunk-based: short-lived `claude/wp-*` branches, squash merges, `main` always releasable.
@@ -339,3 +383,85 @@ Islandia is a native client of the owner's StreamBox media service. Full specifi
   changes go to the owner as `human-gate` issues.
 - The server address is configuration on the device, never in the repository.
 
+- **The headset pairs to a dedicated StreamBox profile (owner, 2026-11-11)**, one that holds no
+  restricted libraries, so it can be revoked on its own and shows only what is meant for it
+  (`07-STREAMBOX.md` §9).
+
+## ADR-24 — Islands and the train **(owner, 2026-11-11)**
+
+The world is **as many islands as the player wants**, joined by a train. Each island stays small
+and contained — the ADR-08 extent — so each can be its own idea, and the Quest 2 only ever has to
+hold one.
+
+- **One island is resident at a time.** Leaving an island saves and unloads it; the next one loads
+  while the train is on its way, so the ride *is* the loading transition and never a loading
+  screen. Memory returns to its baseline after every trip.
+- **Every island has a station** on its shoreline, with a platform, a departure board and a track
+  leading off over the water. Its footprint and the track corridor are reserved: nothing sculpts or
+  builds over them, and the player cannot move or delete the station.
+- **Islands are created on demand** from a seed, which sets the starting terrain, the station
+  position, the theme and the cat. There is no upper bound on how many; the departure board lists
+  them all, with a thumbnail taken when each was last left.
+- **Saves:** a small world index plus one save file per island (ADR-09).
+- **The first launch begins on the train,** arriving at the first island's station. It is the
+  opening of the gift, so it is designed, not defaulted.
+- The train between islands is a seated ride under ADR-25's comfort rules.
+- Engine-free logic — the world index, seeds, reservations, travel state — lives in `Island.Core`
+  and is tested with `dotnet test`.
+
+## ADR-25 — Roller coasters and riding **(owner, 2026-11-11)**
+
+The player **builds roller coasters on their island and rides them.** Together with the train,
+this is what makes Islandia theirs, and it gets the attention that deserves.
+
+- **Track is a chain of pieces** taken from the owner's coaster pack: each piece is catalogue data
+  with an entry and an exit frame (position, heading, pitch, bank). Placing a piece composes frames
+  exactly; nothing is integrated, so a long circuit closes without drift. The piece set follows
+  the pack and is recorded by decision record when `RC-01` reads it.
+- **Validation is plain-spoken:** closed circuit, one station, a lift before the first drop, no
+  self-intersection, supports that reach the ground, nothing in the station reservation or the
+  train corridor. Problems are shown on the track where they are.
+- **Ride physics is energy-based** along the centreline — gravity, friction, chain lift, brakes —
+  fixed-step and deterministic, in `Island.Core`. Forces are computed per sample and give each
+  coaster an intensity rating before anyone rides it.
+- **Comfort is a requirement, not a setting buried in a menu.** Riding is seated, in a car that is
+  a fixed frame of reference with a visible horizon; a vignette narrows with angular acceleration;
+  one button ends any ride with a fade. Options: an intensity cap (a gentle mode slows any coaster
+  to a comfortable ride), vignette strength, and **watch from outside**, where the avatar (ADR-27)
+  rides and the player watches. The train obeys the same rules with tighter limits on acceleration
+  and turn rate.
+- Comfort numbers are planning hypotheses until `HG-R` replaces them with what felt right on the
+  headset. They live in `Island.Core` as data, once.
+- Building works life-size and at tabletop scale, which is the comfortable way to build big.
+- Budgets: rides draw on *Architecture and props* until measured (ADR-10). Finished track
+  sections are merged and un-merge on edit and undo (ADR-17).
+
+## ADR-26 — Painting anything **(owner, 2026-11-11)**
+
+Everything placed in the world can be painted — pack items, built structures, imported models, the
+cat's dishes, coaster cars and the train. This is a major feature and gets real attention.
+
+- **Paint respects edges.** Each mesh is segmented into *paint regions*, split at material-slot
+  boundaries, UV-island boundaries and edges sharper than a dihedral threshold (30° by default),
+  after welding coincident vertices so split normals do not fragment a smooth surface. Tiny
+  regions merge into their neighbour. A **fill** paints one region — the seat of a chair, not the
+  whole chair — and highlights what it will paint before it does.
+- A **brush** paints the triangles under a sized cursor, which suits the low-poly look of most
+  packs. Per-texel painting of detailed textures is not in this version.
+- **One segmentation implementation**, in `Island.Core`: run as a CI tool over pack assets at
+  ingestion, and on the headset over imported models after the gatekeeper, off the main thread.
+- When the regions are wrong, the player can adjust edge sensitivity per object, merge two
+  regions, or split one along a drawn line.
+- **Data:** a per-instance paint layer — region fills and per-triangle brush overrides — keyed by
+  instance id, saved in its own section, every change undoable. An unpainted instance stores
+  nothing.
+- **Rendering:** region ids are a vertex attribute and fills come from a small per-instance colour
+  table on one shared material, so filled instances still batch. A brush-painted instance gets its
+  own baked mesh, counted in the ledger.
+
+## ADR-27 — The avatar **(owner, 2026-11-11)**
+
+A **generic premade avatar** from the packs the owner uploaded. There is no character creator, no
+anthropomorphic character creation and no customisation; something better may come later, and is
+deferred rather than planned. The player sees the avatar only where they can see themselves from
+outside: at tabletop scale, and when watching a ride from outside.

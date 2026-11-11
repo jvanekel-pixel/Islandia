@@ -171,7 +171,7 @@ packages:
     - "An android-build workflow, on merge to main and on demand, path-filtered and concurrency-cancelled [L4]"
     - "Runner pinned to ubuntu-24.04; free-disk-space step; Library cached by lockfile hash; warm test run under 15 minutes [L4]"
     - "CI fails if import leaves uncommitted .meta or settings changes [L2]"
-    - "The APK from main is downloadable as an artefact [L4]"
+    - "The APK from main is downloadable as an artefact — unless the build holds a private-use pack, when it goes to a draft release instead (ADR-11) [L4]"
   status: todo
 
 - id: F-09
@@ -181,8 +181,8 @@ packages:
   deps: [F-07]
   refs: [05-OPERATIONS.md §9]
   accept:
-    - "Adding releases/M<n>.yaml on main creates a tag and a GitHub Release with the APK and docs/reports/M<n>-*.md attached [L4]"
-    - "Issue templates exist for HG-1..HG-5, blocked and infra (HG-2 is the StreamBox in-world check) [L0]"
+    - "Adding releases/M<n>.yaml on main creates a tag and a GitHub Release (a draft, visible only to the owner, whenever the build holds a private-use pack — ADR-11) with the APK and docs/reports/M<n>-*.md attached [L4]"
+    - "Issue templates exist for HG-1, HG-R, HG-2, HG-3, HG-4, blocked and infra (HG-R is the ride comfort check, HG-2 the StreamBox in-world check) [L0]"
   status: todo
 
 - id: F-10
@@ -299,7 +299,112 @@ packages:
     - "docs/reports/M1-factory-online.md written; risks and backlog updated; release cut [L0]"
   status: todo
 
+
 # ───────────────────────────── M2  FIRST PLAYABLE ─────────────────────────────
+# Content ingestion moved here on 2026-11-11: the owner's packs are the whole of the content now,
+# and wave 1 (including the coaster and avatar packs) is the input the rides milestones need.
+
+- id: C-01a
+  title: Catalogue schema, loader and deterministic id generation
+  ms: M2
+  risk: med
+  deps: [F-01]
+  refs: [adr ADR-11, au phase-04-05-07-foliage-architecture-import.md]
+  accept:
+    - "content/catalogue/*.yaml schema documented and validated; every way of getting an entry wrong is covered by a test that proves the loader refuses it [L1]"
+    - "C# ids generated deterministically from the catalogue; ids are stable across additions; collisions, zero and duplicate C# names all fail the build [L1]"
+    - "The generated file is committed and CI fails when it is stale [L0]"
+    - "Python and C# derive the same number for the same id, asserted from values computed independently of both [L1]"
+  status: done
+
+- id: C-01b
+  title: Catalogue validator, licence ledger and honest count
+  ms: M2
+  risk: med
+  deps: [C-01a]
+  refs: [adr ADR-11, au phase-04-05-07-foliage-architecture-import.md]
+  accept:
+    - "Validator checks triangle and LOD budgets, texture sizes, bounds, closed geometry, collider and thumbnail presence, and fails CI [L0]"
+    - "Per-item budgets live in content/budgets.yaml as data; an LOD chain that does not actually reduce fails [L0]"
+    - "Licence ledger generated from the catalogue; a licence outside the allowlist fails, the allowlist cites the decision record that admits it, and the tool checks that record exists [L0]"
+    - "Report counts distinct meshes by asset checksum, not by catalogue entry, so two entries sharing a mesh count as one mesh and two variants [L0]"
+    - "One mesh shared across two kinds fails, because that is the shape the blueprint's dishonest count took [L0]"
+  status: done
+
+- id: C-02a
+  title: Pinned headless Blender, and proof it can do the work
+  ms: M2
+  risk: med
+  deps: [F-01]
+  refs: [adr ADR-11]
+  accept:
+    - "One Blender version is pinned by URL and verified against its published checksum; the installer is idempotent and refuses a mismatched archive [L0]"
+    - "A probe proves, headlessly and with no GPU: Python scripting, the topology counts the catalogue validator reads, GLB export, and rendering a thumbnail [L1]"
+    - "It runs in CI, path-filtered so a 360 MB download is not on every push, with the archive cached and the cache keyed on the pin itself [L1]"
+  status: done
+
+- id: C-02b
+  title: Blender normalisation pipeline
+  ms: M2
+  risk: high
+  deps: [C-01b, C-02a]
+  refs: [adr ADR-11]
+  accept:
+    - "Headless Blender normalises scale and pivot, generates LODs, bakes ambient occlusion to vertex colour and maps flat-colour materials onto the shared palette; textured packs keep their textures within the texture budget [L2]"
+    - "It emits the facts file C-01b's validator reads, with the asset checksum that binds them together [L0]"
+    - "Outputs are deterministic: a rerun over the same input produces byte-identical files [L0]"
+    - "Proven against a synthetic input archive, so testing it needs no third-party download [L1]"
+  status: todo
+
+- id: C-02c
+  title: Pack ingestion from the owner's asset waves, and licence archiving
+  ms: M2
+  risk: high
+  deps: [C-02b]
+  refs: [adr ADR-11, adr ADR-19, 06-RISKS.md]
+  accept:
+    - "Input is a draft GitHub Release tagged assets-wave-<n>: the ingestion workflow lists releases with GITHUB_TOKEN, fetches each archive by asset id (a draft is not reachable by its tag), and records the archive's checksum; an archive that changes later fails until it is re-ingested on purpose [L0]"
+    - "Each pack is recorded in the licence ledger with its source page, its licence, the archive checksum and the licence text found in the archive; a pack whose licence cannot be read, or does not allow use in a private gift that is never distributed, is refused with the reason and listed in a human-gate issue rather than guessed [L0]"
+    - "Each pack's licence is classified redistributable (CC0, CC-BY and the like) or private-use-only; only redistributable processed output is committed, through a bot pull request; raw archives are never committed [L0]"
+    - "A contact sheet per pack is attached to the ingestion pull request, and items are admitted per island theme rather than wholesale (ADR-11) [L0]"
+    - "Wave 1 — the owner's first upload, including the coaster and avatar packs — is ingested end to end [L0]"
+  note: >-
+    Answers issue #25. The owner downloads packs by hand, which also honours the
+    donation interstitials, and uploads the archives to a draft release; nothing
+    scripts past a download page. Was needs-human until that route was agreed on
+    2026-11-11.
+  status: todo
+
+- id: C-02d
+  title: Private-use packs stay out of the public repository
+  ms: M2
+  risk: high
+  deps: [C-02c]
+  refs: [adr ADR-11, adr ADR-19]
+  accept:
+    - "Processed output of private-use-only packs is never committed: CI fetches it into a git-ignored folder before Unity runs, and .meta GUIDs for those assets are deterministic so references to them stay stable [L0][L2]"
+    - "A check fails if any file from a private-use pack is tracked by git, attached to a published release, or uploaded as a workflow artefact [L0]"
+    - "When a build holds private-use assets its APK goes only to a draft release, which only the owner can see [L4]"
+  note: >-
+    Cut with a decision record if every pack the owner uploads turns out to be
+    redistributable. Open design point, settled in this package: whether the
+    processed bundle lives on the draft release or in the Actions cache.
+  status: todo
+
+- id: C-03
+  title: Parametric generators — flowers, hedges, grass
+  ms: M2
+  risk: med
+  deps: [C-01b, C-02a]
+  refs: [adr ADR-11, bp phase-04.md §4.2]
+  accept:
+    - "Generators produce closed or deliberately double-sided geometry within budget for at least 16 flower forms, 6 hedge and topiary forms and grass tufts [L0]"
+    - "Each form has petal, stem and leaf vertex masks so palettes recolour the right parts [L2]"
+    - "Thumbnails are rendered headlessly for every item [L0]"
+  note: >-
+    Cut 2026-11-11 by the owner: content is premade packs only, and generators are
+    no longer a content source (ADR-11, DECISIONS.md 2026-11-11).
+  status: cut
 
 - id: V-01
   title: Input abstraction, simulation driver, XR input adapter
@@ -498,6 +603,7 @@ packages:
     - "HG-1 issue opened from its template with the release link; the build continues without waiting [L0]"
   status: todo
 
+
 # ───────────────────────────── M3  SCULPTABLE ISLAND ─────────────────────────────
 
 - id: W-01
@@ -573,35 +679,212 @@ packages:
     - "CPU time of the sculpt path is recorded as a regression baseline [L3]"
   status: todo
 
+- id: A-01
+  title: Audio core and ambient bed
+  ms: M3
+  risk: low
+  deps: [M2-RETRO]
+  refs: [adr ADR-14, bp phase-09.md §9.2]
+  accept:
+    - "Mixer, voice limits and DSP settings applied by code and asserted [L2]"
+    - "Ambient bed from CC0 loops recorded in the licence ledger; volume settings saved [L3]"
+  note: >-
+    Moved from the media milestone on 2026-11-11: the train and the coasters need
+    the mixer before StreamBox does.
+  status: todo
+
 - id: M3-RETRO
   title: Milestone M3 journey, report, retro, release
   ms: M3
   risk: low
-  deps: [W-02, W-04, U-02]
+  deps: [W-02, W-04, U-02, A-01]
   refs: [04-VERIFICATION.md §5]
   accept:
     - "JourneyTests.M3 passes; report, retro and release done [L3][L0]"
   status: todo
 
-# ───────────────────────────── M4  ISLAND MEDIA — STREAMBOX IN-WORLD ─────────────────────────────
+
+# ───────────────────────────── M4  ISLANDS AND THE TRAIN ─────────────────────────────
+# The heart of the gift, with M5: the person it is for loves trains. Spec: 02-ARCHITECTURE.md ADR-24.
+# TR-01 is engine-free and may be taken early whenever the current milestone is waiting.
+
+- id: TR-01
+  title: A world of islands in Core — world index, island seeds, station reservation
+  ms: M4
+  risk: high
+  deps: [V-02, V-06]
+  refs: [adr ADR-24, adr ADR-08, adr ADR-09]
+  accept:
+    - "A world index lists islands by stable id with name, seed, theme, creation time and thumbnail reference; islands are created on demand and the list has no fixed upper bound [L1]"
+    - "A new island's starting terrain and its station position derive deterministically from its seed, inside the 64 m extent, with the station on the shoreline facing open water [L1]"
+    - "The station footprint and the track corridor leaving the island are reserved: brushes and placement cannot alter them, and a test sculpts and places across them without effect [L1]"
+    - "Each island saves to its own file in the V-06 container and the world index to another; deleting an island removes only its file; a single-island save from an earlier build migrates into a one-island world [L1]"
+    - "Loading the world index never loads an island's contents [L1]"
+  status: todo
+
+- id: TR-02
+  title: One island at a time — load, unload and memory
+  ms: M4
+  risk: high
+  deps: [TR-01, M3-RETRO]
+  refs: [adr ADR-24, adr ADR-10]
+  accept:
+    - "Exactly one island is resident; leaving it saves it, unloads it and returns memory to the pre-load baseline within tolerance over twenty round trips [L3]"
+    - "Loading an island never blocks the main thread beyond the stated bound; load time is measured and recorded as a baseline [L3]"
+    - "An island loads on the headset within the time the train ride covers [L6]"
+  status: todo
+
+- id: TR-03
+  title: Station, platform and the track off the island
+  ms: M4
+  risk: med
+  deps: [TR-02, C-02c]
+  refs: [adr ADR-24, adr ADR-11]
+  accept:
+    - "Every island has a station built in code from pack models, or simple generated meshes until a pack provides them, placed on TR-01's reservation, with a departure board and a track leading off over the water [L3]"
+    - "Station, track and train report to the ledger under the rides allocation and stay within it [L3]"
+    - "The station is saved with the island and cannot be deleted or moved by the player [L3]"
+    - "It looks like a station someone would want to wait at [L7]"
+  status: todo
+
+- id: TR-04
+  title: Riding the train between islands
+  ms: M4
+  risk: high
+  deps: [TR-03, U-02, A-01]
+  refs: [adr ADR-24, adr ADR-25, adr ADR-14]
+  accept:
+    - "Board at the platform, sit, choose a destination; the train departs, crosses open water and arrives at the destination's station; the next island loads during the ride, which never waits visibly on a load [L3]"
+    - "Train motion obeys ADR-25's comfort limits on acceleration and turn rate; the carriage is a fixed frame of reference with a stable horizon; one button ends the ride with a fade [L1][L3]"
+    - "The very first launch begins on the train, arriving at the first island's station [L3]"
+    - "Travelling A → B → A leaves both islands exactly as they were, by structural world-state comparison [L3]"
+    - "Train sounds follow its speed through the A-01 mixer [L3]"
+    - "The ride is something to look forward to, not a loading screen, and it is comfortable seated and standing [L7]"
+  status: todo
+
+- id: TR-05
+  title: The departure board — choose, name and make islands
+  ms: M4
+  risk: med
+  deps: [TR-04, V-11]
+  refs: [adr ADR-24]
+  accept:
+    - "The board lists every island with its name and a thumbnail captured when it was last left, plus 'a new island'; choosing one sets the train's destination [L3]"
+    - "An island can be renamed with the in-world keyboard, and deleted only after a confirmation; a deleted island stays recoverable until the app closes [L3]"
+    - "The board stays usable and allocates nothing while scrolling with one hundred islands in the index [L3]"
+  status: todo
+
+- id: AV-01
+  title: The generic avatar
+  ms: M4
+  risk: low
+  deps: [C-02c, U-01]
+  refs: [adr ADR-27]
+  accept:
+    - "One rigged humanoid from the owner's wave-1 avatar packs is ingested, with Animator controllers for idle, sit and wave generated by code [L2]"
+    - "The player appears as the avatar only where they can see themselves from outside: at tabletop scale, and seated on a ride being watched from outside [L3]"
+    - "There is no character creator; ADR-27 records it as deferred [L0]"
+  status: todo
+
+- id: M4-RETRO
+  title: Milestone M4 journey, report, retro, release
+  ms: M4
+  risk: low
+  deps: [TR-05, AV-01]
+  refs: [04-VERIFICATION.md §5]
+  accept:
+    - "JourneyTests.M4 passes; report, retro and release done [L3][L0]"
+  status: todo
+
+
+# ───────────────────────────── M5  ROLLER COASTERS ─────────────────────────────
+# The other heart of the gift: build a coaster on the island and ride it. Spec: ADR-25.
+# RC-01 and RC-02 are engine-free and may be taken early whenever the current milestone is waiting.
+
+- id: RC-01
+  title: Coaster track model in Core — pieces, snapping, validation
+  ms: M5
+  risk: high
+  deps: [V-06, V-08]
+  refs: [adr ADR-25]
+  accept:
+    - "Track pieces are catalogue data with entry and exit frames (position, heading, pitch, bank); the piece set is derived from the owner's coaster pack and recorded in a decision record [L1][L0]"
+    - "A piece placed at an open end snaps exactly, and the error accumulated over a 200-piece circuit stays under 1 mm because frames are composed, not integrated [L1]"
+    - "Validation reports, per piece: circuit closed, one station, a lift before the first drop, no self-intersection within the clearance envelope, supports reach the ground, nothing inside the station reservation or the train's corridor [L1]"
+    - "A coaster is one save section keyed by instance id, with a migration test; adding and removing a piece are undoable commands [L1]"
+  status: todo
+
+- id: RC-02
+  title: Ride physics in Core — speed, forces and intensity
+  ms: M5
+  risk: high
+  deps: [RC-01]
+  refs: [adr ADR-25]
+  accept:
+    - "Fixed-step, energy-based simulation along the track centreline: gravity, rolling and air friction, chain lift at constant speed, brakes and station; deterministic and independent of frame rate [L1]"
+    - "Vertical, lateral and longitudinal forces are computed per sample; a circuit on which the train would stall, valley or exceed ADR-25's force limits is reported with the piece where it happens [L1]"
+    - "An intensity rating — gentle, lively or thrilling — is computed from the forces and shown before riding; a gentle setting scales speed down so any valid coaster can be ridden gently [L1]"
+  status: todo
+
+- id: RC-03
+  title: Track, supports and cars in Unity
+  ms: M5
+  risk: high
+  deps: [RC-01, C-02c, M4-RETRO]
+  refs: [adr ADR-25, adr ADR-10, adr ADR-17]
+  accept:
+    - "Track renders from the pack's piece models placed on RC-01's frames; supports are generated down to the terrain and re-seat when the ground under them is sculpted [L3]"
+    - "Finished sections merge into a few meshes and un-merge on edit and undo; a 200-piece coaster stays within the rides allocation of the ledger [L3]"
+    - "Cars from the pack follow the track at RC-02's speeds, wheels and bank following the frames [L3]"
+  status: todo
+
+- id: RC-04
+  title: The coaster builder
+  ms: M5
+  risk: high
+  deps: [RC-03, V-11]
+  refs: [adr ADR-25]
+  accept:
+    - "A piece palette on the wrist; the next piece previews as a ghost at the open end; place, delete-last and undo are each one step [L3]"
+    - "Building works life-size and at tabletop scale, which is the comfortable way to build a big one [L3]"
+    - "Validation problems show on the track where they are, in plain words; a 'finish the circuit' helper offers pieces that close the loop [L3]"
+    - "Someone who has never built a coaster builds and rides a small one within five minutes [L7]"
+  status: todo
+
+- id: RC-05
+  title: Riding a coaster
+  ms: M5
+  risk: high
+  deps: [RC-02, RC-04, AV-01]
+  refs: [adr ADR-25, adr ADR-14]
+  accept:
+    - "Board at the station and ride in the front car; the car is a fixed frame of reference with a visible horizon; a vignette narrows with angular acceleration; one button ends the ride with a fade [L3]"
+    - "Comfort settings — intensity cap, vignette strength, and watch-from-outside, where the avatar rides and the player watches from a chosen spot or at tabletop scale — are all saved [L3]"
+    - "Ride sounds — chain lift, wheels, wind — follow speed through the A-01 mixer [L3]"
+    - "Riding allocates nothing per frame, and frame time holds in simulation with a full island loaded [L3]"
+    - "Exhilarating and comfortable, seated, at each intensity [L7]"
+  status: todo
+
+- id: M5-RETRO
+  title: Milestone M5 journey, report, retro, release and HG-R issue
+  ms: M5
+  risk: low
+  deps: [RC-05]
+  refs: [04-VERIFICATION.md §5, 00-START-HERE.md §5]
+  accept:
+    - "JourneyTests.M5 passes; report, retro and release done [L3][L0]"
+    - "HG-R ride comfort issue opened for the train and a coaster; the build continues without waiting [L0]"
+  status: todo
+
+
+# ───────────────────────────── M6  ISLAND MEDIA — STREAMBOX IN-WORLD ─────────────────────────────
 # The owner's own media server, native in the world. Spec: docs/plan/07-STREAMBOX.md.
 # SB-01 depends only on F-08 and may be taken early whenever the current milestone is waiting.
 # No session working in this repository may push to, or open pull requests on, the StreamBox repository.
 
-- id: A-01
-  title: Audio core and ambient bed
-  ms: M4
-  risk: low
-  deps: [M3-RETRO]
-  refs: [adr ADR-14, bp phase-09.md §9.2]
-  accept:
-    - "Mixer, voice limits and DSP settings applied by code and asserted [L2]"
-    - "Ambient bed from CC0 loops recorded in the licence ledger; volume settings saved [L3]"
-  status: todo
-
 - id: SB-01a
   title: StreamBox contract snapshot and mock gateway
-  ms: M4
+  ms: M6
   risk: high
   deps: [F-08]
   refs: [07-STREAMBOX.md, adr ADR-23]
@@ -614,7 +897,7 @@ packages:
 
 - id: SB-01b
   title: StreamBox models and tolerant JSON mapping in Island.Core
-  ms: M4
+  ms: M6
   risk: high
   deps: [SB-01a]
   refs: [07-STREAMBOX.md, adr ADR-23, adr ADR-07]
@@ -627,7 +910,7 @@ packages:
 
 - id: SB-01c
   title: StreamBox client and HTTP transport in Island.Core
-  ms: M4
+  ms: M6
   risk: high
   deps: [SB-01b]
   refs: [07-STREAMBOX.md, adr ADR-23]
@@ -641,7 +924,7 @@ packages:
 
 - id: SB-01d
   title: Connect socket transport and remote control
-  ms: M4
+  ms: M6
   risk: high
   deps: [SB-01c]
   refs: [07-STREAMBOX.md, adr ADR-23]
@@ -655,7 +938,7 @@ packages:
 
 - id: SB-02
   title: Media player backend
-  ms: M4
+  ms: M6
   risk: high
   deps: [V-14, A-01]
   refs: [07-STREAMBOX.md §4, adr ADR-15, dr Assets/Scripts/Media/VirtualCinemaScreenController.cs, au phase-08-12-media-pets-ai.md]
@@ -669,7 +952,7 @@ packages:
 
 - id: A-04
   title: Screen and speaker props
-  ms: M4
+  ms: M6
   risk: med
   deps: [SB-02]
   refs: [adr ADR-15, dr Assets/Scripts/Media/VirtualCinemaManager.cs]
@@ -682,7 +965,7 @@ packages:
 
 - id: SB-03
   title: Pairing and sign-in
-  ms: M4
+  ms: M6
   risk: med
   deps: [SB-01b, V-11]
   refs: [07-STREAMBOX.md §3.1]
@@ -695,7 +978,7 @@ packages:
 
 - id: SB-04
   title: Library browser
-  ms: M4
+  ms: M6
   risk: med
   deps: [SB-03]
   refs: [07-STREAMBOX.md §3.2]
@@ -709,7 +992,7 @@ packages:
 
 - id: SB-05
   title: Watching
-  ms: M4
+  ms: M6
   risk: high
   deps: [SB-02, SB-04, A-04]
   refs: [07-STREAMBOX.md §3.3, 07-STREAMBOX.md §3.5]
@@ -723,7 +1006,7 @@ packages:
 
 - id: A-02
   title: Radio and speakers — local files and bundled loops, multi-speaker
-  ms: M4
+  ms: M6
   risk: med
   deps: [A-01]
   refs: [adr ADR-14, dr Assets/Scripts/Audio/SpatialBoxRadioController.cs, dr Assets/Scripts/Audio/SpatialRadioNetworkManager.cs, au phase-08-12-media-pets-ai.md]
@@ -737,7 +1020,7 @@ packages:
 
 - id: SB-06
   title: StreamBox music on radios and speakers
-  ms: M4
+  ms: M6
   risk: med
   deps: [A-02, SB-03]
   refs: [07-STREAMBOX.md §3.4]
@@ -751,7 +1034,7 @@ packages:
 
 - id: SB-07
   title: Islandia as a Connect device
-  ms: M4
+  ms: M6
   risk: med
   deps: [SB-05]
   refs: [07-STREAMBOX.md §3.6]
@@ -762,99 +1045,24 @@ packages:
     - "Something started from the phone app plays on the in-world screen, and the phone remote controls it [L6]"
   status: todo
 
-- id: M4-RETRO
-  title: Milestone M4 journey, report, retro, release and HG-2 issue
-  ms: M4
+- id: M6-RETRO
+  title: Milestone M6 journey, report, retro, release and HG-2 issue
+  ms: M6
   risk: low
   deps: [SB-05, SB-06, SB-07]
   refs: [04-VERIFICATION.md §5, 00-START-HERE.md §5]
   accept:
-    - "JourneyTests.M4 passes against the mock gateway; report, retro and release done [L3][L0]"
+    - "JourneyTests.M6 passes against the mock gateway; report, retro and release done [L3][L0]"
     - "A cross-repository note lists anything that would be better changed on the StreamBox side, as a human-gate issue for the owner to take into that project's own process [L0]"
     - "HG-2 issue opened; the build continues without waiting [L0]"
   status: todo
 
-# ───────────────────────────── M5  LIVING GARDEN ─────────────────────────────
 
-- id: C-01a
-  title: Catalogue schema, loader and deterministic id generation
-  ms: M5
-  risk: med
-  deps: [F-01]
-  refs: [adr ADR-11, au phase-04-05-07-foliage-architecture-import.md]
-  accept:
-    - "content/catalogue/*.yaml schema documented and validated; every way of getting an entry wrong is covered by a test that proves the loader refuses it [L1]"
-    - "C# ids generated deterministically from the catalogue; ids are stable across additions; collisions, zero and duplicate C# names all fail the build [L1]"
-    - "The generated file is committed and CI fails when it is stale [L0]"
-    - "Python and C# derive the same number for the same id, asserted from values computed independently of both [L1]"
-  status: done
-
-- id: C-01b
-  title: Catalogue validator, licence ledger and honest count
-  ms: M5
-  risk: med
-  deps: [C-01a]
-  refs: [adr ADR-11, au phase-04-05-07-foliage-architecture-import.md]
-  accept:
-    - "Validator checks triangle and LOD budgets, texture sizes, bounds, closed geometry, collider and thumbnail presence, and fails CI [L0]"
-    - "Per-item budgets live in content/budgets.yaml as data; an LOD chain that does not actually reduce fails [L0]"
-    - "Licence ledger generated from the catalogue; a licence outside the allowlist fails, the allowlist cites the decision record that admits it, and the tool checks that record exists [L0]"
-    - "Report counts distinct meshes by asset checksum, not by catalogue entry, so two entries sharing a mesh count as one mesh and two variants [L0]"
-    - "One mesh shared across two kinds fails, because that is the shape the blueprint's dishonest count took [L0]"
-  status: done
-
-- id: C-02a
-  title: Pinned headless Blender, and proof it can do the work
-  ms: M5
-  risk: med
-  deps: [F-01]
-  refs: [adr ADR-11]
-  accept:
-    - "One Blender version is pinned by URL and verified against its published checksum; the installer is idempotent and refuses a mismatched archive [L0]"
-    - "A probe proves, headlessly and with no GPU: Python scripting, the topology counts the catalogue validator reads, GLB export, and rendering a thumbnail [L1]"
-    - "It runs in CI, path-filtered so a 360 MB download is not on every push, with the archive cached and the cache keyed on the pin itself [L1]"
-  status: done
-
-- id: C-02b
-  title: Blender normalisation pipeline
-  ms: M5
-  risk: high
-  deps: [C-01b, C-02a]
-  refs: [adr ADR-11]
-  accept:
-    - "Headless Blender normalises scale and pivot, generates LODs, bakes ambient occlusion to vertex colour and maps materials onto the shared palette [L2]"
-    - "It emits the facts file C-01b's validator reads, with the asset checksum that binds them together [L0]"
-    - "Outputs are deterministic: a rerun over the same input produces byte-identical files [L0]"
-    - "Proven against a synthetic input archive, so testing it needs no third-party download [L1]"
-  status: todo
-
-- id: C-02c
-  title: Pack ingestion and licence archiving
-  ms: M5
-  risk: high
-  deps: [C-02b]
-  refs: [adr ADR-11]
-  accept:
-    - "Each pack is recorded with its source, its licence, the checksum of the archive it came from, and the archived licence text; a checksum mismatch fails [L0]"
-    - "How an archive reaches the pipeline is settled with the owner first: RT-06 fired because the sources ADR-11 names have no pinnable download URL [L0]"
-    - "Processed assets land in the project through a bot PR; raw downloads are never committed [L0]"
-  status: needs-human
-
-- id: C-03
-  title: Parametric generators — flowers, hedges, grass
-  ms: M5
-  risk: med
-  deps: [C-01b, C-02a]
-  refs: [adr ADR-11, bp phase-04.md §4.2]
-  accept:
-    - "Generators produce closed or deliberately double-sided geometry within budget for at least 16 flower forms, 6 hedge and topiary forms and grass tufts [L0]"
-    - "Each form has petal, stem and leaf vertex masks so palettes recolour the right parts [L2]"
-    - "Thumbnails are rendered headlessly for every item [L0]"
-  status: todo
+# ───────────────────────────── M7  LIVING GARDEN ─────────────────────────────
 
 - id: W-10
   title: Foliage instance store, culling and LOD
-  ms: M5
+  ms: M7
   risk: high
   deps: [M3-RETRO]
   refs: [adr ADR-17, dr Assets/Scripts/Foliage/FoliageInstancingManager.cs, dr Assets/Scripts/Foliage/BotanicalCullingJob.cs, au phase-04-05-07-foliage-architecture-import.md]
@@ -867,19 +1075,19 @@ packages:
   status: todo
 
 - id: W-11
-  title: Foliage shader and palettes
-  ms: M5
+  title: Foliage shader
+  ms: M7
   risk: med
-  deps: [W-10, C-03]
+  deps: [W-10]
   refs: [dr Assets/Shaders/BotanicalVertexLUT.shader, adr ADR-03]
   accept:
-    - "One opaque instanced shader recolours masked vertices from a palette texture per instance; passes smoke and rule scans [L2][L0]"
+    - "One opaque instanced shader renders pack foliage with a per-instance tint; passes smoke and rule scans [L2][L0]"
     - "No shadows cast by foliage; no alpha blending [L2]"
   status: todo
 
 - id: W-12
   title: Scatter-and-grow brush and terrain following
-  ms: M5
+  ms: M7
   risk: med
   deps: [W-10]
   refs: [dr Assets/Scripts/UX/ToyboxInteractionController.cs, bp phase-03.md, au phase-04-05-07-foliage-architecture-import.md]
@@ -891,7 +1099,7 @@ packages:
 
 - id: W-13
   title: Grass
-  ms: M5
+  ms: M7
   risk: med
   deps: [W-10, W-11]
   refs: [bp phase-04.md §4.1]
@@ -901,20 +1109,20 @@ packages:
   status: todo
 
 - id: C-04
-  title: Botanical batch 1
-  ms: M5
+  title: Plant batch 1 from the owner's packs
+  ms: M7
   risk: med
-  deps: [C-02b, C-02c, C-03, W-11]
+  deps: [C-02c, W-11]
   refs: [adr ADR-11, bp 00-executive-blueprint.md]
   accept:
-    - "At least 12 trees, 12 bushes and 16 flower forms with palettes are in the catalogue, pass the validator and are placeable [L0][L3]"
+    - "The trees, bushes and flowers in the owner's packs that fit an island theme are in the catalogue, pass the validator and are placeable [L0][L3]"
     - "A contact sheet of thumbnails is attached to the PR [L0]"
     - "Species are recognisable and consistent in style [L7]"
   status: todo
 
 - id: U-10
   title: Inventory browser
-  ms: M5
+  ms: M7
   risk: med
   deps: [C-01b, V-11]
   refs: [bp phase-03.md §3.1]
@@ -923,23 +1131,24 @@ packages:
     - "Usable with controllers and with hands [L7]"
   status: todo
 
-- id: M5-RETRO
-  title: Milestone M5 journey, report, retro, release
-  ms: M5
+- id: M7-RETRO
+  title: Milestone M7 journey, report, retro, release
+  ms: M7
   risk: low
   deps: [W-12, W-13, C-04, U-10]
   refs: [04-VERIFICATION.md §5]
   accept:
-    - "JourneyTests.M5 passes; report, retro and release done [L3][L0]"
+    - "JourneyTests.M7 passes; report, retro and release done [L3][L0]"
   status: todo
 
-# ───────────────────────────── M6  BUILDER'S KIT ─────────────────────────────
+
+# ───────────────────────────── M8  BUILDER'S KIT ─────────────────────────────
 
 - id: B-01
   title: Module and socket model, snap solver
-  ms: M6
+  ms: M8
   risk: med
-  deps: [M5-RETRO]
+  deps: [M7-RETRO]
   refs: [dr Assets/Scripts/Architecture/MagneticSocketSnapper.cs, au phase-04-05-07-foliage-architecture-import.md]
   accept:
     - "Sockets are catalogue data; the solver returns position and rotation together and honours the target's orientation [L1]"
@@ -948,7 +1157,7 @@ packages:
 
 - id: B-02
   title: Studio tools — select, move, rotate, scale, multi-select, delete
-  ms: M6
+  ms: M8
   risk: high
   deps: [B-01]
   refs: [dr Assets/Scripts/UX/ArtistStudioGridGizmoController.cs, au phase-01-03-engine-terrain-ux.md]
@@ -960,7 +1169,7 @@ packages:
 
 - id: B-03
   title: Architecture shader and shared palette material
-  ms: M6
+  ms: M8
   risk: med
   deps: [S-03]
   refs: [dr Assets/Shaders/ArchitecturalAtlasUber.shader, adr ADR-03]
@@ -969,10 +1178,10 @@ packages:
   status: todo
 
 - id: C-05
-  title: Architecture batch 1 — one complete theme, gazebos, props
-  ms: M6
+  title: Architecture batch 1 from packs — one complete theme, gazebos, props
+  ms: M8
   risk: high
-  deps: [C-02b, B-01, B-03]
+  deps: [C-02c, B-01, B-03]
   refs: [adr ADR-11, bp phase-05.md §5.2]
   accept:
     - "One theme with foundations, walls, windows, doors, floors, stairs and roofs (≥ 20 modules) that tile on the grid with correct sockets and colliders [L0][L2]"
@@ -983,7 +1192,7 @@ packages:
 
 - id: B-04
   title: Draw-call strategy for structures — measure, then decide
-  ms: M6
+  ms: M8
   risk: med
   deps: [C-05]
   refs: [adr ADR-17, dr Assets/Scripts/Architecture/RuntimeMeshWelder.cs, au phase-04-05-07-foliage-architecture-import.md]
@@ -994,7 +1203,7 @@ packages:
 
 - id: B-05
   title: Foundations and stilts on slopes and water
-  ms: M6
+  ms: M8
   risk: low
   deps: [B-01, W-01]
   refs: [bp 00-executive-blueprint.md]
@@ -1004,7 +1213,7 @@ packages:
 
 - id: B-06
   title: glTF export
-  ms: M6
+  ms: M8
   risk: med
   deps: [C-05, W-10]
   refs: [dr Assets/Scripts/Architecture/IslandGltfExporter.cs, au phase-04-05-07-foliage-architecture-import.md]
@@ -1016,19 +1225,19 @@ packages:
 
 - id: P-10
   title: Save coverage, slots, autosave
-  ms: M6
+  ms: M8
   risk: med
-  deps: [B-02, W-10]
+  deps: [B-02, W-10, TR-01]
   refs: [adr ADR-09]
   accept:
-    - "Sections exist for structures, props, foliage, settings and time of day, each with a migration test [L1]"
-    - "Multiple island slots, autosave on a timer and on pause, backup rotation [L3]"
+    - "Sections exist for structures, props, foliage, coasters, paint, the cat, settings and time of day, each with a migration test [L1]"
+    - "Per-island saves through the world index (TR-01); autosave on a timer, on pause and on leaving an island; backup rotation [L3]"
     - "RoundTripTests covers a generated island using every placed-object kind [L3]"
   status: todo
 
 - id: U-11
   title: Toybox and studio modes
-  ms: M6
+  ms: M8
   risk: med
   deps: [B-02, U-10]
   refs: [bp phase-03.md §3.1]
@@ -1038,23 +1247,25 @@ packages:
     - "A newcomer can build something in five minutes [L7]"
   status: todo
 
-- id: M6-RETRO
-  title: Milestone M6 journey, report, retro, release
-  ms: M6
+- id: M8-RETRO
+  title: Milestone M8 journey, report, retro, release
+  ms: M8
   risk: low
   deps: [B-04, B-05, B-06, P-10, U-11]
   refs: [04-VERIFICATION.md §5]
   accept:
-    - "JourneyTests.M6 passes; report, retro and release done [L3][L0]"
+    - "JourneyTests.M8 passes; report, retro and release done [L3][L0]"
   status: todo
 
-# ───────────────────────────── M7  BRING YOUR OWN MODELS ─────────────────────────────
+
+# ───────────────────────────── M9  BRING YOUR OWN MODELS ─────────────────────────────
 # Track I has no dependency on earlier milestones beyond M2. The driver may take I-01, I-04 and I-05
 # early whenever the current milestone is waiting on CI minutes or a human gate.
+# The relay is deployed (owner, 2026-11-11): imported models are a major feature, painted in M10.
 
 - id: I-01
   title: GLB gatekeeper in Core
-  ms: M7
+  ms: M9
   risk: high
   deps: [F-08]
   refs: [adr ADR-12, au phase-06-companion.md]
@@ -1067,7 +1278,7 @@ packages:
 
 - id: I-02
   title: On-device loader
-  ms: M7
+  ms: M9
   risk: high
   deps: [I-01, M2-RETRO]
   refs: [adr ADR-12, dr Assets/Scripts/Cloud/IslandGltfLoader.cs, dr Assets/Scripts/Cloud/GltfMaterialRemapperAndLogger.cs, au phase-04-05-07-foliage-architecture-import.md]
@@ -1082,7 +1293,7 @@ packages:
 
 - id: I-03
   title: Imports folder
-  ms: M7
+  ms: M9
   risk: low
   deps: [I-02, U-10]
   refs: [adr ADR-12]
@@ -1093,7 +1304,7 @@ packages:
 
 - id: I-04
   title: Browser converter
-  ms: M7
+  ms: M9
   risk: high
   deps: [I-01]
   refs: [adr ADR-13, dr CompanionWeb/src/CompanionScalePortal.jsx, au phase-06-companion.md]
@@ -1106,7 +1317,7 @@ packages:
 
 - id: I-05
   title: Relay service
-  ms: M7
+  ms: M9
   risk: high
   deps: [I-01]
   refs: [adr ADR-13, adr ADR-21, au phase-06-companion.md]
@@ -1120,7 +1331,7 @@ packages:
 
 - id: I-06
   title: Headset pairing and receive flow
-  ms: M7
+  ms: M9
   risk: med
   deps: [I-02, I-05]
   refs: [dr Assets/Scripts/Cloud/CompanionPairingAndQuotaClient.cs, au phase-06-companion.md]
@@ -1131,8 +1342,8 @@ packages:
   status: todo
 
 - id: I-07
-  title: Deployment package for the companion
-  ms: M7
+  title: Deploying the companion and relay
+  ms: M9
   risk: med
   deps: [I-04, I-05]
   refs: [adr ADR-13, 00-START-HERE.md §3]
@@ -1140,68 +1351,222 @@ packages:
     - "Infrastructure definition and a deploy workflow exist and are exercised against a local emulator [L3]"
     - "A human-gate issue lists exactly what the owner must create and which secrets to add; cost ceiling and scale-to-zero are configured in the definition [L0]"
     - "Deployed and reachable [L6]"
+    - "Hosting is a free tier that needs no payment card where one exists, so the relay cannot run up a bill; if every option needs a card, a human-gate issue says so before anything is created [L0]"
   status: todo
 
-- id: M7-RETRO
-  title: Milestone M7 journey, report, retro, release
-  ms: M7
+- id: M9-RETRO
+  title: Milestone M9 journey, report, retro, release
+  ms: M9
   risk: low
-  deps: [I-03, I-06, I-07, M6-RETRO]
+  deps: [I-03, I-06, I-07, M8-RETRO]
   refs: [04-VERIFICATION.md §5]
   accept:
-    - "JourneyTests.M7 passes including hostile fixtures; report, retro and release done [L3][L0]"
+    - "JourneyTests.M9 passes including hostile fixtures; report, retro and release done [L3][L0]"
   status: todo
 
-# ───────────────────────────── M8  ISLAND COMPANIONS ─────────────────────────────
+
+# ───────────────────────────── M10  PAINT ANYTHING ─────────────────────────────
+# Owner, 2026-11-11: a major feature that needs real attention. Spec: ADR-26.
+# PNT-01 and PNT-02 are engine-free and may be taken early whenever the current milestone is waiting.
+
+- id: PNT-01
+  title: Mesh segmentation in Core — paint regions that respect edges
+  ms: M10
+  risk: high
+  deps: [F-08]
+  refs: [adr ADR-26]
+  accept:
+    - "Triangles are grouped into paint regions split at material-slot boundaries, UV-island boundaries and edges sharper than a dihedral threshold (default 30°, configurable); coincident vertices are welded by position first so split normals do not fragment a smooth surface [L1]"
+    - "Regions under a minimum size merge into the neighbour they share the longest edge with; output is deterministic for the same input and threshold [L1]"
+    - "Fixtures: a cube gives six regions, a cylinder three, a sphere one, and a chair from the owner's packs gives seat, back and legs as separate regions [L1]"
+    - "Degenerate triangles, non-manifold edges and absurd counts are handled without exceptions escaping; a 50,000-triangle mesh segments within a stated time and allocation bound [L1]"
+  status: todo
+
+- id: PNT-02
+  title: Paint model in Core — fills, brush, undo and save
+  ms: M10
+  risk: med
+  deps: [PNT-01, V-06, V-08]
+  refs: [adr ADR-26, adr ADR-09]
+  accept:
+    - "A per-instance paint layer holds region fills and per-triangle brush overrides as palette colours, keyed by instance id; an unpainted instance stores nothing [L1]"
+    - "A fill and a brush stroke are each one undoable command storing a compact delta; 'back to original' is undoable too [L1]"
+    - "A paint save section round-trips exactly, with a migration test [L1]"
+  status: todo
+
+- id: PNT-03
+  title: Segmentation in both pipelines
+  ms: M10
+  risk: high
+  deps: [PNT-01, C-02c, I-02]
+  refs: [adr ADR-26, adr ADR-12]
+  accept:
+    - "Pack assets are segmented at ingestion by the Core implementation run as a tool in CI; region ids are stored with the processed asset and are byte-identical on a rerun [L0][L1]"
+    - "Imported models are segmented on the headset after the gatekeeper, off the main thread, within a stated time bound [L3]"
+    - "One implementation serves both; nothing re-implements segmentation in Python or in the browser [L0]"
+  status: todo
+
+- id: PNT-04
+  title: Paint rendering
+  ms: M10
+  risk: high
+  deps: [PNT-02, PNT-03, B-03]
+  refs: [adr ADR-26, adr ADR-03, adr ADR-17]
+  accept:
+    - "Region ids are a vertex attribute; region fills come from a small per-instance colour table on one shared material, so filled instances still batch [L2][L3]"
+    - "A brush-painted instance gets its own baked-colour mesh, counted in the ledger, and returns to the shared mesh when reset [L3]"
+    - "The shader passes the smoke tests and the shader-rule scan [L2][L0]"
+  status: todo
+
+- id: PNT-05
+  title: Paint tools — fill, brush, eyedropper, palette
+  ms: M10
+  risk: high
+  deps: [PNT-04, U-10, B-02]
+  refs: [adr ADR-26]
+  accept:
+    - "The fill bucket highlights the region under the pointer before it is applied, so what will be painted is never a surprise [L3]"
+    - "Brush paints the triangles under a sized cursor; eyedropper picks a colour from any object; a curated palette plus a custom colour picker; recent colours remembered [L3]"
+    - "Everything placed can be painted: pack items, built structures, imported models, the cat's dishes, coaster cars and the train [L3]"
+    - "Painting a chair's seat one colour and its legs another feels effortless [L7]"
+  status: todo
+
+- id: PNT-06
+  title: When the regions are wrong — sensitivity and split/merge
+  ms: M10
+  risk: med
+  deps: [PNT-05]
+  refs: [adr ADR-26]
+  accept:
+    - "Per object, the player can raise or lower edge sensitivity and see the regions update; the choice is saved and undoable [L3]"
+    - "Two regions can be merged, and a region split along a drawn line; both are saved and undoable [L3]"
+    - "Segmentation quality across the owner's wave-1 packs and a corpus of imported fixtures is reported as a contact sheet of region maps [L0]"
+  status: todo
+
+- id: M10-RETRO
+  title: Milestone M10 journey, report, retro, release
+  ms: M10
+  risk: low
+  deps: [PNT-06, M9-RETRO]
+  refs: [04-VERIFICATION.md §5]
+  accept:
+    - "JourneyTests.M10 passes; report, retro and release done [L3][L0]"
+  status: todo
+
+
+# ───────────────────────────── M11  THE ISLAND CAT ─────────────────────────────
+# Owner, 2026-11-11: one stray cat per island replaces adoptable pets. Spec: ADR-16.
+
+- id: CAT-01
+  title: The cat, its collar and its dishes — content
+  ms: M11
+  risk: med
+  deps: [C-02c, M8-RETRO]
+  refs: [adr ADR-16]
+  accept:
+    - "A rigged cat from the owner's packs, or a free pack proposed in a human-gate issue, with idle, walk, sit, groom, eat and sleep clips and an Animator controller generated by code; a rigid-part cat is the recorded fallback [L2][L0]"
+    - "A collar, a food dish and a water dish are in the catalogue and pass the validator [L0]"
+    - "Each island's cat looks different: coat colour and pattern derive deterministically from the island's seed, within what the model supports [L1]"
+    - "Bone, triangle and LOD budgets are validated [L0]"
+  status: todo
+
+- id: CAT-02
+  title: The cat in Core — befriending and behaviour
+  ms: M11
+  risk: med
+  deps: [TR-01]
+  refs: [adr ADR-16]
+  accept:
+    - "One cat per island, created with the island; its state — stray, fed, befriended — persists in the island's save [L1]"
+    - "Deterministic seeded utility AI at 4 Hz: wander, sit, groom, nap in the sun, keep a stray's distance, come closer as it is fed, visit its dishes; interest points come from the world, not constants [L1]"
+    - "The AI tick allocates nothing and its time is a recorded baseline [L1]"
+    - "The ledger's cap of four active pets becomes one cat per island, in code and in its test, citing ADR-10 [L1]"
+  status: todo
+
+- id: CAT-03
+  title: How the cat gets around
+  ms: M11
+  risk: high
+  deps: [CAT-02, W-04, B-04]
+  refs: [adr ADR-16, dr Assets/Scripts/AI/ChunkedDynamicNavMeshManager.cs, au phase-08-12-media-pets-ai.md]
+  accept:
+    - "Paths go around structures, water, the station and coaster supports; a test puts a house and a pond between start and goal [L3]"
+    - "Path data is rebuilt only for regions that changed and never blocks the main thread beyond a stated bound [L3]"
+  status: todo
+
+- id: CAT-04
+  title: Meeting, feeding and keeping the cat
+  ms: M11
+  risk: med
+  deps: [CAT-01, CAT-03, U-10]
+  refs: [adr ADR-16]
+  accept:
+    - "The cat can be approached and petted with a controller or a hand, and reacts according to how friendly it has become [L3]"
+    - "Feeding it gives it a collar, and puts a food dish and a water dish on the island as ordinary placeable objects — movable, paintable, saved and undoable [L3]"
+    - "Once befriended it can be named; the name shows on the collar tag as real text; it uses its dishes [L3]"
+    - "Meeting the cat is a small, lovely moment [L7]"
+  status: todo
 
 - id: PET-01
   title: Pet content pipeline
-  ms: M8
+  ms: M11
   risk: high
-  deps: [C-02b, M6-RETRO]
+  deps: [C-02b, M8-RETRO]
   refs: [adr ADR-16, au phase-08-12-media-pets-ai.md]
   accept:
     - "CC0 rigged animals with idle, walk, run and at least one extra clip are ingested; Animator controllers generated by code [L2]"
     - "At least four archetypes ship; any archetype without a rigged source is recorded and built as a rigid-part creature [L0]"
     - "Bone, triangle and LOD budgets validated [L0]"
-  status: todo
+  note: >-
+    Cut 2026-11-11 by the owner: one stray cat per island replaces adoptable,
+    customisable pets (ADR-16). Superseded by the CAT packages.
+  status: cut
 
 - id: PET-02
   title: Pet data model and customisation
-  ms: M8
+  ms: M11
   risk: med
   deps: [PET-01]
   refs: [dr Assets/Scripts/Pets/PetArchetypeDatabase.cs, dr Assets/Scripts/Pets/IslandPetSanctuaryManager.cs]
   accept:
     - "Profile (archetype, colours, pattern, proportions, name) lives in Core and round-trips completely, including resting pets [L1]"
     - "Active-pet cap per tier enforced; extra pets rest and can be swapped in [L3]"
-  status: todo
+  note: >-
+    Cut 2026-11-11 by the owner: one stray cat per island replaces adoptable,
+    customisable pets (ADR-16). Superseded by the CAT packages.
+  status: cut
 
 - id: PET-03
   title: Pet shader and name tag
-  ms: M8
+  ms: M11
   risk: med
   deps: [PET-01, S-03]
   refs: [dr Assets/Shaders/PetCoatPatternLut.shader, au phase-08-12-media-pets-ai.md]
   accept:
     - "Patterns are computed from a baked bind-space channel and do not swim under animation; a test compares pattern coordinates across two poses [L2]"
     - "The pet's name is rendered as real text on a tag [L3]"
-  status: todo
+  note: >-
+    Cut 2026-11-11 by the owner: one stray cat per island replaces adoptable,
+    customisable pets (ADR-16). Superseded by the CAT packages.
+  status: cut
 
 - id: PET-04
   title: Navigation
-  ms: M8
+  ms: M11
   risk: high
   deps: [W-04, B-04]
   refs: [adr ADR-16, dr Assets/Scripts/AI/ChunkedDynamicNavMeshManager.cs, au phase-08-12-media-pets-ai.md]
   accept:
     - "Navigation data is rebuilt only for regions that changed; sources exclude pets, toys and the player; rebuild never blocks the main thread beyond a stated bound [L3]"
     - "Paths go around structures and around water for land species; a test places a house and a pond between start and goal [L3]"
-  status: todo
+  note: >-
+    Cut 2026-11-11 by the owner: one stray cat per island replaces adoptable,
+    customisable pets (ADR-16). Superseded by the CAT packages.
+  status: cut
 
 - id: PET-05
   title: Behaviour
-  ms: M8
+  ms: M11
   risk: med
   deps: [PET-02, PET-04]
   refs: [dr Assets/Scripts/AI/PetHarmonyCoordinator.cs, dr Assets/Scripts/AI/PetFetchableToy.cs, bp phase-11.md §11.2]
@@ -1210,11 +1575,14 @@ packages:
     - "Paired activities allocate distinct slots; interest points come from the world (nearest tree, radio, screen), not constants [L1]"
     - "Fetch: a thrown toy is retrieved along a path and carried at the mouth [L3]"
     - "AI tick allocates nothing and its time is a recorded baseline [L3]"
-  status: todo
+  note: >-
+    Cut 2026-11-11 by the owner: one stray cat per island replaces adoptable,
+    customisable pets (ADR-16). Superseded by the CAT packages.
+  status: cut
 
 - id: PET-06
   title: Pet studio and hand interaction
-  ms: M8
+  ms: M11
   risk: med
   deps: [PET-03, PET-05, U-10]
   refs: [dr Assets/Scripts/UX/VRComfortAndHandTrackingManager.cs, au phase-08-12-media-pets-ai.md]
@@ -1222,11 +1590,14 @@ packages:
     - "Adopt, customise, rename, rest and release from a panel built in code [L3]"
     - "Petting and throwing work with controllers; hand poses are transformed into world space correctly at both scales [L3]"
     - "Hand tracking feels reliable [L7]"
-  status: todo
+  note: >-
+    Cut 2026-11-11 by the owner: one stray cat per island replaces adoptable,
+    customisable pets (ADR-16). Superseded by the CAT packages.
+  status: cut
 
 - id: U-20
   title: Hand tracking for core tools
-  ms: M8
+  ms: M11
   risk: med
   deps: [U-11]
   refs: [bp phase-11.md]
@@ -1235,23 +1606,24 @@ packages:
     - "Usable on device [L7]"
   status: todo
 
-- id: M8-RETRO
-  title: Milestone M8 journey, report, retro, release
-  ms: M8
+- id: M11-RETRO
+  title: Milestone M11 journey, report, retro, release
+  ms: M11
   risk: low
-  deps: [PET-06, U-20, M4-RETRO, M7-RETRO]
+  deps: [CAT-04, U-20, M6-RETRO, M10-RETRO]
   refs: [04-VERIFICATION.md §5]
   accept:
-    - "JourneyTests.M8 passes; report, retro and release done [L3][L0]"
+    - "JourneyTests.M11 passes; report, retro and release done [L3][L0]"
   status: todo
 
-# ───────────────────────────── M9  ALPHA — FEATURE COMPLETE ─────────────────────────────
+
+# ───────────────────────────── M12  ALPHA — FEATURE COMPLETE ─────────────────────────────
 
 - id: Q-01
   title: Quality scaler
-  ms: M9
+  ms: M12
   risk: med
-  deps: [M8-RETRO]
+  deps: [M11-RETRO]
   refs: [adr ADR-02, adr ADR-10, bp phase-12.md]
   accept:
     - "Scaler adjusts render scale, foveation level and foliage density from frame timing and ledger zone, with hysteresis; behaviour is tested against synthetic timing traces [L1]"
@@ -1260,19 +1632,20 @@ packages:
 
 - id: Q-02
   title: Stress islands and performance regression suite
-  ms: M9
+  ms: M12
   risk: med
   deps: [Q-01]
   refs: [04-VERIFICATION.md §5]
   accept:
     - "A generator builds islands at 50%, 100% and 120% of every budget; the 100% island passes every ledger assertion; the 120% island triggers the scaler and the gauge [L3]"
     - "CPU timing baselines for sculpt, cull, AI and import are tracked per commit and regressions over a threshold fail [L3]"
-    - "JourneyTests.M9 runs ten simulated minutes on the 100% island [L3]"
+    - "JourneyTests.M12 runs ten simulated minutes on the 100% island [L3]"
+    - "The 100% island includes a 200-piece coaster, the station and the cat; a ten-island world round-trips through the train [L3]"
   status: todo
 
 - id: Q-03
   title: Robustness
-  ms: M9
+  ms: M12
   risk: med
   deps: [P-10]
   refs: [adr ADR-09]
@@ -1283,7 +1656,7 @@ packages:
 
 - id: Q-04
   title: Onboarding, settings, accessibility
-  ms: M9
+  ms: M12
   risk: high
   deps: [U-11, U-02]
   refs: [bp phase-03.md]
@@ -1292,23 +1665,25 @@ packages:
     - "Settings cover comfort, handedness, audio, text size and seated play; all saved [L3]"
     - "A first-time player gets through onboarding without help, and without being told anything beforehand [L7]"
     - "The first five minutes are designed, not inherited: what the player sees on opening it, what they are invited to do first, and how they find out they can sculpt the ground at all [L7]"
+    - "The first launch arrives by train at the first island; the opening invites riding, sculpting, building a first coaster and meeting the cat, in an order chosen by design [L3]"
   status: todo
 
 - id: Q-05
   title: Security, privacy and licence review
-  ms: M9
+  ms: M12
   risk: high
-  deps: [M7-RETRO]
+  deps: [M9-RETRO]
   refs: [adr ADR-21, au phase-06-companion.md]
   accept:
     - "Independent security review of the relay, converter and on-device import path; every finding fixed or accepted with a decision record. This matters whether or not anything is published: the app talks to a private media server holding a household's library [L0]"
     - "Dependency audit clean or exceptions recorded; third-party notices screen generated from the licence ledger, honouring attribution for every asset that asks for it [L0]"
     - "A data-flow statement lists every network request the app can make and why [L0]"
+    - "No file from a private-use pack is tracked by git, in a public release or in a workflow artefact; the licence ledger matches what is in the build [L0]"
   status: todo
 
-- id: M9-RETRO
+- id: M12-RETRO
   title: Alpha report, retro, release and HG-3 issue
-  ms: M9
+  ms: M12
   risk: low
   deps: [Q-02, Q-03, Q-04, Q-05]
   refs: [00-START-HERE.md §5]
@@ -1317,13 +1692,14 @@ packages:
     - "HG-3 issue opened; release cut [L0]"
   status: todo
 
-# ───────────────────────────── M10  BETA — CONTENT COMPLETE ─────────────────────────────
+
+# ───────────────────────────── M13  BETA — CONTENT COMPLETE ─────────────────────────────
 
 - id: D-TRIAGE-ALPHA
   title: Triage the alpha device report into fix packages
-  ms: M10
+  ms: M13
   risk: med
-  deps: [M9-RETRO]
+  deps: [M12-RETRO]
   refs: [04-VERIFICATION.md §4]
   accept:
     - "Every failed measurement and every owner note becomes a D-* package with a reproduction in simulation where possible [L0]"
@@ -1332,7 +1708,7 @@ packages:
 
 - id: A-03
   title: "Optional: internet radio tuner"
-  ms: M10
+  ms: M13
   risk: high
   deps: [A-02]
   refs: [adr ADR-14, dr Assets/Scripts/Audio/PrimaryAudioCatalogAndScanner.cs, au phase-08-12-media-pets-ai.md]
@@ -1343,19 +1719,19 @@ packages:
   status: needs-human
 
 - id: C-10
-  title: Botanical batches to target
-  ms: M10
+  title: Later asset waves, island theme by island theme
+  ms: M13
   risk: med
   deps: [C-04]
   refs: [adr ADR-11]
   accept:
-    - "Trees, bushes and flowers reach the ADR-11 target; every item passes the validator; contact sheets attached [L0]"
+    - "Each asset wave the owner uploads is ingested through C-02c; every admitted item passes the validator; contact sheets attached [L0]"
     - "Style coherence is judged, not just counted: a contact sheet of everything together looks like one game [L7]"
   status: todo
 
 - id: C-11
   title: Architecture themes 2 and 3
-  ms: M10
+  ms: M13
   risk: high
   deps: [C-05]
   refs: [adr ADR-11, bp phase-05.md §5.2]
@@ -1364,18 +1740,18 @@ packages:
   status: todo
 
 - id: C-12
-  title: Gazebos, rocks, outdoor props, media and pet props to target
-  ms: M10
+  title: Gazebos, rocks, outdoor props, media and cat props
+  ms: M13
   risk: med
   deps: [C-05]
   refs: [adr ADR-11]
   accept:
-    - "Category counts reach the ADR-11 target; every prop that the player can sit on, light or switch has its interaction [L0][L3]"
+    - "Every prop that the player can sit on, light or switch has its interaction; each island theme has what it needs to feel complete (ADR-11) [L0][L3]"
   status: todo
 
 - id: Q-10
   title: Visual polish pass
-  ms: M10
+  ms: M13
   risk: med
   deps: [C-10, C-11, C-12]
   refs: [adr ADR-04]
@@ -1386,7 +1762,7 @@ packages:
 
 - id: Q-11
   title: Soak and leak hunt
-  ms: M10
+  ms: M13
   risk: med
   deps: [Q-02]
   refs: [bp phase-12.md]
@@ -1398,7 +1774,7 @@ packages:
 
 - id: Q-12
   title: Strings externalised
-  ms: M10
+  ms: M13
   risk: low
   deps: [Q-04]
   refs: []
@@ -1406,9 +1782,9 @@ packages:
     - "No player-facing literal string in code outside the string table; English only [L0]"
   status: todo
 
-- id: M10-RETRO
+- id: M13-RETRO
   title: Beta report, retro, release and HG-4 issue
-  ms: M10
+  ms: M13
   risk: low
   deps: [D-TRIAGE-ALPHA, Q-10, Q-11, Q-12]
   refs: [00-START-HERE.md §5]
@@ -1417,15 +1793,16 @@ packages:
     - "HG-4 issue opened; release cut. This is the last gate — there is no store submission after it [L0]"
   status: todo
 
-# ───────────────────────────── M11  FINISHED — ON THE HEADSET ─────────────────────────────
+
+# ───────────────────────────── M14  FINISHED — ON THE HEADSET ─────────────────────────────
 # Not a store release. This is a gift for one person: a signed build that installs, and enough
 # written down that it can be looked after. See 02-ARCHITECTURE.md ADR-20.
 
 - id: R-01
   title: Signed, installable build
-  ms: M11
+  ms: M14
   risk: med
-  deps: [M10-RETRO]
+  deps: [M13-RETRO]
   refs: [adr ADR-20]
   accept:
     - "CI produces a signed APK from a key the owner supplies as secrets; the key never enters the repository or a session [L4]"
@@ -1435,20 +1812,20 @@ packages:
   status: todo
 
 - id: R-03
-  title: Relay readiness, only if the relay is used
-  ms: M11
+  title: Relay readiness
+  ms: M14
   risk: low
   deps: [I-07]
   refs: [adr ADR-13, adr ADR-21]
   accept:
-    - "If the owner deployed the relay: it has a health check, a cost ceiling and a documented way to turn it off [L3]"
-    - "If they did not: the imports folder is the documented path and this package is closed as not needed [L0]"
+    - "The deployed relay has a health check, a cost ceiling or a provider that cannot bill, and a documented way to turn it off [L3]"
+    - "The imports folder stays a documented path that needs no relay [L0]"
     - "A data-flow note lists every network request the app can make and why; there is no public privacy policy to write because there is no public [L0]"
   status: todo
 
 - id: R-11
   title: Hand-over notes and monthly upkeep
-  ms: M11
+  ms: M14
   risk: low
   deps: [R-01]
   refs: [05-OPERATIONS.md]
@@ -1458,9 +1835,9 @@ packages:
     - "The build driver is replaced by a monthly maintenance task [L0]"
   status: todo
 
-- id: M11-RETRO
+- id: M14-RETRO
   title: It is finished — report, retro, release
-  ms: M11
+  ms: M14
   risk: low
   deps: [R-01, R-03, R-11]
   refs: [05-OPERATIONS.md §9]
