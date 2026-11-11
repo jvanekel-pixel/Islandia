@@ -1,0 +1,76 @@
+# The content pipeline's own checks, which need Blender.
+#
+# Separate from `checks` because installing Blender is a 360 MB download, and putting that on every
+# push to pay for a probe that only matters when the content tooling changes would be a poor trade.
+# Path-filtered, so it runs when the thing it tests moves.
+#
+# Blender is pinned exactly (tools/blender/install.sh) and verified against its published checksum.
+# The content pipeline has to be deterministic — `C-02` requires a rerun to produce byte-identical
+# files — and Blender's mesh operators, glTF exporter and renderer all change between releases, so
+# "whatever Blender the runner has" is not a pipeline.
+
+name: content
+
+on:
+  push:
+    paths:
+      - 'tools/blender/**'
+      - 'tools/content/**'
+      - 'content/**'
+      - '.github/workflows/content.yml'
+      - 'Makefile'
+  pull_request:
+    paths:
+      - 'tools/blender/**'
+      - 'tools/content/**'
+      - 'content/**'
+      - '.github/workflows/content.yml'
+      - 'Makefile'
+  workflow_dispatch:
+
+concurrency:
+  group: content-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  blender:
+    name: Blender can do what the pipeline needs
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    env:
+      BLENDER_CACHE: ${{ github.workspace }}/.blender-cache
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Keyed on the install script, which holds the version and the checksum — so bumping the pin
+      # invalidates the cache by construction rather than by anyone remembering to.
+      - name: Cache the Blender archive
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.blender-cache
+          key: blender-${{ hashFiles('tools/blender/install.sh') }}
+
+      - name: Install the pinned Blender
+        run: make blender
+
+      - name: Prove it can script, measure, export and render (L1)
+        run: make blender-probe
+
+      - name: Report what it proved
+        if: always()
+        run: |
+          {
+            echo "## Blender"
+            echo ""
+            echo '```'
+            /opt/blender/blender --version 2>/dev/null | head -2 || echo "not installed"
+            echo '```'
+            echo ""
+            echo "The probe covers Python scripting, the topology counts the catalogue validator"
+            echo "reads, GLB export, and rendering a thumbnail on the CPU with no display."
+          } >> "$GITHUB_STEP_SUMMARY"

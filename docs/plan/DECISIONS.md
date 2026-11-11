@@ -499,6 +499,36 @@ and a throw there is someone watching their world disappear. Covered by 2,000 ra
 500 bit-flipped copies of a valid file, and truncation at every length from zero to the whole file —
 each of which must return a refusal with a reason, not throw.
 
+## 2026-11-11 — Blender is pinned to 4.5.16 LTS, and it can do the work
+
+**`C-02a`.** The content track's last unknown. `C-02` and `C-03` both need headless Blender, nothing
+had ever run it here, and four separate things were open questions — three of which could only be
+answered by running it in a container with no display and no GPU. All four now pass, in CI:
+
+| What | Result |
+| :-- | :-- |
+| Python scripting with `--background --factory-startup` | a cube is 8 verts, 6 faces |
+| Topology counts the catalogue validator reads | closed cube: 12 triangles, 0 boundary, 0 non-manifold; one face removed: 4 boundary |
+| GLB export, the format `I-01` reads and glTFast loads | 69,684 bytes, header `glTF` |
+| A thumbnail with **no GPU and no display** | a real 128px PNG, via Cycles on CPU |
+
+The render was the one in doubt. EEVEE wants OpenGL, which a CI container does not have, so
+thumbnails go through Cycles on the CPU. Slower, and it works, which beats faster and absent.
+
+**Pinned exactly, verified by checksum.** `4.5.16` and its published SHA-256 live in
+`tools/blender/install.sh`, and an archive that does not match is not unpacked — the script runs as
+root in CI and extracts a few gigabytes of executables, so "probably the right file" is not good
+enough. Not from apt, either: the distribution's version moves with the runner image and nothing
+announces it. `C-02` requires that a rerun produce byte-identical files, and Blender's mesh
+operators, glTF exporter and renderer all change between releases, so "whatever Blender is
+available" is not a pipeline but a lottery whose result gets committed.
+
+**Its own workflow, path-filtered.** Installing Blender is a 360 MB download. Putting that on every
+push to pay for a probe that only matters when the content tooling changes would be a poor trade, so
+`content.yml` runs on the paths that can affect it. The archive is cached with the key derived from
+`install.sh` itself, so bumping the pin invalidates the cache by construction rather than by someone
+remembering to.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

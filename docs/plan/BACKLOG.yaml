@@ -776,6 +776,18 @@ packages:
     - "One mesh shared across two kinds fails, because that is the shape the blueprint's dishonest count took [L0]"
   status: done
 
+- id: C-02a
+  title: Pinned headless Blender, and proof it can do the work
+  ms: M5
+  risk: med
+  deps: [F-01]
+  refs: [adr ADR-11]
+  accept:
+    - "One Blender version is pinned by URL and verified against its published checksum; the installer is idempotent and refuses a mismatched archive [L0]"
+    - "A probe proves, headlessly and with no GPU: Python scripting, the topology counts the catalogue validator reads, GLB export, and rendering a thumbnail [L1]"
+    - "It runs in CI, path-filtered so a 360 MB download is not on every push, with the archive cached and the cache keyed on the pin itself [L1]"
+  status: done
+
 - id: C-02
   title: CC0 ingestion pipeline
   ms: M5
@@ -793,7 +805,7 @@ packages:
   title: Parametric generators — flowers, hedges, grass
   ms: M5
   risk: med
-  deps: [C-01b]
+  deps: [C-01b, C-02a]
   refs: [adr ADR-11, bp phase-04.md §4.2]
   accept:
     - "Generators produce closed or deliberately double-sided geometry within budget for at least 16 flower forms, 6 hedge and topiary forms and grass tufts [L0]"
