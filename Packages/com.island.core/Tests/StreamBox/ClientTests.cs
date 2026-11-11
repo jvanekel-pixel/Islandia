@@ -183,7 +183,13 @@ namespace Island.Core.Tests.StreamBox
             using (var cancel = new CancellationTokenSource())
             {
                 cancel.Cancel();
-                Assert.ThrowsAsync<OperationCanceledException>(
+
+                // CatchAsync, not ThrowsAsync: ThrowsAsync demands the exact type, and
+                // cancellation surfaces as OperationCanceledException under .NET 9 but as its
+                // subclass TaskCanceledException under Unity's runtime. The contract is that
+                // cancelling throws, not which flavour — and the Unity test run is what found
+                // this, because `dotnet test` alone never saw the difference.
+                Assert.CatchAsync<OperationCanceledException>(
                     () => _client.AwaitApprovalAsync(start, cancel.Token));
             }
         }

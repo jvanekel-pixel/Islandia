@@ -81,9 +81,16 @@ jobs:
           set +e
           # No -quit: -runTests quits by itself, and adding both makes the editor leave before the
           # results are written.
+          #
+          # EndToEnd is excluded because those tests drive the StreamBox client against the mock
+          # gateway, which is a node server the Unity container does not have. `make core-test`
+          # excludes them the same way and `make streambox-e2e` runs them in the `checks` workflow,
+          # so they are proven on every commit — just not here. The first run of this workflow
+          # failed on exactly that, with eleven fixtures reporting the mock's dependency missing.
           unity-editor -batchmode -nographics -runTests \
             -projectPath . \
             -testPlatform EditMode \
+            -testCategory "!EndToEnd" \
             -testResults /tmp/editmode.xml \
             -logFile /tmp/editmode.log
           code=$?
@@ -104,6 +111,7 @@ jobs:
           unity-editor -batchmode -nographics -runTests \
             -projectPath . \
             -testPlatform PlayMode \
+            -testCategory "!EndToEnd" \
             -testResults /tmp/playmode.xml \
             -logFile /tmp/playmode.log
           code=$?
