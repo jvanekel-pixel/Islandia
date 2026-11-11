@@ -332,6 +332,50 @@ the automation that verifies it. That ordering is backwards and it produced exac
 implies. `F-07a` exists because of it, and nothing of this kind should be merged again while the
 thing that checks it is still in review.
 
+## 2026-11-11 — Undo history is two lists, not a ring buffer
+
+**`V-08`.** A ring buffer is the obvious shape for bounded history and it is where three of the
+four defects in the draft lived. Batches could be split when the write head overtook them, so
+undoing one left the world in a state it had never been in. Entries that fell off the end were
+never released, so a long session leaked every object it had ever deleted — the draft hid deleted
+objects with `SetActive(false)` and nothing ever destroyed the ones history forgot. And the redo
+branch was "invalidated" by zeroing a counter while the stale entries stayed in the buffer, where a
+later walk could reach them again.
+
+Two `List<Entry>` instead. Eviction becomes an explicit operation on the front of a list, which is
+the thing that has to be right, and it is now covered by tests that assert a command is released
+exactly once however it leaves history.
+
+**History is bounded by memory, not by a count of steps.** A terrain stroke carries a compressed
+region delta; a move carries two transforms. Counting steps would either hold a hundred megabytes
+of terrain or throw away a hundred cheap moves. Both bounds exist and either trips eviction. The
+step limit is **128**, which is what the spec asks for — the draft's constant said 256 while its
+own comment said 128, the kind of disagreement that decides nothing until it decides the wrong
+thing.
+
+**Two eviction rules, both chosen deliberately.** A whole batch goes or none of it does, because
+half a batch undoes into a state that never existed. And the newest step is never evicted, even
+when it alone exceeds the memory bound: being unable to take back the thing you just did is worse
+than holding one oversized delta, and refusing to record it is the same failure in a different
+coat.
+
+**A terrain stroke stores both sides of its dirty rectangle, uncompressed in value and deflated in
+storage.** Replaying a brush backwards does not return the ground to where it started — the
+exponential approach in `TerrainSculptor` is not symmetric, and nor is the weight blend, which
+renormalises — so undo is a write of stored values rather than an inverse operation. The values are
+stored as whole floats, not the 16-bit quantisation the save format uses, because undo that returns
+the ground to *almost* where it was leaves a visible seam where the restored region meets the ground
+around it. Deflate then gets it back: a measured stroke over 3,969 samples stores **8 KB against 63
+KB raw, 12%**, so a full 128-step history of sculpting is about a megabyte.
+
+**A stroke is one step, not one per frame.** The sculptor runs every frame a button is held;
+capture opens when the stroke starts and closes when it ends. Holding the brush down for three
+seconds is one thing to undo, which is what the person did.
+
+**The draft had no terrain command at all** — spawn, delete, transform, scatter, and nothing for
+sculpting, which is both the thing people do most and the thing they most need to take back,
+because a brush's falloff is not invertible by eye.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

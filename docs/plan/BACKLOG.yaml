@@ -384,7 +384,8 @@ packages:
     - "Command stack in Core keyed by instance id; bounded memory; evicted commands release what they own [L1]"
     - "A terrain stroke is one undoable command storing a compressed region delta; undo/redo restores heights and weights exactly [L1]"
     - "Batches undo as one step [L1]"
-  status: todo
+    - "Eviction takes a whole batch or none of it, and the step just taken is always undoable [L1]"
+  status: done
 
 - id: V-09
   title: Sculpt tool end to end
