@@ -113,9 +113,15 @@ All required checks green on the head commit, then:
    the head commit has passed. A session must not merge its own work: the permission classifier
    refuses it, and that refusal is not something to route around by hand.
 
+   **Label last.** `awaiting-merge` means *land this now*, so a labelled branch is finished by
+   definition — do not push to it afterwards. On 2026-11-11 auto-merge squashed a pull request
+   while a second commit was still being pushed to the same branch: it landed with one commit, the
+   rest was stranded, and recovering it took a second pull request.
+
    If it does not merge, read the workflow's run — it says which guard stopped it. Common
-   answers: a check still running (wait), a conflict (rebase), or a stop label someone added on
-   purpose (`do-not-merge` means a human wants to look first; leave it).
+   answers: a check still running (wait), a conflict (rebase), a commit with no checks at all
+   (the `checks` workflow is not running on that branch — fix that, not this), or a stop label
+   someone added on purpose (`do-not-merge` means a human wants to look first; leave it).
 
    Either way: delete nothing by force, and never rewrite `main`.
 
