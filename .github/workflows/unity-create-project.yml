@@ -51,6 +51,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # This job runs in the Unity container as root, while the checkout belongs to the runner's
+      # own user, and git refuses to work in a repository owned by somebody else. Without this
+      # every `git` call in this workflow fails with "detected dubious ownership" — which the
+      # second attempt at this workflow did, in the drift check and then silently in the commit
+      # step, after the Unity half had finally gone green.
+      - name: Let git use this checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Take a Personal seat
         id: activate
         env:
@@ -161,7 +169,12 @@ jobs:
 
           if [ "$before" != "$after" ]; then
             echo "::warning title=The project changed on reimport::opening it again rewrote something"
-            diff <(echo "$before") <(echo "$after") || true
+            # Temporary files rather than `diff <(…) <(…)`: GitHub runs these steps under `sh`,
+            # not bash, and process substitution is a bash feature. The second attempt died here
+            # with `Syntax error: "(" unexpected` — after Unity itself had succeeded.
+            printf '%s\n' "$before" > /tmp/drift-before.txt
+            printf '%s\n' "$after" > /tmp/drift-after.txt
+            diff /tmp/drift-before.txt /tmp/drift-after.txt || true
           else
             echo "Stable: opening the project again changed nothing."
           fi
