@@ -27,7 +27,12 @@ import sys
 from pathlib import Path
 
 #: Extensions worth reading to answer an API question.
-KEEP = (".cs", ".shader", ".hlsl", ".compute", ".cginc")
+#:
+#: `.asmdef` earns its place: an assembly definition that references a package needs that package's
+#: *assembly* name, which appears nowhere in the C# and cannot be guessed from the namespace —
+#: URP's namespace is `UnityEngine.Rendering.Universal` and its assembly is not. Leaving these out
+#: was the first thing the artefact could not answer.
+KEEP = (".cs", ".shader", ".hlsl", ".compute", ".cginc", ".asmdef")
 
 #: Directories that carry no API surface worth the bytes.
 SKIP_DIRS = {"Tests", "Samples", "Samples~", "Documentation", "Documentation~", ".git"}
