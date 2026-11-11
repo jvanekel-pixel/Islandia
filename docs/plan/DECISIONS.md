@@ -949,6 +949,24 @@ artefact — `OpenXRPackageSettings.GetSettingsForBuildTargetGroupFromPackageSet
 for a group whose module is missing, and `FeatureHelpers.RefreshFeatures` is the public route that
 creates the settings.
 
+## 2026-11-11 — Editor-only XR files are ignored, not committed
+
+**Decided by:** work package `F-05`, on its first `unity-tests` run.
+
+The new guard in `unity-tests` (no editor run may leave `Assets/XR` changed) failed with every
+test green. Nothing committed had changed. Opening the project created three untracked files:
+`Assets/XR/Settings/OpenXR Editor Settings.asset` (OpenXR's internal editor-side settings), and
+`Assets/XR/UserSimulationSettings/` and `Assets/XR/Resources/`, which hold AR Foundation's per-user
+XR Simulation settings and preferences (AR Foundation arrives as a dependency of Meta OpenXR, and
+its build processor strips the simulation files from player builds). None of these is read by
+a build, and committing per-user files invites churn, so they go in `.gitignore`.
+
+The guard is unchanged and still fails on any modified, deleted or new file under `Assets/XR` or in
+`ProjectSettings/EditorBuildSettings.asset` that is not one of these.
+
+**Evidence:** `unity-tests` run 43102051087 — EditMode and PlayMode passed, and the guard listed
+exactly those three paths as `??`, with no `M` or `D` lines.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced
