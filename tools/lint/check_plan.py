@@ -34,7 +34,7 @@ REQUIRED_FIELDS = ("id", "title", "ms", "risk", "deps", "refs", "accept", "statu
 VALID_STATUS = {"todo", "in-progress", "done", "blocked", "needs-human", "cut"}
 VALID_RISK = {"low", "med", "high"}
 LEVEL = re.compile(r"\[L[0-7]\](\[L[0-7]\])*\s*$")
-ID_IN_PROSE = re.compile(r"`((?:F|S|V|W|U|C|B|P|I|A|PET|Q|R|SB|D)-[A-Z0-9-]+[a-z]?|M\d+-RETRO)`")
+ID_IN_PROSE = re.compile(r"`((?:F|S|V|W|U|C|B|P|I|A|PET|Q|R|SB|D|TR|RC|PNT|CAT|AV)-[A-Z0-9-]+[a-z]?|M\d+-RETRO)`")
 
 
 def fail(problems: list[str], message: str) -> None:

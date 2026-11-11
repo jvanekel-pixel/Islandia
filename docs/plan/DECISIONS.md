@@ -746,9 +746,168 @@ dispatched by hand.** That is now in `05-OPERATIONS.md`. It is not worth a deplo
 token to automate: the generating workflows are dispatch-only and rare, and a session that has just
 asked for one can ask for the other.
 
+## 2026-11-11 — The owner's re-plan: what changed, in one place
+
+**Decided by:** the owner, in a new planning conversation, after reviewing where the build stood.
+Each decision has its own entry below; this one records the mechanics.
+
+**Milestones renumbered.** Two new milestones — Islands and the train (M4) and Roller coasters
+(M5) — come straight after the foundations, and Paint anything (M10) is new. Old → new: M4 media →
+**M6**, M5 garden → **M7**, M6 builder → **M8**, M7 import → **M9**, M8 pets → **M11 The island
+cat**, M9 alpha → **M12**, M10 beta → **M13**, M11 finished → **M14**. Retro packages were renamed to
+match. **Entries above this one use the old numbers.**
+
+**Gates.** New non-blocking `HG-R` (ride comfort) after M5. HG-2 (StreamBox) now follows M6, HG-3
+M12, HG-4 M13. HG-4 is still the last gate.
+
+**Moved.** `A-01` (audio core) from the media milestone to M3, because the train and coaster rides
+need the mixer before StreamBox does. Content ingestion (`C-01a`–`C-02d`) to M2, because wave 1 —
+coaster pieces and avatar included — is the input the ride milestones need.
+
+**New tracks.** `TR` islands and the train, `RC` roller coasters, `AV` the avatar, `PNT` painting,
+`CAT` the island cat. `tools/lint/check_plan.py` learned the new prefixes so prose mentions of
+them are checked like any other.
+
+**Acceptance lines changed, not deleted** (`CLAUDE.md` order of authority):
+
+- `F-07` — the APK artefact rule gains an exception for builds holding private-use packs.
+- `F-09` — releases become drafts when the build holds private-use packs; the gate templates are
+  HG-1, HG-R, HG-2, HG-3 and HG-4 (HG-5 went with the store track on 2026-11-10).
+- `C-02b` — palette mapping applies to flat-colour packs; textured packs keep their textures.
+- `C-02c` — rewritten: draft-release input, licence classification, per-theme admission.
+- `W-11` — per-instance tint rather than the generators' vertex masks, which no longer exist.
+- `C-04`, `C-10`, `C-12` — counts against the ≈ 120 target became "what the owner's packs provide
+  and fits a theme", because the target is lifted.
+- `P-10` — island slots became per-island saves through the world index.
+- `R-03` — "only if the relay is used" removed; it is used.
+- Added lines on `Q-02`, `Q-04`, `Q-05` and `I-07` for the stress world, the opening by train, the
+  private-pack check and card-free hosting.
+
+**Cut** (`status: cut`, kept for history): `C-03` and `PET-01` to `PET-06`.
+
+**Also:** the old scheduled driver was paused by the session that took these decisions down — see
+`STATE.md`.
+
+## 2026-11-11 — Content is the owner's premade packs, delivered on draft releases
+
+**Decided by:** the owner. "I want to move to completely premade digital assets. I didn't know
+there would be so much free stuff."
+
+- **Premade free packs are the only content source** (ADR-11). Parametric generators are dropped
+  as a source and `C-03` is cut. The ≈ 120-mesh target of 2026-11-10 (D5) is lifted: the catalogue
+  holds what the owner's packs provide and what passes the validator and the eye. Coherence still
+  beats count, now judged per island theme — with many islands, packs in different styles can
+  live on different islands.
+- **How archives arrive — answers issue #25 and `RT-06`.** The owner downloads each pack by hand
+  (which honours donation pages; nothing scripts past one) and uploads the archives as assets on a
+  **draft** GitHub Release tagged `assets-wave-<n>`. A draft is visible only to people with write
+  access, and is not reachable by its tag, so ingestion lists releases with `GITHUB_TOKEN` and
+  fetches by asset id. The archive checksum is the reproducibility pin that a download URL was
+  supposed to be.
+- **Licence rule, restated.** Admitted: anything whose licence allows use in a private gift that
+  is never distributed. Recorded per pack in the ledger, with the licence text from the archive;
+  unreadable licences go to the owner, not guessed. The 2026-11-10 rule refusing anything that
+  forbids redistribution in a built application is replaced, because a build installed on one
+  headset is not a redistribution.
+- **But the repository is public**, and committing a file is publishing it. So each pack is
+  classified *redistributable* (CC0, CC-BY and similar) or *private-use-only*, and private-use
+  output never enters git, a published release or a workflow artefact (`C-02d`, ADR-19). An APK
+  that contains private-use assets goes only to a draft release. Open design point, settled in
+  `C-02d`: whether processed private-use output lives on the draft release or in the Actions
+  cache. `C-02d` is cut if every pack turns out redistributable.
+- The owner has already downloaded a first set of packs, including avatar packs and coaster
+  models; wave 1 is the first upload.
+
+**Evidence:** issue #25 (Kenney's download runs through a donation interstitial; no pinnable URL);
+GitHub's documented visibility of draft releases.
+
+## 2026-11-11 — Islands and the train, and roller coasters, are the heart of the gift
+
+**Decided by:** the owner. "When I told you this was a gift and you asked what we could
+incorporate to make this special for the user — these are both it. He loves trains and roller
+coasters, so including those is most important."
+
+- **Endless islands, a station on each, and a train between them** (ADR-24, `TR-01`–`TR-05`). It
+  keeps each island small and contained, lets each be its own idea, and suits the Quest 2: only one
+  island is resident at a time, and the train ride covers the load. The first launch begins on
+  the train, arriving at the first island — the opening of the gift.
+- **Build roller coasters and ride them** (ADR-25, `RC-01`–`RC-05`). The owner supplies the coaster
+  models; the work is the builder and the ride. Comfort is treated as a requirement, because a
+  coaster is the classic way to make someone sick in VR (`RK-12`), and gets its own early gate,
+  `HG-R`, so the comfort numbers are measured on a headset rather than guessed.
+- **Ordering:** straight after the foundations (M4, M5), ahead of media, garden, building kit and
+  import, so they sit at the heart of the alpha and get the beta's polish. The engine-free halves
+  can be built now, while Unity work waits on CI.
+- **Never cut** (`RK-09`): the train, the coasters, painting, and StreamBox playback.
+- Rides draw on the *Architecture and props* budget until measured (ADR-10); no budget number was
+  changed, because none has been measured.
+
+## 2026-11-11 — One stray cat per island replaces pets
+
+**Decided by:** the owner. "Instead of there being a pet generator or different pets, I just want a
+different stray cat on each island and you can interact, and if you do choose to feed it, it gets
+a collar and food and water dish like another placeable object."
+
+ADR-16 rewritten; `PET-01`–`PET-06` cut; `CAT-01`–`CAT-04` in M11. Navigation and behaviour carry
+over from the pet design in smaller form. The budget's hard cap of four active pets becomes one
+cat per island (ADR-10); `CAT-02` changes the cap in the ledger code and its test, which today pin
+four.
+
+## 2026-11-11 — The avatar is generic; character creation is dropped
+
+**Decided by:** the owner. "Drop the anthro character creation and use a generic avatar that I
+will upload for now. We will add better later, maybe."
+
+ADR-27; `AV-01` in M4. The avatar is seen only where the player can see themselves from outside:
+at tabletop scale and when watching a ride from outside. A character creator is deferred, not
+planned.
+
+## 2026-11-11 — The relay is deployed, and painting is a major feature
+
+**Decided by:** the owner (D6 = yes). "I want to be able to import 3D assets into the world, and
+those items should be customisable — I should be able to paint them. It would be cool if the game
+could identify edges and corners so that the user could fill and it not do the whole object. This
+is a major feature that needs a lot of attention during the build."
+
+- **Relay deployed** (ADR-13, `I-07`, `R-03`). Free tier only; preferably a provider that needs no
+  payment card, since Cloud Run's free tier — the earlier default — needs a billing account, and
+  "nothing may cost money" is safest when nothing *can* (`RX-10`).
+- **Painting** gets its own milestone, M10 (ADR-26, `PNT-01`–`PNT-06`), and applies to everything
+  placed: pack items, structures, imported models, the cat's dishes, coaster cars and the train.
+  The fill respects edges: meshes are segmented into regions at material slots, UV islands and
+  sharp edges, with one implementation in `Island.Core` used both at ingestion and on the headset.
+  The risk is segmentation quality on arbitrary meshes (`RT-21`); `PNT-06` gives the player a way
+  to correct it, and the brush always works regardless.
+
+## 2026-11-11 — StreamBox: public contract, dedicated profile, no restricted libraries
+
+**Decided by:** the owner, who asked for "whatever you think is safest and smartest"; these are
+the choices made on that instruction.
+
+1. **The contract description stays public.** It holds no secret or address, and it is already in
+   history, so removing it would hide nothing while costing the public repository and its free CI.
+2. **The headset pairs to a dedicated profile.** It can be revoked alone, without touching the
+   owner's other devices, and keeps its own history.
+3. **No restricted libraries on that profile**, so they are not reachable from the headset.
+   Islandia needs no change for this; the HG-2 pairing step names the profile.
+
+`07-STREAMBOX.md` §9 and ADR-23 updated.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced
   but never described. If so, add it to `docs/blueprint/`.
-- Is this intended as a store release, or only for your own headset? (Decides how much of M11 is needed.)
-- The three questions in `07-STREAMBOX.md` §9.
+- Do the owner's packs include a **train and station**, and a **rigged cat**? If not, `TR-03` and
+  `CAT-01` will propose specific free packs.
+
+Answered and removed on 2026-11-11: whether this is a store release (no — a gift, 2026-11-10), and
+the three questions in `07-STREAMBOX.md` §9.
+
+## Open design points
+
+Not questions for the owner; each is settled inside the package named.
+
+- Where processed private-use output lives — the draft release or the Actions cache (`C-02d`).
+- The coaster piece set, read from the owner's coaster pack (`RC-01`).
+- Whether rides need their own budget row (`RC-03`).
+- Which free host runs the relay without a payment card (`I-07`).

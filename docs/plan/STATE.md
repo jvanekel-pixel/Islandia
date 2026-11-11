@@ -5,50 +5,66 @@
 | | |
 | :-- | :-- |
 | **Stage** | 2 — Construction |
-| **Current milestone** | M1 Factory online · M2 started on the engine-free track |
-| **In flight** | Nothing. Every pull request opened so far is merged and `main` is clean |
+| **Current milestone** | M1 Factory online · engine-free work ahead of it on M2, M4, M5 and M10 |
+| **In flight** | Nothing once the 2026-11-11 re-plan pull request lands |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
-| **Driver** | **Running.** The scheduled task *Islandia build driver* fires every four hours at :43 past, into one long-lived session, and takes up to two work packages per run. It is working: `F-03`, `F-04`, `F-07b`, `F-07c`, `C-02a` and three automation fixes came from it on 2026-11-11. Pause or re-point it at <https://claude.ai/code/routines> |
-| **Last updated** | 2026-11-11, 18:00 UTC (`F-04` done; this file corrected) |
+| **Driver** | **Paused** (2026-11-11). The old scheduled task fired into one long-lived chat that was near its context limit and also had the StreamBox repository attached. It waits for the owner to re-point it: a new session each run, this repository only, Opus, and the prompt in `docs/plan/prompts/driver.md` — set at <https://claude.ai/code/routines> |
+| **Last updated** | 2026-11-11 — the owner's re-plan: trains, roller coasters, endless islands, a stray cat, painting, premade packs |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
-## Open human gates
+## The plan changed on 2026-11-11
 
-| Gate | What is needed | Issue |
-| :-- | :-- | :-- |
-| HG-0 | **Done** 2026-11-10, Unity included | — |
-| — | **How CC0 pack archives reach the ingestion pipeline.** `RT-06` fired: the sources ADR-11 names have no download URL that can be pinned, so unattended fetching may not be possible. `C-02c` is `needs-human` until this is answered. Nothing else is blocked by it — `C-02b` and `C-03` both proceed | [#25](https://github.com/jvanekel-pixel/Islandia/issues/25) |
+The owner re-planned the project around what makes it theirs. In short (`DECISIONS.md`, 2026-11-11):
 
-If `F-02` fails because `UNITY_LICENSE`, `UNITY_EMAIL` or `UNITY_PASSWORD` is missing, that is the
-tail of HG-0, not a new problem: open a `human-gate` issue pointing at `00-START-HERE.md` §2 step 4
-and carry on with packages that do not need Unity (`F-01`, `F-08`, `SB-01a`, `I-01`, `I-04`).
+- **Trains and roller coasters are the heart of the gift.** Endless small islands, a station on
+  each and a train between them (M4); build roller coasters and ride them (M5). Comfort has its own
+  early gate, `HG-R`.
+- **Content is premade free packs only**, which the owner downloads and uploads to a draft release.
+  No generators, no fixed count.
+- **One stray cat per island** replaces pets; feed it and it gets a collar and dishes (M11).
+- **A generic avatar**; no character creation.
+- **Import and paint anything** — the relay is deployed, and painting respects edges (M10).
+- StreamBox pairs to a dedicated profile with no restricted libraries.
+
+Milestones were renumbered: media is M6, garden M7, builder M8, import M9, alpha M12, beta M13,
+finished M14. Older documents and log entries use the old numbers.
+
+## With the owner now
+
+Being walked through one at a time in the planning conversation. None blocks the next packages.
+
+| What | Unblocks |
+| :-- | :-- |
+| **Upload asset wave 1** to a draft release tagged `assets-wave-1` (the start guide, §7, says how) | `C-02c` ingestion, then the coasters, the avatar and every piece of content |
+| Approve the cloud environment for this repository | `F-10`, then `F-11` |
+| Re-point the scheduled driver (above) | Unattended progress |
+| Create the Android signing key and add it as repository secrets | Installable builds that upgrade without losing saves (`R-01`, but useful from HG-1) |
+| Confirm the package id (`dev.islandia.app` or another) — final before the first install on the headset | Same |
+| Headset developer setup: Meta developer organisation, Developer Mode, `adb` on the PC | HG-1 |
+| Unity credentials in the cloud environment, if the owner wants sessions to run Unity directly | `S-01`'s optional accelerator |
 
 ## Blocked
 
-**Nothing.** 
-
-The scheduled driver's 403s of 2026-11-10 are fixed: the task was recreated bound to a session that
-already has the repository, and it has been running since. The note that used to live here described
-a fault that no longer exists, which is `RK-10` — plan documents rotting — happening to the file
-whose whole job is to be true.
+**Nothing.**
 
 ## Waiting on a device (`needs-device`) or a person (`needs-human`)
 
-Collected here as packages merge; they become the checklist for the next human gate.
-
 | What | From | Why it needs a person |
 | :-- | :-- | :-- |
-| Add `.claude/settings.json` | `F-01` | A session cannot write its own permission file, which is right. **This now matters more than it looked:** without it the driver also cannot merge its own pull requests, so every work package stops at a green PR for the owner to merge. `00-START-HERE.md` §9 has the file and both choices |
+| Cloud environment approval | `F-10` | Only the owner can approve the environment card |
 
 ## Next up
 
 Take the first `todo` package in `BACKLOG.yaml` whose dependencies are `done` — `make next` prints
-them. As of this writing: **`F-05`** (OpenXR and Meta features), **`V-07b`** (tier settings applied
-at runtime), **`C-02b`** (the Blender normalisation pipeline), **`C-03`** (parametric generators),
-`I-04`, `I-05`.
+them. As of this writing: **`F-05`** (OpenXR and Meta features), **`C-02b`** (the Blender
+normalisation pipeline), **`V-07b`**, and the engine-free starts of the new features — **`TR-01`**
+(the world of islands), **`RC-01`** (coaster track model), **`PNT-01`** (paint segmentation) — plus
+`I-04` and `I-05`. Prefer the current milestone; take an engine-free package when it is waiting
+on CI.
 
-**21 of 116 packages are done.** `F-01`–`F-04`, `F-07a`–`F-07c`, `F-08`, `F-13`, `V-02`, `V-06`,
-`V-07a`, `V-08`, `SB-01a`–`SB-01d`, `C-01a`, `C-01b`, `C-02a`, `I-01`.
+**21 of 134 live packages are done** (7 more were cut on 2026-11-11). `F-01`–`F-04`,
+`F-07a`–`F-07c`, `F-08`, `F-13`, `V-02`, `V-06`, `V-07a`, `V-08`, `SB-01a`–`SB-01d`, `C-01a`,
+`C-01b`, `C-02a`, `I-01`.
 
 ### What exists now
 
@@ -77,23 +93,23 @@ at runtime), **`C-02b`** (the Blender normalisation pipeline), **`C-03`** (param
 
 ### Open, not blocking
 
-- [#25](https://github.com/jvanekel-pixel/Islandia/issues/25) `human-gate` — how CC0 pack archives
-  reach the pipeline. `C-02c` waits on it; `C-02b` and `C-03` do not.
+- [#25](https://github.com/jvanekel-pixel/Islandia/issues/25) `human-gate` — answered by the
+  re-plan: archives arrive on draft releases. Close it once wave 1 is uploaded.
 - [#21](https://github.com/jvanekel-pixel/Islandia/issues/21),
   [#15](https://github.com/jvanekel-pixel/Islandia/issues/15) `infra` — two defects in the mock
   StreamBox gateway, both found by CI, neither urgent.
-- The owner is considering whether to spend a small budget on asset production. Nothing waits on it.
 
 ## Recently merged
 
-- `F-02` Unity licence activation in CI — **working** (2026-11-10)
-- `V-02` Terrain model in Core — heightfield, brushes, dirty regions (2026-11-10)
-- `SB-01b` StreamBox models and tolerant JSON mapping (2026-11-10)
-- `SB-01a` StreamBox contract snapshot and mock gateway (2026-11-10)
-- `F-02` Unity licence workflow — built and merged; cannot pass until the secrets exist (2026-11-10, PR #3)
-- `F-08` Island.Core package and dotnet test harness (2026-11-10, PR #2)
-- `F-01` Repository skeleton, Makefile, lint, meta generator (2026-11-10, PR #1)
-- Planning bundle, driver prompt and kickoff state (2026-11-10)
+- The owner's re-plan (2026-11-11)
+- `F-04` ADR-03 set in code and asserted (2026-11-11, PR #32)
+- `F-07c` package sources uploaded from the resolved project (2026-11-11, PR #31)
+- `F-13` auto-merge's trigger list checked (2026-11-11, PR #30)
+- `F-07b` EditMode and PlayMode tests in CI (2026-11-11, PR #29)
+- `F-03` the Unity project, generated (2026-11-11, PRs #27, #28)
+- `C-02a` pinned headless Blender (2026-11-11, PR #24)
+- `F-02` Unity licence activation in CI — working (2026-11-10)
+- `V-02`, `V-06`, `V-08`, `SB-01a`–`SB-01d`, `I-01`, `C-01a`, `C-01b` (2026-11-10/11)
 
 ## Measured facts
 

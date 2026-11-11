@@ -188,13 +188,17 @@ StreamBox will change. Defences:
 Audiobooks · text subtitles · watch-together with friends as avatars · the voice assistant ·
 4K or HDR (not on this hardware) · offline downloads.
 
-## 9. Open questions for the owner
+## 9. Answered by the owner, 2026-11-11
 
-1. **Public description of the contract.** §3 describes how StreamBox's client API works. It holds
-   no secret and no address, but it is a public description of a private service. If you would
-   rather not publish it, the alternative is a private repository with a build runner on your PC.
-2. **Which profile should the headset use** — your own, or a dedicated one? Pairing lets the phone
-   choose.
-3. **Should restricted libraries be reachable from the headset at all?** Islandia shows whatever
-   the gateway returns for the paired profile. If the answer is no, pair it to a profile without
-   them; nothing in Islandia needs to change.
+The owner asked for whatever is safest and smartest. Recorded in `DECISIONS.md`, 2026-11-11.
+
+1. **Public description of the contract — kept public.** §3 holds no secret and no address, and
+   it is already in the repository's history, so taking it out now would hide nothing. The rules
+   that matter stay enforced on every change: no server address, token, account detail or library
+   content is ever committed.
+2. **Which profile the headset uses — a dedicated one.** The headset pairs to its own StreamBox
+   profile, not the owner's. It can be signed out or revoked on its own without touching anyone
+   else's devices, and it keeps its own watch history.
+3. **Restricted libraries — not reachable.** The dedicated profile has no restricted libraries.
+   Islandia shows whatever the gateway returns for the paired profile, so nothing in Islandia
+   changes; the pairing instructions at HG-2 say which profile to choose.

@@ -75,7 +75,7 @@ architectures, included shader list, and a stripped-assemblies report.
 Built in `V-12`, used at every human gate. The owner's whole job is: plug in, run, wear, wait.
 
 **In the app:** a benchmark mode started by a launch parameter. It loads generated stress islands,
-flies a fixed camera path, exercises sculpting, scattering, placing, importing, pets and media on
+flies a fixed camera path, exercises sculpting, scattering, placing, importing, the cat, riding the train and a coaster, and media on
 a script, and writes one JSON report per scenario with frame-time percentiles, ledger readings,
 memory, device identifiers and a pass/fail against ADR-10. It also saves a handful of screenshots.
 
@@ -102,12 +102,15 @@ passing.
 | :-- | :-- |
 | M2 | Boot → raise a hill → dig a pond → place a plant and a wall → save → reload → state equal → undo twice |
 | M3 | Full brush set across chunk borders → paint all four surfaces → level a pad → switch scale and back → walk by teleport |
-| M4 | Pair with the mock gateway → browse → play a film → pause five minutes → resume → next episode → play an album on two speakers → a Connect command from a simulated phone pauses it → sign out clears everything |
-| M5 | Scatter a meadow of 3,000 plants across a hill → sculpt under it → plants follow → remove some → undo |
-| M6 | Build a two-storey house from 40 modules with snapping → edit one wall → export → re-import the export |
-| M7 | Convert a fixture model in the browser → send through the relay → simulated headset receives → gatekeeper accepts → placed; hostile fixtures rejected |
-| M8 | Adopt two pets → customise → they path around a house and a pond → fetch → save → reload |
-| M9 | A generated worst-case island at 100% of every budget runs all of the above for ten simulated minutes |
+| M4 | Arrive by train → sculpt → leave → make a new island from the departure board → ride there → ride back → the first island is exactly as it was |
+| M5 | Build a circuit with a lift and a drop → validate → ride it at gentle and full intensity → watch from outside → undo a piece → save → reload |
+| M6 | Pair with the mock gateway → browse → play a film → pause five minutes → resume → next episode → play an album on two speakers → a Connect command from a simulated phone pauses it → sign out clears everything |
+| M7 | Scatter a meadow of 3,000 plants across a hill → sculpt under it → plants follow → remove some → undo |
+| M8 | Build a two-storey house from 40 modules with snapping → edit one wall → export → re-import the export |
+| M9 | Convert a fixture model in the browser → send through the relay → simulated headset receives → gatekeeper accepts → placed; hostile fixtures rejected |
+| M10 | Fill a pack chair's seat and legs different colours → brush the back → paint an imported model → adjust its edge sensitivity → undo all → save → reload |
+| M11 | Meet the cat → feed it → collar and dishes appear → move the dishes → it paths around a house and a pond to them → name it → save → reload |
+| M12 | A generated worst-case island at 100% of every budget runs all of the above for ten simulated minutes, and a ten-island world round-trips by train |
 
 ## 6. Definition of Done for a work package
 
