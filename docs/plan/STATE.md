@@ -9,7 +9,7 @@
 | **In flight** | **Two pull requests stand between `main` and everything built today.** [#16](https://github.com/jvanekel-pixel/Islandia/pull/16) is the CI checks workflow, green and independent. [#19](https://github.com/jvanekel-pixel/Islandia/pull/19) is the whole stack — auto-merge, the gift re-plan, the Unity-project workflow, `V-07a`, `C-01a`, `C-01b` and the auto-merge fix — because auto-merge collapsed each stacked PR into its base branch rather than into `main`. #10 is superseded by #19 |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | Paused. Being driven by an interactive session for now |
-| **Last updated** | 2026-11-11 (`F-07b` — EditMode tests in CI) |
+| **Last updated** | 2026-11-11 (`F-07b` done — 312 EditMode tests green in the editor) |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## Open human gates
@@ -64,7 +64,14 @@ Done so far: `F-01`, `F-02`, `F-08`, `F-13`, `SB-01a`, `SB-01b`, `V-02`, `V-06`,
 
 **The Unity project is on `main`** (`5ae50c2`), generated and committed by its own workflow: editor
 `6000.3.28f1`, 67 packages locked at resolver-chosen versions, and a second import that changes
-nothing. `F-04`, `F-05` and `V-07b` are unblocked.
+nothing.
+
+**The editor runs the tests** (`F-07b`): 312 EditMode tests green in Unity, the same 312 that
+`dotnet test` runs, so `Island.Core` is now proven on both runtimes. Its first run earned its
+keep by finding a cross-runtime difference `dotnet test` cannot see — cancellation arrives as
+`TaskCanceledException` in Unity and as its base class under .NET 9.
+
+`F-04`, `F-05` and `V-07b` are unblocked, and their `[L2]` criteria now have somewhere to be proven.
 
 Test counts: **323 Island.Core** (312 fast, 11 end-to-end against the mock gateway) **· 114 tooling
 · 30 StreamBox contract.**

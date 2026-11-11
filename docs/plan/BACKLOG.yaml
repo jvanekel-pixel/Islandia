@@ -94,7 +94,8 @@ packages:
     - "A run that produces no tests fails rather than passing, because that is what a test assembly which did not compile looks like from outside [L0]"
     - "Results and editor logs are kept as artefacts, and the counts appear in the run summary (RK-07) [L0]"
     - "The seat is returned even when the tests fail [L2]"
-  status: todo
+    - "The editor's test run agrees with `dotnet test`: the same count, and a cross-runtime exception difference caught rather than papered over [L2]"
+  status: done
 
 - id: F-04
   title: Player, graphics and URP configuration as code, with assertion tests
