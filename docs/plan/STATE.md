@@ -35,11 +35,21 @@ Being walked through one at a time in the planning conversation. None blocks the
 
 | What | Unblocks |
 | :-- | :-- |
-| Re-point the scheduled driver (above) | Unattended progress |
-| Create the Android signing key and add it as repository secrets | Installable builds that upgrade without losing saves (`R-01`, but useful from HG-1) |
-| Confirm the package id (`dev.islandia.app` or another) — final before the first install on the headset | Same |
 | Headset developer setup: Meta developer organisation, Developer Mode, `adb` on the PC | HG-1 |
 | Unity credentials in the cloud environment, if the owner wants sessions to run Unity directly | `S-01`'s optional accelerator |
+
+## Settled with the owner on 2026-11-11
+
+- **Scheduled driver:** a new routine, a fresh session each run, this repository only, Opus,
+  daily at 01:05 America/Denver. The owner may move it to hourly after the weekly usage reset; the
+  lease check makes hourly runs back-to-back rather than overlapping. Its environment should be
+  `islandia`, not Default — the owner is switching it.
+- **Signing key:** made on the owner's PC with `tools/owner/new-signing-key.ps1`; the four
+  `ANDROID_*` secrets open it in CI (`Signing key` workflow). Fingerprint in `R-01`'s note.
+- **Identity:** package id `dev.islandia.app` is final; the name under the icon is *Islandia*
+  (ADR-22).
+- **Who plays it:** the owner's own Quest 2, played by their partner, who thinks VR is dumb and
+  asked for exactly this game. See `DECISIONS.md`.
 
 ## Asset wave 1 is uploaded (2026-11-11)
 

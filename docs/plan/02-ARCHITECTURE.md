@@ -364,9 +364,9 @@ enforced by the privacy check on every change, not by a document.
 
 ## ADR-22 — Identity
 
-The app is **Islandia**. Android package id `dev.islandia.app` is a placeholder and must be
-confirmed by the owner before the first upload to a Meta release channel, because the package id
-cannot change afterwards.
+The app is **Islandia** — the name under the icon in the headset's library. Android package id
+**`dev.islandia.app`, final** (owner, 2026-11-11). It can never change: an update under another id
+installs as a second app and leaves the saved islands behind. The display name can change freely.
 
 ## ADR-23 — StreamBox **(owner requirement, 2026-11-10)**
 
