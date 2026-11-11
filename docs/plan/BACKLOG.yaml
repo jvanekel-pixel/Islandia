@@ -107,7 +107,8 @@ packages:
     - "A workflow uploads the C# and shader sources of the packages the project actually resolved, with an index of every package and its version [L2]"
     - "Tests and samples are dropped, binaries are dropped, and keeping nothing fails rather than uploading an empty artefact [L0]"
     - "It runs when packages-lock.json changes, and on demand [L2]"
-  status: todo
+    - "A session can download it and read a real signature from it, proven by doing so [L2]"
+  status: done
 
 - id: F-04
   title: Player, graphics and URP configuration as code, with assertion tests
