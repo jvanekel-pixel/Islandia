@@ -14,14 +14,15 @@ this session.
 **First, get the code.** A scheduled session may start with no repository attached. Try these in
 order and stop at the first that works:
 
-1. If `/home/user/islandia` already holds a clone, use it.
+1. If `/home/user/Islandia` or `/home/user/islandia` already holds a clone, use it. (Sessions with
+   the repository attached clone it to `/home/user/Islandia`.)
 2. If you have an `add_repo` tool, attach `jvanekel-pixel/Islandia` with `push` access, clone it
    exactly as that tool instructs, then call `register_repo_root`.
-3. Otherwise `git clone https://github.com/jvanekel-pixel/Islandia /home/user/islandia` — the repo
+3. Otherwise `git clone https://github.com/jvanekel-pixel/Islandia /home/user/Islandia` — the repo
    is public, so the session's git proxy may serve it read-only.
 
-Then check you can actually finish a work package: `git -C /home/user/islandia push --dry-run
-origin HEAD:refs/heads/probe-$(date +%s)` and `gh api repos/jvanekel-pixel/Islandia --jq .full_name`.
+Then check you can actually finish a work package, from the clone: `git push --dry-run origin
+HEAD:refs/heads/probe-$(date +%s)` and `gh api repos/jvanekel-pixel/Islandia --jq .full_name`.
 **If you cannot both push and reach the API, stop.** Say in one line that this scheduled run has no
 write access to the repository, and that the fix is to add `jvanekel-pixel/Islandia` to the task's
 repositories at <https://claude.ai/code/routines>. Do not do the work locally and lose it, and do
@@ -36,8 +37,9 @@ run the driver loop in `05-OPERATIONS.md` exactly as written:
 - Use branch names `claude/wp-<ID>-<slug>`, one work package per pull request.
 - Prove the work at the levels its acceptance criteria name. Never mark a device or human
   criterion as passed.
-- Merge only on green checks and after the review in §7. Update `BACKLOG.yaml` and `STATE.md` in
-  the same pull request.
+- Never merge your own pull request. After the review in §7, with every check green, label it
+  `work-package` and `awaiting-merge` — last, and push nothing after — and auto-merge lands it.
+  Update `BACKLOG.yaml` and `STATE.md` in the same pull request.
 - Follow the stop-the-line rule. Do not weaken a test or a budget to get green.
 - Stop after three work packages, or sooner if the loop says to.
 

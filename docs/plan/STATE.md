@@ -35,13 +35,27 @@ Being walked through one at a time in the planning conversation. None blocks the
 
 | What | Unblocks |
 | :-- | :-- |
-| **Upload asset wave 1** to a draft release tagged `assets-wave-1` (the start guide, §7, says how) | `C-02c` ingestion, then the coasters, the avatar and every piece of content |
-| Approve the cloud environment for this repository | `F-10`, then `F-11` |
 | Re-point the scheduled driver (above) | Unattended progress |
 | Create the Android signing key and add it as repository secrets | Installable builds that upgrade without losing saves (`R-01`, but useful from HG-1) |
 | Confirm the package id (`dev.islandia.app` or another) — final before the first install on the headset | Same |
 | Headset developer setup: Meta developer organisation, Developer Mode, `adb` on the PC | HG-1 |
 | Unity credentials in the cloud environment, if the owner wants sessions to run Unity directly | `S-01`'s optional accelerator |
+
+## Asset wave 1 is uploaded (2026-11-11)
+
+Draft release `assets-wave-1` (id 442151453), 23 archives, ~95 MB. **Every one is CC0** — its
+`License.txt` says so — so processed output may be committed to this public repository and
+`C-02d`'s private-use path is not needed for this wave. Checked by downloading each archive.
+
+| Packs | Notes |
+| :-- | :-- |
+| Kenney: `coaster-kit` (183 models), `train-kit` (103) | The two that matter most: `RC-01` and `TR-*` read their piece sets from these |
+| Kenney: `animated-characters-protagonists`, `-retro`, `-survivors` | FBX only, rigged and animated — the candidates for `AV-01`'s generic avatar |
+| Kenney: nature, fantasy-town, city ×3, building, brick, modular-buildings, castle, hexagon, furniture, food, survival, graveyard, space-station | glb + fbx + obj each |
+| KayKit (Kay Lousberg): Forest Nature, Furniture Bits, Halloween Bits | gltf + fbx + obj; no glb |
+
+Gaps found: **no cat model** in any pack (`CAT-*` needs one — a later wave); the release notes
+link `kenney.nl/assets/mini-forest` but no archive for it was uploaded.
 
 ## Blocked
 
@@ -51,7 +65,7 @@ Being walked through one at a time in the planning conversation. None blocks the
 
 | What | From | Why it needs a person |
 | :-- | :-- | :-- |
-| Cloud environment approval | `F-10` | Only the owner can approve the environment card |
+| — | — | Nothing at the moment |
 
 ## Next up
 
@@ -93,8 +107,8 @@ on CI.
 
 ### Open, not blocking
 
-- [#25](https://github.com/jvanekel-pixel/Islandia/issues/25) `human-gate` — answered by the
-  re-plan: archives arrive on draft releases. Close it once wave 1 is uploaded.
+- [#25](https://github.com/jvanekel-pixel/Islandia/issues/25) `human-gate` — answered: archives
+  arrive on draft releases, and wave 1 is uploaded. `C-02c`'s pull request closes it.
 - [#21](https://github.com/jvanekel-pixel/Islandia/issues/21),
   [#15](https://github.com/jvanekel-pixel/Islandia/issues/15) `infra` — two defects in the mock
   StreamBox gateway, both found by CI, neither urgent.

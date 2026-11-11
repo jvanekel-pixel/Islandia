@@ -14,7 +14,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent.parent
 #: Reference-only material: carried over verbatim, so its links are not ours to fix.
-EXCLUDE = ("docs/blueprint/", "reference/drafts/")
+EXCLUDE = ("docs/blueprint/", "reference/drafts/", ".claude/")
 
 #: Path segments we never own. Vendored dependencies and build output have their own broken
 #: links and are nobody's business here.
