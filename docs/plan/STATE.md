@@ -6,10 +6,10 @@
 | :-- | :-- |
 | **Stage** | 2 — Construction |
 | **Current milestone** | M1 Factory online · M2 started on the engine-free track |
-| **In flight** | **Two pull requests stand between `main` and everything built today.** [#16](https://github.com/jvanekel-pixel/Islandia/pull/16) is the CI checks workflow, green and independent. [#19](https://github.com/jvanekel-pixel/Islandia/pull/19) is the whole stack — auto-merge, the gift re-plan, the Unity-project workflow, `V-07a`, `C-01a`, `C-01b` and the auto-merge fix — because auto-merge collapsed each stacked PR into its base branch rather than into `main`. #10 is superseded by #19 |
+| **In flight** | Nothing. Every pull request opened so far is merged and `main` is clean |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
-| **Driver** | Paused. Being driven by an interactive session for now |
-| **Last updated** | 2026-11-11 (`F-04` done — ADR-03 is set in code and asserted) |
+| **Driver** | **Running.** The scheduled task *Islandia build driver* fires every four hours at :43 past, into one long-lived session, and takes up to two work packages per run. It is working: `F-03`, `F-04`, `F-07b`, `F-07c`, `C-02a` and three automation fixes came from it on 2026-11-11. Pause or re-point it at <https://claude.ai/code/routines> |
+| **Last updated** | 2026-11-11, 18:00 UTC (`F-04` done; this file corrected) |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## Open human gates
@@ -25,25 +25,12 @@ and carry on with packages that do not need Unity (`F-01`, `F-08`, `SB-01a`, `I-
 
 ## Blocked
 
-**The scheduled driver cannot reach the repository.** Five runs between 06:49 and 14:49 on
-2026-11-10 each ended in about eleven seconds: clone, push and the GitHub API all returned 403,
-because the task was created with an empty repository list and neither `create_trigger` nor
-`update_trigger` can set one. The guard in the prompt worked — no run did work it would have lost,
-and the whole night cost about forty cents — but each one sent the owner a notification, so the
-task is paused until it is fixed.
+**Nothing.** 
 
-Two fields, both in the task's **Edit** dialog at <https://claude.ai/code/routines>:
-
-| Field | Where | Set it to |
-| :-- | :-- | :-- |
-| Repository | Advanced settings → General tab | `jvanekel-pixel/Islandia` |
-| Model | the model selector on the prompt box | Opus — runs so far defaulted to Sonnet |
-
-Then re-enable the task. A session cannot set either: there is no documented programmatic way to
-give a scheduled task a repository, and a session may not change a task's model on its own.
-
-Worth revisiting once a real run has happened: every two hours × three packages is a fast burn of
-the owner's usage. Tune the cadence from what one full run actually costs.
+The scheduled driver's 403s of 2026-11-10 are fixed: the task was recreated bound to a session that
+already has the repository, and it has been running since. The note that used to live here described
+a fault that no longer exists, which is `RK-10` — plan documents rotting — happening to the file
+whose whole job is to be true.
 
 ## Waiting on a device (`needs-device`) or a person (`needs-human`)
 
@@ -55,80 +42,47 @@ Collected here as packages merge; they become the checklist for the next human g
 
 ## Next up
 
-**Merge PR #10.** Then the `unity-create-project` workflow can be dispatched to finish `F-03`'s
-second half (generate the project, commit `ProjectSettings` and the manifest), and `F-04` → `F-05`
-follow.
+Take the first `todo` package in `BACKLOG.yaml` whose dependencies are `done` — `make next` prints
+them. As of this writing: **`F-05`** (OpenXR and Meta features), **`V-07b`** (tier settings applied
+at runtime), **`C-02b`** (the Blender normalisation pipeline), **`C-03`** (parametric generators),
+`I-04`, `I-05`.
 
-Done so far: `F-01`, `F-02`, `F-08`, `F-13`, `SB-01a`, `SB-01b`, `V-02`, `V-06`, `V-07a`, `C-01a`,
-`C-01b`, `V-08`, `SB-01c`, `SB-01d`, `I-01`, `F-03`, `C-02a`.
+**21 of 116 packages are done.** `F-01`–`F-04`, `F-07a`–`F-07c`, `F-08`, `F-13`, `V-02`, `V-06`,
+`V-07a`, `V-08`, `SB-01a`–`SB-01d`, `C-01a`, `C-01b`, `C-02a`, `I-01`.
 
-**The Unity project is on `main`** (`5ae50c2`), generated and committed by its own workflow: editor
-`6000.3.28f1`, 67 packages locked at resolver-chosen versions, and a second import that changes
-nothing.
+### What exists now
 
-**The editor runs the tests** (`F-07b`): 312 EditMode tests green in Unity, the same 312 that
-`dotnet test` runs, so `Island.Core` is now proven on both runtimes. Its first run earned its
-keep by finding a cross-runtime difference `dotnet test` cannot see — cancellation arrives as
-`TaskCanceledException` in Unity and as its base class under .NET 9.
+- **The Unity project**, generated and committed by its own workflow: editor `6000.3.28f1`, 67
+  packages locked, a second import that changes nothing, and every ADR-03 rendering decision set in
+  code and asserted from the committed assets (`F-04`).
+- **Five CI workflows.** `checks` (L0/L1, every push), `content` (Blender, path-filtered),
+  `unity-tests` (EditMode and PlayMode), `unity-package-sources` and `unity-configure` (both
+  generate; both commit only on dispatch). `auto-merge` lands anything labelled `awaiting-merge`
+  once its checks pass.
+- **StreamBox reachable end to end** from `Island.Core`: pairing, browsing, playing, progress, music
+  and remote control, all proven against the mock gateway in CI.
+- **The content pipeline**, less its input: catalogue, schema, validator, licence ledger, honest
+  count, and a pinned headless Blender proven to script, measure, export GLB and render a thumbnail
+  with no GPU.
 
-`F-04`, `F-05` and `V-07b` are unblocked, and their `[L2]` criteria now have somewhere to be proven.
+### Three things a new session should know
 
-Test counts: **323 Island.Core** (312 fast, 11 end-to-end against the mock gateway) **· 114 tooling
-· 30 StreamBox contract.**
+1. **Label last.** `awaiting-merge` means *land this now*; do not push to a branch after labelling
+   its pull request. Auto-merge has squashed a PR mid-push and stranded the rest.
+2. **Branch from `main`, not from an unmerged branch.** Squash-merging the parent leaves the child
+   conflicted.
+3. **A workflow's own commit triggers nothing.** After dispatching `unity-configure` or
+   `unity-create-project`, dispatch `unity-tests` by hand — pushes made with `GITHUB_TOKEN` do not
+   start workflow runs.
 
-**CI is green on the chain**, end-to-end suite included: the `checks` workflow was folded into it,
-so the nine packages waiting to land are verified by a run rather than by a session's word.
+### Open, not blocking
 
-**CI now runs the non-Unity checks** (`F-07a`, PR #16) — before this, nothing did. Its first run
-went red on a real portability bug (issue #15), which is the best argument for it there is.
-
-**Auto-merge merged four pull requests on zero verification** before that landed, because "every
-check passed" is true of an empty set. The merges are sound but the mechanism was not; it now
-requires at least one check to have succeeded. See `DECISIONS.md`, 2026-11-10.
-
-**The content pipeline is ready for assets.** The catalogue, its schema, the validator, the licence
-ledger and the honest count all exist and are tested; `C-02b` (normalise) and `C-03` (parametric
-generators) are what fill it, and the Blender toolchain they both need is proven (`C-02a`).
-
-Unblocked and needing no Unity: `C-03` (parametric generators, though its thumbnails need Blender),
-`I-04` (the browser converter — it reads the same `contract/import/limits.v1.json` the gatekeeper
-does). `V-07b` waits on the Unity project.
-
-StreamBox is now reachable end to end from `Island.Core`: pairing, browsing, playing, progress,
-music and remote control, all proven against the mock gateway in CI. What remains for media is
-`SB-02`, the player backend — and that is the one thing that cannot be settled without the headset
-(`RT-16`, the `V-14` probe).
-
-`C-02b` (the normalisation pipeline) and `C-03` (parametric generators) are the next content work,
-and both are unblocked now that `C-02a` has pinned and proven headless Blender. `C-02c` — getting
-the pack archives in the first place — is `needs-human`: see the gate above.
-
-**`F-03`'s second half cannot run yet for a mechanical reason:** `unity-create-project.yml` is not
-registered with Actions, because a workflow only becomes dispatchable once it has run or reached the
-default branch. Dispatching it returns 404 until the chain lands on `main`.
-
-**Open question from the owner, 2026-11-10:** whether to spend a small budget on asset production
-(a rented GPU, generated assets, or bought base meshes). This cuts across ADR-11, ADR-24 and the
-"nothing may cost money" rule, which currently forbids all three. Nothing is decided and no money
-has been spent; see the assessment recorded in `DECISIONS.md` when it lands.
-
-`F-10` stays `needs-human`: it needs an environment card only the owner can approve, and nothing
-waits on it.
-
-**The Unity track is parked**, waiting on issue #4: the licence secrets are not set, so `F-02`
-cannot pass and `F-03` to `F-07` cannot start. Nothing else is blocked by it.
-
-The owner hit trouble activating a Unity Personal licence in Unity Hub on 2026-11-10 — a known
-flaky area, and the only route, since manual `.alf` activation does not cover Personal. `F-08` was
-moved ahead of `F-02` so the build keeps moving meanwhile. If the secrets are still absent when
-`F-02` comes up, follow its note: open a `human-gate` issue, set it `needs-human`, and carry on.
-Packages that need no Unity at all: `F-08`, `SB-01a`, `I-01`, `I-04`, `I-05`.
-
-**Note on `F-10` (cloud environment):** the kickoff session did not propose one. Its own container
-had a second, unrelated repository attached, and an environment proposed from there would have
-covered that project too. Propose it from a session that has only Islandia. The Default environment
-has unrestricted network access and no setup script, so nothing is blocked meanwhile — the only
-cost is reinstalling the .NET SDK and the companion toolchain each session.
+- [#25](https://github.com/jvanekel-pixel/Islandia/issues/25) `human-gate` — how CC0 pack archives
+  reach the pipeline. `C-02c` waits on it; `C-02b` and `C-03` do not.
+- [#21](https://github.com/jvanekel-pixel/Islandia/issues/21),
+  [#15](https://github.com/jvanekel-pixel/Islandia/issues/15) `infra` — two defects in the mock
+  StreamBox gateway, both found by CI, neither urgent.
+- The owner is considering whether to spend a small budget on asset production. Nothing waits on it.
 
 ## Recently merged
 
@@ -147,7 +101,8 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 
 | Fact | Value | Source |
 | :-- | :-- | :-- |
-| Local gate `make check` | 5 lint checks, 27 tooling tests, 117 core tests, 30 contract tests — about 12 s | F-01, F-08, SB-01a/b, V-02, V-06 |
+| Local gate `make check` | 7 lint checks, 134 tooling tests, 312 core tests, 30 contract tests, 11 end-to-end — about 40 s | everything merged to 2026-11-11 |
+| Unity EditMode tests in CI | **334** — the 312 `Island.Core` ones plus 22 asserting ADR-03 | F-04, F-07b |
 | .NET SDK in a cloud session | not present; installs to `~/.dotnet` in ~40 s | F-08 |
 | Unity editor pinned | `6000.3.28f1` — the newest 6000.3 tag with an Android module | F-02 |
 | Unity licence in CI | **works.** Seat request with account credentials; no licence file. 104 s end to end | F-02 |
