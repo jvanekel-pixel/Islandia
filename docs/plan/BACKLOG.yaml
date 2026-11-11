@@ -134,7 +134,14 @@ packages:
     - "Assets/XR/** committed; a test asserts the feature set and fails if a batchmode build resets it [L2]"
     - "Interaction profiles for Touch controllers and hands are present in the settings asset [L2]"
     - "Headset shows a stereo image with tracking [L6]"
-  status: todo
+  note: >-
+    Done 2026-11-11 (PR #36). XrConfigurator, called from ProjectConfigurator.Apply;
+    XrConfigurationTests (15) read Assets/XR back; unity-tests fails if an editor run
+    changes Assets/XR or EditorBuildSettings. The headset criterion is needs-device,
+    for HG-1. Review follow-ups for F-06: Apply does not itself remove other Android
+    loaders, clear Standalone loaders or verify that a disable took effect (the tests
+    catch all three); XRGeneralSettings.k_SettingsKey is obsolete, use settingsKey.
+  status: done
 
 - id: F-06
   title: Assemblies, composition root, boot scene builder, simulation mode
