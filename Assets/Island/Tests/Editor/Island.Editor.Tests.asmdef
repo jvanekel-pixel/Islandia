@@ -6,6 +6,7 @@
         "Island.Core",
         "Unity.RenderPipelines.Universal.Runtime",
         "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.GPUDriven.Runtime",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
