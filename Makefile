@@ -68,6 +68,7 @@ lint-content:  ## The catalogue is valid, within budget, licensed, and its gener
 	@$(PY) tools/content/validate.py
 	@$(PY) tools/content/ledger.py --check
 	@$(PY) tools/content/report.py --check
+	@$(PY) tools/content/coaster_pieces.py --check
 
 # ------------------------------------------------------------------- the tests
 
@@ -141,6 +142,7 @@ blender-probe: blender  ## Prove that Blender can do what the content pipeline n
 content:  ## Regenerate what the catalogue derives — run after editing content/catalogue
 	@$(PY) tools/content/generate_ids.py
 	@$(PY) tools/content/ledger.py
+	@$(PY) tools/content/coaster_pieces.py
 
 .PHONY: content-report
 content-report:  ## What is in the catalogue: distinct meshes and palette variants, counted honestly

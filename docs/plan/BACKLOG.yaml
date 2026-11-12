@@ -841,26 +841,69 @@ packages:
 
 # ───────────────────────────── M5  ROLLER COASTERS ─────────────────────────────
 # The other heart of the gift: build a coaster on the island and ride it. Spec: ADR-25.
-# RC-01 and RC-02 are engine-free and may be taken early whenever the current milestone is waiting.
+# RC-01a, RC-01b, RC-01 and RC-02 are engine-free and may be taken early whenever the current milestone is waiting.
 
-- id: RC-01
-  title: Coaster track model in Core — pieces, snapping, validation
+- id: RC-01a
+  title: Coaster track pieces and frames in Core — derived from the pack, composed exactly
   ms: M5
   risk: high
-  deps: [V-06, V-08]
+  deps: [C-01a]
   refs: [adr ADR-25]
   accept:
     - "Track pieces are catalogue data with entry and exit frames (position, heading, pitch, bank); the piece set is derived from the owner's coaster pack and recorded in a decision record [L1][L0]"
     - "A piece placed at an open end snaps exactly, and the error accumulated over a 200-piece circuit stays under 1 mm because frames are composed, not integrated [L1]"
+  note: >-
+    Split out of RC-01 on 2026-11-12 (05-OPERATIONS.md §5): the measuring tool,
+    the generator and the frame model alone came to about 1,100 hand-written lines.
+    tools/content/measure_coaster_kit.py measures the pack into
+    content/facts/rides/coaster-kit.json; content/rides/coaster-track.yaml names
+    37 pieces; tools/content/coaster_pieces.py generates CoasterPieces.g.cs.
+    Island.Core.Rides: TrackPoint, TrackFrame (integer sub-units, quarter-turn
+    headings, eighth-turn pitch and bank), TrackShape, TrackPiece (reversed and
+    mirrored placements), Coaster (a chain recomposed on every edit; edits that
+    would strand a later piece are refused). DECISIONS.md, 2026-11-12.
+  status: done
+
+- id: RC-01b
+  title: Coaster validation in Core — closed, one station, lift, clearance, supports, reservation
+  ms: M5
+  risk: high
+  deps: [RC-01a, TR-01a]
+  refs: [adr ADR-25]
+  accept:
     - "Validation reports, per piece: circuit closed, one station, a lift before the first drop, no self-intersection within the clearance envelope, supports reach the ground, nothing inside the station reservation or the train's corridor [L1]"
+  note: >-
+    Planned shape: a ground-height query interface with a Heightfield adapter,
+    tested on flat and sculpted ground. Clearance from the pieces' centreline
+    samples (half a unit apart) in integer sub-units, skipping adjacent pieces;
+    the facts' reach (0.58-0.61 units for every shape and style) sizes the
+    envelope. Support columns stand under TrackPiece.Supports samples where the
+    frame is within 45° of upright. The station reservation is checked with
+    StationSite.Permits per sample at CoasterPieces.MetresPerUnit.
+  status: todo
+
+- id: RC-01
+  title: Coasters saved and edited with undo
+  ms: M5
+  risk: high
+  deps: [RC-01a, V-06, V-08]
+  refs: [adr ADR-25]
+  accept:
     - "A coaster is one save section keyed by instance id, with a migration test; adding and removing a piece are undoable commands [L1]"
+  note: >-
+    The remainder after RC-01a and RC-01b. Planned shape: one section holding
+    every coaster on the island, each keyed by its instance id, with its start
+    frame, style and pieces by numeric id (an unknown id refuses the island
+    loudly, since ids are permanent); a pinned v1 payload as the migration test.
+    Commands wrap Coaster.Insert and Coaster.RemoveAt and name the coaster as
+    their subject.
   status: todo
 
 - id: RC-02
   title: Ride physics in Core — speed, forces and intensity
   ms: M5
   risk: high
-  deps: [RC-01]
+  deps: [RC-01a]
   refs: [adr ADR-25]
   accept:
     - "Fixed-step, energy-based simulation along the track centreline: gravity, rolling and air friction, chain lift at constant speed, brakes and station; deterministic and independent of frame rate [L1]"
@@ -872,7 +915,7 @@ packages:
   title: Track, supports and cars in Unity
   ms: M5
   risk: high
-  deps: [RC-01, C-02c, M4-RETRO]
+  deps: [RC-01, RC-01b, C-02c, M4-RETRO]
   refs: [adr ADR-25, adr ADR-10, adr ADR-17]
   accept:
     - "Track renders from the pack's piece models placed on RC-01's frames; supports are generated down to the terrain and re-seat when the ground under them is sculpted [L3]"

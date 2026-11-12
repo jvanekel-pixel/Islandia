@@ -1,0 +1,896 @@
+{
+ "pack": "kenney-coaster-kit",
+ "pack_version": "1.0",
+ "licence": "CC0-1.0",
+ "sub_units_per_unit": 64,
+ "pivot_below_model_origin": 64,
+ "styles": [
+  "steel",
+  "wood",
+  "mouse",
+  "hanging",
+  "monorail",
+  "flume"
+ ],
+ "shapes": {
+  "straight": {
+   "model": "straight",
+   "form": "line",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [0, -64, 256],
+    "heading": 0,
+    "pitch": 0,
+    "bank": 0
+   },
+   "length": 256,
+   "samples": [
+    [0, 0, 0],
+    [0, 0, 32],
+    [0, 0, 64],
+    [0, 0, 96],
+    [0, 0, 128],
+    [0, 0, 160],
+    [0, 0, 192],
+    [0, 0, 224],
+    [0, 0, 256]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "reach": 37,
+   "crc32": {
+    "steel": "b66c8467",
+    "wood": "b854668d",
+    "mouse": "64d720ee",
+    "hanging": "39c6fc54",
+    "monorail": "c94cc34c",
+    "flume": "dc8a44c6"
+   }
+  },
+  "straight-short": {
+   "model": "track",
+   "form": "line",
+   "entry": {
+    "at": [0, 0, -32],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [0, 0, 32],
+    "heading": 0,
+    "pitch": 0,
+    "bank": 0
+   },
+   "length": 64,
+   "samples": [
+    [0, 0, 0],
+    [0, 0, 32],
+    [0, 0, 64]
+   ],
+   "supports": [0, 1, 2],
+   "reach": 37,
+   "crc32": {
+    "steel": "861f939d",
+    "wood": "0cc10e08",
+    "mouse": "ae52d9f6",
+    "hanging": "02e14130",
+    "monorail": "16d9b0bb",
+    "flume": "a39710b1"
+   }
+  },
+  "corner-small": {
+   "model": "corner-small",
+   "form": "bezier",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [128, -64, 128],
+    "heading": 1,
+    "pitch": 0,
+    "bank": 0
+   },
+   "length": 198,
+   "samples": [
+    [0, 0, 0],
+    [4, 0, 28],
+    [15, 0, 54],
+    [30, 0, 78],
+    [50, 0, 98],
+    [74, 0, 113],
+    [100, 0, 124],
+    [128, 0, 128]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "reach": 37,
+   "crc32": {
+    "steel": "cfbdb4a6",
+    "wood": "21d717b7",
+    "mouse": "e332ed9a",
+    "hanging": "5d517ecf",
+    "monorail": "960754e8",
+    "flume": "fe2ef0dc"
+   }
+  },
+  "corner-large": {
+   "model": "corner-large",
+   "form": "bezier",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [256, -64, 256],
+    "heading": 1,
+    "pitch": 0,
+    "bank": 0
+   },
+   "length": 397,
+   "samples": [
+    [0, 0, 0],
+    [2, 0, 30],
+    [9, 0, 60],
+    [20, 0, 89],
+    [33, 0, 116],
+    [50, 0, 141],
+    [69, 0, 165],
+    [91, 0, 187],
+    [115, 0, 206],
+    [140, 0, 223],
+    [167, 0, 236],
+    [196, 0, 247],
+    [226, 0, 254],
+    [256, 0, 256]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "reach": 37,
+   "crc32": {
+    "steel": "b4131549",
+    "wood": "f98a266b",
+    "mouse": "3b2eacd0",
+    "hanging": "92f8ad05",
+    "monorail": "62d00b42",
+    "flume": "55264dcd"
+   }
+  },
+  "corner-small-ramp": {
+   "model": "corner-small-ramp",
+   "form": "bezier",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [128, 0, 128],
+    "heading": 1,
+    "pitch": 0,
+    "bank": 0
+   },
+   "length": 210,
+   "samples": [
+    [0, 0, 0],
+    [4, 4, 29],
+    [15, 14, 55],
+    [31, 26, 78],
+    [50, 38, 97],
+    [73, 50, 113],
+    [99, 60, 124],
+    [128, 64, 128]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "reach": 37,
+   "crc32": {
+    "steel": "6d61dbca",
+    "wood": "d5c4cc73",
+    "mouse": "c3791c03",
+    "hanging": "3b6422a7",
+    "monorail": "752607f5",
+    "flume": "fc033055"
+   }
+  },
+  "corner-large-ramp": {
+   "model": "corner-large-ramp",
+   "form": "bezier",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [256, 0, 256],
+    "heading": 1,
+    "pitch": 0,
+    "bank": 0
+   },
+   "length": 403,
+   "samples": [
+    [0, 0, 0],
+    [2, 1, 31],
+    [9, 4, 61],
+    [20, 9, 89],
+    [34, 15, 117],
+    [51, 21, 142],
+    [70, 28, 165],
+    [91, 36, 186],
+    [114, 43, 205],
+    [139, 49, 222],
+    [167, 55, 236],
+    [195, 60, 247],
+    [225, 63, 254],
+    [256, 64, 256]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "reach": 37,
+   "crc32": {
+    "steel": "bd28b6e1",
+    "wood": "df3f6134",
+    "mouse": "2cbec0dc",
+    "hanging": "72740f33",
+    "monorail": "18fe0ac4",
+    "flume": "4cfcc2be"
+   }
+  },
+  "curve": {
+   "model": "curve",
+   "form": "bezier",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [128, -64, 256],
+    "heading": 0,
+    "pitch": 0,
+    "bank": 0
+   },
+   "length": 296,
+   "samples": [
+    [0, 0, 0],
+    [3, 0, 29],
+    [11, 0, 58],
+    [25, 0, 84],
+    [43, 0, 107],
+    [64, 0, 128],
+    [85, 0, 149],
+    [103, 0, 172],
+    [117, 0, 198],
+    [125, 0, 227],
+    [128, 0, 256]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "reach": 37,
+   "crc32": {
+    "steel": "0bf7b253",
+    "wood": "7ef77742",
+    "mouse": "859474c3",
+    "hanging": "9e564420",
+    "monorail": "414cb136",
+    "flume": "adb9d58c"
+   }
+  },
+  "hill": {
+   "model": "straight-hill-complete",
+   "form": "bezier",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [0, 0, 256],
+    "heading": 0,
+    "pitch": 0,
+    "bank": 0
+   },
+   "length": 267,
+   "samples": [
+    [0, 0, 0],
+    [0, 1, 30],
+    [0, 6, 59],
+    [0, 14, 87],
+    [0, 25, 115],
+    [0, 39, 141],
+    [0, 50, 169],
+    [0, 58, 197],
+    [0, 63, 226],
+    [0, 64, 256]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "reach": 37,
+   "crc32": {
+    "steel": "c8baa87f",
+    "wood": "4c5449b8",
+    "mouse": "6cc0e301",
+    "hanging": "b80d6ea9",
+    "monorail": "dace30bf",
+    "flume": "b9bae962"
+   }
+  },
+  "hill-half": {
+   "model": "straight-hill-complete-half",
+   "form": "bezier",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [0, -32, 256],
+    "heading": 0,
+    "pitch": 0,
+    "bank": 0
+   },
+   "length": 259,
+   "samples": [
+    [0, 0, 0],
+    [0, 1, 29],
+    [0, 3, 57],
+    [0, 7, 86],
+    [0, 13, 114],
+    [0, 19, 142],
+    [0, 25, 170],
+    [0, 29, 199],
+    [0, 31, 227],
+    [0, 32, 256]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "reach": 37,
+   "crc32": {
+    "steel": "6da83858",
+    "wood": "cec48e94",
+    "mouse": "2685e88a",
+    "hanging": "6bd60331",
+    "monorail": "57e646e1",
+    "flume": "203d359b"
+   }
+  },
+  "hill-beginning": {
+   "model": "straight-hill-beginning",
+   "form": "bezier",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [0, 0, 256],
+    "heading": 0,
+    "pitch": 1,
+    "bank": 0
+   },
+   "length": 270,
+   "samples": [
+    [0, 0, 0],
+    [0, 0, 30],
+    [0, 2, 60],
+    [0, 4, 90],
+    [0, 7, 120],
+    [0, 13, 149],
+    [0, 20, 178],
+    [0, 31, 206],
+    [0, 45, 233],
+    [0, 64, 256]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "reach": 37,
+   "crc32": {
+    "steel": "de25c8bd",
+    "wood": "1aad117d",
+    "mouse": "1ade7d2b",
+    "hanging": "fb6baace",
+    "monorail": "9886172c",
+    "flume": "ffce1c1c"
+   }
+  },
+  "hill-end": {
+   "model": "straight-hill-end",
+   "form": "bezier",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 1,
+    "bank": 0
+   },
+   "exit": {
+    "at": [0, 0, 256],
+    "heading": 0,
+    "pitch": 0,
+    "bank": 0
+   },
+   "length": 270,
+   "samples": [
+    [0, 0, 0],
+    [0, 19, 23],
+    [0, 33, 50],
+    [0, 44, 78],
+    [0, 51, 107],
+    [0, 57, 136],
+    [0, 60, 166],
+    [0, 62, 196],
+    [0, 64, 226],
+    [0, 64, 256]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "reach": 37,
+   "crc32": {
+    "steel": "10b9e7e2",
+    "wood": "4b335576",
+    "mouse": "74a2a68f",
+    "hanging": "17501e00",
+    "monorail": "c7e3bc05",
+    "flume": "8cc60ab9"
+   }
+  },
+  "bump-up": {
+   "model": "straight-bump-up",
+   "form": "bump",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [0, -64, 256],
+    "heading": 0,
+    "pitch": 0,
+    "bank": 0
+   },
+   "length": 266,
+   "samples": [
+    [0, 0, 0],
+    [0, 4, 29],
+    [0, 13, 57],
+    [0, 24, 85],
+    [0, 31, 113],
+    [0, 31, 143],
+    [0, 24, 171],
+    [0, 13, 199],
+    [0, 4, 227],
+    [0, 0, 256]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "reach": 38,
+   "crc32": {
+    "steel": "a75bac6c",
+    "wood": "33433757",
+    "mouse": "cd0293db",
+    "hanging": "39e87e55",
+    "monorail": "75a863d6",
+    "flume": "62831b32"
+   }
+  },
+  "bump-down": {
+   "model": "straight-bump-down",
+   "form": "bump",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [0, -64, 256],
+    "heading": 0,
+    "pitch": 0,
+    "bank": 0
+   },
+   "length": 266,
+   "samples": [
+    [0, 0, 0],
+    [0, -4, 29],
+    [0, -13, 57],
+    [0, -24, 85],
+    [0, -31, 113],
+    [0, -31, 143],
+    [0, -24, 171],
+    [0, -13, 199],
+    [0, -4, 227],
+    [0, 0, 256]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "reach": 38,
+   "crc32": {
+    "steel": "3a4e6b85",
+    "wood": "fd6875af",
+    "mouse": "56d5d6c7",
+    "hanging": "4e082d5b",
+    "monorail": "d684b456",
+    "flume": "4a5a4fad"
+   }
+  },
+  "skew-left": {
+   "model": "straight-skew-left",
+   "form": "line",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [0, -64, 256],
+    "heading": 0,
+    "pitch": 0,
+    "bank": -1
+   },
+   "length": 256,
+   "samples": [
+    [0, 0, 0],
+    [0, 0, 32],
+    [0, 0, 64],
+    [0, 0, 96],
+    [0, 0, 128],
+    [0, 0, 160],
+    [0, 0, 192],
+    [0, 0, 224],
+    [0, 0, 256]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "reach": 37,
+   "crc32": {
+    "steel": "a0b9012a",
+    "wood": "8c40b898",
+    "mouse": "a9536147",
+    "hanging": "76162933",
+    "monorail": "c3220861",
+    "flume": "e9ac3431"
+   }
+  },
+  "skew-right": {
+   "model": "straight-skew-right",
+   "form": "line",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [0, -64, 256],
+    "heading": 0,
+    "pitch": 0,
+    "bank": 1
+   },
+   "length": 256,
+   "samples": [
+    [0, 0, 0],
+    [0, 0, 32],
+    [0, 0, 64],
+    [0, 0, 96],
+    [0, 0, 128],
+    [0, 0, 160],
+    [0, 0, 192],
+    [0, 0, 224],
+    [0, 0, 256]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "reach": 37,
+   "crc32": {
+    "steel": "63a45d48",
+    "wood": "68b43c6f",
+    "mouse": "2f1590c3",
+    "hanging": "65706b61",
+    "monorail": "8449e560",
+    "flume": "20472cbb"
+   }
+  },
+  "skew-left-side": {
+   "model": "straight-skew-left-side",
+   "form": "line",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [0, -64, 256],
+    "heading": 0,
+    "pitch": 0,
+    "bank": -2
+   },
+   "length": 256,
+   "samples": [
+    [0, 0, 0],
+    [0, 0, 32],
+    [0, 0, 64],
+    [0, 0, 96],
+    [0, 0, 128],
+    [0, 0, 160],
+    [0, 0, 192],
+    [0, 0, 224],
+    [0, 0, 256]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "reach": 37,
+   "crc32": {
+    "steel": "3e1f74ac",
+    "wood": "3d3ba3b1",
+    "mouse": "9f6ce572",
+    "hanging": "92d92ac9",
+    "monorail": "8f8869c5",
+    "flume": "7a7460ac"
+   }
+  },
+  "skew-right-side": {
+   "model": "straight-skew-right-side",
+   "form": "line",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [0, -64, 256],
+    "heading": 0,
+    "pitch": 0,
+    "bank": 2
+   },
+   "length": 256,
+   "samples": [
+    [0, 0, 0],
+    [0, 0, 32],
+    [0, 0, 64],
+    [0, 0, 96],
+    [0, 0, 128],
+    [0, 0, 160],
+    [0, 0, 192],
+    [0, 0, 224],
+    [0, 0, 256]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "reach": 37,
+   "crc32": {
+    "steel": "37653b66",
+    "wood": "044d76df",
+    "mouse": "52fa1c41",
+    "hanging": "b70b6b61",
+    "monorail": "049ea67f",
+    "flume": "c8f517ea"
+   }
+  },
+  "looping": {
+   "model": "looping",
+   "form": "loop",
+   "entry": {
+    "at": [0, -64, 0],
+    "pitch": 0,
+    "bank": 0
+   },
+   "exit": {
+    "at": [64, -64, 0],
+    "heading": 0,
+    "pitch": 0,
+    "bank": 0
+   },
+   "length": 807,
+   "samples": [
+    [0, 0, 0],
+    [2, 4, 31],
+    [5, 15, 59],
+    [7, 32, 85],
+    [10, 55, 105],
+    [12, 83, 120],
+    [15, 113, 127],
+    [17, 143, 127],
+    [20, 173, 120],
+    [22, 201, 105],
+    [25, 224, 85],
+    [27, 241, 59],
+    [30, 252, 31],
+    [32, 256, 0],
+    [34, 252, -31],
+    [37, 241, -59],
+    [39, 224, -85],
+    [42, 201, -105],
+    [44, 173, -120],
+    [47, 143, -127],
+    [49, 113, -127],
+    [52, 83, -120],
+    [54, 55, -105],
+    [57, 32, -85],
+    [59, 15, -59],
+    [62, 4, -31],
+    [64, 0, 0]
+   ],
+   "supports": [
+    0,
+    1,
+    2,
+    3,
+    23,
+    24,
+    25,
+    26
+   ],
+   "reach": 39,
+   "crc32": {
+    "steel": "3e7c195d",
+    "wood": "14782291",
+    "mouse": "bafde46c",
+    "hanging": "d59679df",
+    "monorail": "3c807396",
+    "flume": "8812f52d"
+   }
+  }
+ }
+}
