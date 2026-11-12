@@ -145,8 +145,15 @@ namespace Island.Core.Rides
         /// <summary>Ends higher than it starts.</summary>
         public bool Climbs => Exit.Y > 0;
 
-        /// <summary>Ends lower than it starts: the train is falling.</summary>
+        /// <summary>Ends lower than it starts.</summary>
         public bool Drops => Exit.Y < 0;
+
+        /// <summary>
+        /// Goes downhill anywhere along it: some centreline sample is lower than the one before
+        /// it. A dip, a bump and a loop all fall although each ends level, so a train needs a
+        /// lift to have carried it up before any of them. Climbing and level pieces do not fall.
+        /// </summary>
+        public bool Falls { get; private set; }
 
         public static TrackPiece Place(TrackShape shape, string id, string name, Placement placed,
                                        TrackRole role, RideIntensity intensity)
@@ -179,6 +186,8 @@ namespace Island.Core.Rides
             var onAxis = piece.Turn == 0 && piece.EntryPitch == 0 && piece.ExitPitch == 0 && role != TrackRole.Station;
             foreach (var sample in piece.Samples) onAxis &= sample.X == 0 && sample.Y == 0;
             piece.RollsFreely = onAxis;
+            for (var k = 1; k < piece.Samples.Count; k++)
+                piece.Falls |= piece.Samples[k].Y < piece.Samples[k - 1].Y;
             return piece;
         }
 

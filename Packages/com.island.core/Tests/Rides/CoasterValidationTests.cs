@@ -186,6 +186,41 @@ namespace Island.Core.Tests.Rides
             Assert.That(PiecesWith(Check(unlifted), CoasterProblem.NoLiftBeforeDrop), Is.EqualTo(new[] { 3 }));
         }
 
+        [Test]
+        public void ADipNeedsALiftThoughItEndsLevel()
+        {
+            // The rectangle with no climb: a straight for the lift and a dip (31 below, back to
+            // level) for the hill down. It closes level; the dip is the first place it falls.
+            // Started a unit up so the dip stays out of the ground.
+            var rectangle = Rectangle(lift: P.Straight);
+            rectangle[4] = P.BumpDown;
+            var coaster = Build(new TrackPoint(0, U, 0), rectangle);
+            Assert.That(coaster.IsClosed, Is.True);
+            Assert.That(Check(coaster).Issues, Is.EqualTo(Issues((4, CoasterProblem.NoLiftBeforeDrop))));
+
+            // With the lift back and the dip after the hill, nothing is wrong.
+            var lifted = Rectangle(straight: P.BumpDown);
+            Assert.That(Check(Build(new TrackPoint(0, U, 0), lifted)).Issues, Is.Empty);
+        }
+
+        [TestCase("dip")]
+        [TestCase("bump")]
+        [TestCase("loop-right")]
+        [TestCase("loop-left")]
+        public void APieceThatFallsAndComesBackNeedsALiftBeforeIt(string which)
+        {
+            // Each of these ends level with where it began, but somewhere along it the track goes
+            // downhill: the dip at once, the bump after its crest, the loop after its top.
+            var piece = which == "dip" ? P.BumpDown : which == "bump" ? P.BumpUp
+                      : which == "loop-right" ? P.LoopRight : P.LoopLeft;
+            Assert.That(piece.Exit.Y, Is.Zero);
+            var unlifted = Check(Build(new TrackPoint(0, U, 0), P.Station, piece, P.Straight));
+            Assert.That(PiecesWith(unlifted, CoasterProblem.NoLiftBeforeDrop), Is.EqualTo(new[] { 1 }));
+
+            var lifted = Check(Build(new TrackPoint(0, U, 0), P.Station, P.LiftHill, piece, P.Straight));
+            Assert.That(PiecesWith(lifted, CoasterProblem.NoLiftBeforeDrop), Is.Empty);
+        }
+
         // ---- clearance ---------------------------------------------------------------------------
 
         [Test]

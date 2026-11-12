@@ -1172,6 +1172,14 @@ human-gate issue, since the accelerator it would offer has been declined.
   same coaster always gives the same list. A second station is reported where it is; the lift is
   looked for in ride order from the station, round the circuit. `RC-03` colours pieces from this
   and stands columns where `CoasterValidator.IsUpright` and the facts agree.
+- **A piece falls if it goes downhill anywhere along it** (revised the same day, on review):
+  some centreline sample is lower than the one before it (`TrackPiece.Falls`). The first rule
+  asked only whether a piece *ends* lower, so a dip (31 below, back to level), a bump (31 above
+  and back) and the loops (256 up and back) never counted, and a level circuit with a dip and no
+  lift validated clean. What a train physically needs is to have been carried up by a lift
+  before it ever goes downhill, and every descent of the track lies inside some piece (pieces
+  share their end samples), so checking each piece's own samples finds the first descent
+  exactly. Climbs and lifts never fall; a test pins that for the whole set.
 
 ## Open questions for the owner
 

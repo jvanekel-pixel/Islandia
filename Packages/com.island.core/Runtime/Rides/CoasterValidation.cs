@@ -15,7 +15,10 @@ namespace Island.Core.Rides
         NoStation = 3,
         /// <summary>Every station after the first, in ride order from piece 0.</summary>
         ExtraStation = 4,
-        /// <summary>The first piece that falls, when no lift comes between the station and it.</summary>
+        /// <summary>
+        /// The first piece that goes downhill anywhere along it (<see cref="TrackPiece.Falls"/>) —
+        /// a dip, a bump or a loop as much as a drop — when no lift comes between the station and it.
+        /// </summary>
         NoLiftBeforeDrop = 5,
         /// <summary>Within the clearance envelope of another piece; <see cref="CoasterIssue.Other"/> names it.</summary>
         Collides = 6,
@@ -213,7 +216,7 @@ namespace Island.Core.Rides
                 var index = (from + step) % count;
                 var piece = coaster.PieceAt(index);
                 if (piece.Role == TrackRole.Lift) return;
-                if (piece.Drops)
+                if (piece.Falls)
                 {
                     issues.Add(new CoasterIssue(index, CoasterProblem.NoLiftBeforeDrop));
                     return;

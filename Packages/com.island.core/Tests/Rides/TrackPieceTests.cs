@@ -146,6 +146,7 @@ namespace Island.Core.Tests.Rides
                 if (piece.Role == TrackRole.Lift)
                 {
                     Assert.That(piece.Climbs, Is.True, $"{piece.Id}: a lift climbs");
+                    Assert.That(piece.Falls, Is.False, $"{piece.Id}: a lift never goes downhill");
                     Assert.That(piece.Intensity, Is.EqualTo(RideIntensity.Gentle), $"{piece.Id}: a lift is slow");
                 }
             }
@@ -153,6 +154,20 @@ namespace Island.Core.Tests.Rides
             Assert.That(CoasterPieces.LoopRight.Intensity, Is.EqualTo(RideIntensity.Thrilling));
             Assert.That(CoasterPieces.TurnLargeRight.Intensity, Is.EqualTo(RideIntensity.Gentle));
             Assert.That(CoasterPieces.DropStart.Drops, Is.True);
+        }
+
+        [Test]
+        public void APieceFallsWhereverItGoesDownhillNotOnlyWhereItEndsLower()
+        {
+            foreach (var piece in CoasterPieces.All)
+                if (piece.Drops) Assert.That(piece.Falls, Is.True, $"{piece.Id} ends lower");
+            // Ending level: the dip, the bump and the loops fall on the way; the rest never leave level.
+            Assert.That(CoasterPieces.BumpDown.Falls && CoasterPieces.BumpUp.Falls, Is.True);
+            Assert.That(CoasterPieces.LoopRight.Falls && CoasterPieces.LoopLeft.Falls, Is.True);
+            foreach (var level in new[] { CoasterPieces.Station, CoasterPieces.Straight, CoasterPieces.TurnSmallRight,
+                                          CoasterPieces.TurnLargeLeft, CoasterPieces.ShiftRight, CoasterPieces.TwistLeft })
+                Assert.That(level.Falls, Is.False, level.Id);
+            Assert.That(CoasterPieces.HillUp.Falls || CoasterPieces.HelixLargeRightUp.Falls, Is.False, "climbs do not fall");
         }
 
         [Test]
