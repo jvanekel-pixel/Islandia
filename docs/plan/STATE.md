@@ -6,10 +6,10 @@
 | :-- | :-- |
 | **Stage** | 2 — Construction |
 | **Current milestone** | M1 Factory online · engine-free work ahead of it on M2, M4, M5 and M10 |
-| **In flight** | `RC-01a` (coaster track pieces and frames, derived from the owner's pack) |
+| **In flight** | `RC-01b` (coaster validation, per piece) |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | **Running** on a schedule, a new session each run. Its first run (2026-11-11) was **not** on the `islandia` environment: no .NET, no setup script, unrestricted network. Point the routine at that environment at <https://claude.ai/code/routines> |
-| **Last updated** | 2026-11-12 — `RC-01a` done: 37 coaster pieces measured from the pack, frames composed in integers |
+| **Last updated** | 2026-11-12 — `RC-01b` done: coaster validation per piece — closed, one station, lift, clearance, supports, reservation |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## The plan changed on 2026-11-11
@@ -31,13 +31,7 @@ finished M14. Older documents and log entries use the old numbers.
 
 ## With the owner now
 
-Being walked through one at a time in the planning conversation. None blocks the next packages.
-
-| What | Unblocks |
-| :-- | :-- |
-| Point the scheduled driver at the `islandia` environment (above) | `F-10`, and sessions that start with the toolchain installed |
-| Headset developer setup: Meta developer organisation, Developer Mode, `adb` on the PC | HG-1 |
-| Unity credentials in the cloud environment, if the owner wants sessions to run Unity directly | `S-01`'s optional accelerator |
+Nothing — the owner's setup list is complete.
 
 ## Settled with the owner on 2026-11-11
 
@@ -49,6 +43,17 @@ Being walked through one at a time in the planning conversation. None blocks the
   `ANDROID_*` secrets open it in CI (`Signing key` workflow). Fingerprint in `R-01`'s note.
 - **Identity:** package id `dev.islandia.app` is final; the name under the icon is *Islandia*
   (ADR-22).
+- **Headset ready for test builds** (2026-11-12): Meta developer organisation, Developer Mode on,
+  Android platform tools on the owner's PC, USB debugging allowed. **USB, not Wi-Fi**: the PC and
+  the headset are on different networks, and a good data cable works. The HG-1 install script
+  should still accept `adb connect <address>:5555` for later. Two things that cost time and belong
+  in its instructions: the "Allow USB debugging" box appears only after the PC runs `adb`, and it
+  can sit out of the wearer's line of sight; a charge-only cable shows as a connect chime every
+  ~30 s.
+- **Environment:** the routine now runs on `islandia`.
+- **Unity stays in CI only** (2026-11-12): no Unity credentials in the cloud environment, so
+  sessions never run the editor themselves. `S-01` records its findings and offers nothing. See
+  `DECISIONS.md`.
 - **Who plays it:** the owner's own Quest 2, played by their partner, who thinks VR is dumb and
   asked for exactly this game. See `DECISIONS.md`.
 
@@ -82,13 +87,13 @@ link `kenney.nl/assets/mini-forest` but no archive for it was uploaded.
 
 Take the first `todo` package in `BACKLOG.yaml` whose dependencies are `done` — `make next` prints
 them. As of this writing: **`F-06`** (assemblies, composition root, boot scene — the next M1 step), **`C-02b`** (the Blender
-normalisation pipeline), **`V-07b`**, and the engine-free starts of the new features — **`RC-01b`** (coaster validation), **`RC-01`** (coasters saved, with undo), **`RC-02`** (ride physics), **`PNT-01`** (paint segmentation) — plus
+normalisation pipeline), **`V-07b`**, and the engine-free starts of the new features — **`RC-01`** (coasters saved, with undo), **`RC-02`** (ride physics), **`PNT-01`** (paint segmentation) — plus
 `I-04` and `I-05`. Prefer the current milestone; take an engine-free package when it is waiting
 on CI.
 
-**25 of 137 live packages are done** (7 more were cut on 2026-11-11; `RC-01` was split in three on 2026-11-12). `F-01`–`F-05`,
+**26 of 137 live packages are done** (7 more were cut on 2026-11-11; `RC-01` was split in three on 2026-11-12). `F-01`–`F-05`,
 `F-07a`–`F-07c`, `F-08`, `F-13`, `V-02`, `V-06`, `V-07a`, `V-08`, `SB-01a`–`SB-01d`, `C-01a`,
-`C-01b`, `C-02a`, `I-01`, `TR-01a`, `TR-01`, `RC-01a`.
+`C-01b`, `C-02a`, `I-01`, `TR-01a`, `TR-01`, `RC-01a`, `RC-01b`.
 
 ### What exists now
 
@@ -125,6 +130,7 @@ on CI.
 
 ## Recently merged
 
+- `RC-01b` coaster validation: each problem named on the piece it is on, in integers; ground read from the heightfield exactly (2026-11-12)
 - `RC-01a` coaster pieces from the owner's pack: 37 pieces, frames in integer sub-units, a 200-piece circuit that closes exactly (2026-11-12)
 - `TR-01` the world of islands: an index that never loads islands, one save file each, deletion, and migration of an old single-island save (2026-11-12)
 - `TR-01a` an island from its seed: terrain, station on the shore, reserved ground (2026-11-12, PR #39)
@@ -145,7 +151,7 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 
 | Fact | Value | Source |
 | :-- | :-- | :-- |
-| Local gate `make check` | 7 lint checks, 143 tooling tests, 363 core tests, 30 contract tests, 11 end-to-end — about 60 s | everything merged to 2026-11-12 |
+| Local gate `make check` | 7 lint checks, 143 tooling tests, 395 core tests, 30 contract tests, 11 end-to-end — about 60 s | everything merged to 2026-11-12 |
 | Coaster pack geometry | grid unit = pack unit (64 sub-units, planned at 2 m); straight 4, turns radius 2 and 4, loop 4 tall; all six styles within 0.58–0.61 units of one centreline | `RC-01a`, `content/facts/rides/coaster-kit.json` |
 | Unity EditMode tests in CI | **349** — the 312 `Island.Core` ones, 22 asserting ADR-03, 15 asserting the XR setup | F-04, F-05, F-07b |
 | Unity image for configure and tests | `ubuntu-6000.3.28f1-android-3` — OpenXR needs the Android module to write Android settings. Pulled and ran without disk trouble | F-05 |

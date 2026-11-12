@@ -1122,6 +1122,82 @@ slopes, the S-bend and the airtime bumps *lively*; the loop and the leans *thril
 the builder's palette and the gentle setting, which can offer only gentle pieces by default, until
 `RC-02` rates whole coasters from their forces. Nothing else was added for rides.
 
+## 2026-11-12 — Unity runs in CI only
+
+**Decided by:** the owner. Unity credentials do not go into the cloud environment, so sessions
+never run the editor themselves; Unity work is done by the `unity-*` workflows.
+
+- CI already runs Unity, free, on every change that needs it.
+- A Unity login would have to sit in every session as a plain-text environment variable, which
+  CLAUDE.md forbids for keys.
+- A session that dies while holding the Personal seat can leave CI unable to activate Unity.
+
+`S-01` stays in the backlog for its timing measurements; it records findings and opens no
+human-gate issue, since the accelerator it would offer has been declined.
+
+## 2026-11-12 — Coaster validation: where a coaster is, and how much room it needs
+
+**Decided by:** the build session for `RC-01b`, inside ADR-25 and ADR-24.
+
+- **A coaster's grid is the island's world space, in sub-units.** Origin at the island's centre
+  at height 0, the island's axes, 32 sub-units to the metre; `Coaster.Start` is where it is.
+  Nothing else places a coaster, so nothing can disagree with it. Every heightfield sample is a
+  whole 8 sub-units, so track and ground meet on integers (`CoasterSpace`, pinned by tests).
+- **Ground through an interface,** `ICoasterGround`: flat for tests and the tabletop, and the
+  island's `Heightfield` read in fixed point — each sample's height in 1/1024 sub-unit (exact,
+  since it is a float times a power of two), bilinear weights in whole eighths, rounded up.
+  Floating interpolation would not promise the same answer on the headset.
+- **The clearance envelope is not the reach doubled.** Each piece's measured reach (0.58–0.61
+  units) is the furthest its geometry gets from the centreline, but the pack's own loop puts its
+  way out one unit beside the track leading in, so a sphere of the reach around each track
+  would reject the pack's signature piece. The envelope is a cylinder per centreline
+  sample: two samples of different pieces collide when they are closer than **¾ unit sideways**
+  (cars are 0.7 wide; the loop passes) and closer vertically than **the taller piece's reach
+  plus one unit of headroom** (2 m for a seated rider; symmetric, since riders hang below the
+  track at a loop's top). So a track may cross another two units above it, not one.
+- **Neighbours are compared too,** except pairs of samples both within 1½ units of the end the
+  two pieces share — a right loop followed by a left one collides at the top, far from their
+  joint. The last piece and the first share an end whenever the open end is on the start, even
+  leaning: that is an open circuit, not a collision.
+- **Supports** stand where the piece's facts allow one (the loop's top does not) and the track is
+  banked no more than an eighth, interpolated evenly across a lean. The tallest column is
+  **12 units (24 m)**, a planning figure: the island's ground tops out at 18 m and a coaster that
+  needs more is over the sea floor or very tall. Any sample below the ground is *buried*; any
+  beyond the island's edge is *off the island*.
+- **The station's reservation is two-dimensional,** as `StationSite.Permits` is: a box of the
+  piece's reach around each sample may not touch the footprint or the train's corridor at any
+  height. A test checks the validator and `Permits` agree piece by piece.
+- **Reports, not refusals.** Each issue is a piece index (−1 for the coaster: no track, no
+  station), a problem code, the other piece for a collision, and a plain reason; sorted, so the
+  same coaster always gives the same list. A second station is reported where it is; the lift is
+  looked for in ride order from the station, round the circuit. `RC-03` colours pieces from this
+  and stands columns where `CoasterValidator.IsUpright` and the facts agree.
+- **A piece falls if it goes downhill anywhere along it** (revised the same day, on review):
+  some centreline sample is lower than the one before it (`TrackPiece.Falls`). The first rule
+  asked only whether a piece *ends* lower, so a dip (31 below, back to level), a bump (31 above
+  and back) and the loops (256 up and back) never counted, and a level circuit with a dip and no
+  lift validated clean. What a train physically needs is to have been carried up by a lift
+  before it ever goes downhill, and every descent of the track lies inside some piece (pieces
+  share their end samples), so checking each piece's own samples finds the first descent
+  exactly. Climbs and lifts never fall; a test pins that for the whole set.
+- **Collisions: a grid first, and at most four per piece** (revised the same day, on review).
+  Comparing every pair of pieces was ~524k box tests for 1,024 pieces, and a tangled unfinished
+  coaster — 1,024 tight turns on one circle — reported 783,360 collisions and took 135 ms on
+  desktop CoreCLR, several times that on the Quest 2, on every edit. Now the pieces' boxes are
+  binned into a uniform XZ grid over the coaster (cells at least one straight, 4 units, across
+  and at most 64 a side), and samples are compared only for pairs whose boxes come within the
+  envelope, in index order, with the boxes and reaches computed once and no allocation per
+  pair. **Each piece names at most `CoasterValidator.MaxCollisionsPerPiece` = 4 others, its
+  lowest-numbered**, so a coaster reports at most 4 × 1,024 collisions; a pair is not compared
+  once neither piece could take another. Four because one piece crossing over a joint
+  legitimately touches both sides of it, and the pack's tightest pile in the tests names three.
+  The answer is still integers and still deterministic: a test compares it with a brute-force
+  every-pair reference (a test-only helper) on 50 varied coasters, and every earlier test is
+  unchanged. Measured in Release on desktop CoreCLR, whole `Validate`, median of 30: a
+  wandering 1,024-piece coaster 3.2 → 1.7 ms (the clearance part about 2.2 → 0.7 ms); the
+  stacked 1,024 turns 135 → 3.4 ms, with 5,121 issues instead of 784,385. No timing is asserted
+  in the suite.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

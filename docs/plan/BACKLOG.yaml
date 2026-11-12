@@ -255,6 +255,10 @@ packages:
   accept:
     - "Time-boxed to one session. Answer recorded: can the editor image be pulled via the registry mirror, which hosts must be allowed, how long does a cold compile take [L0]"
     - "If viable, a human-gate issue offers it to the owner as an optional accelerator, stating that it needs their licence in the environment. Not adopted without their yes [L0]"
+  note: >-
+    The owner has already declined the accelerator (2026-11-12, DECISIONS.md
+    "Unity runs in CI only"), so the second line is answered: the spike records
+    its findings and timings only and opens no human-gate issue.
   status: todo
 
 - id: S-02
@@ -873,14 +877,18 @@ packages:
   accept:
     - "Validation reports, per piece: circuit closed, one station, a lift before the first drop, no self-intersection within the clearance envelope, supports reach the ground, nothing inside the station reservation or the train's corridor [L1]"
   note: >-
-    Planned shape: a ground-height query interface with a Heightfield adapter,
-    tested on flat and sculpted ground. Clearance from the pieces' centreline
-    samples (half a unit apart) in integer sub-units, skipping adjacent pieces;
-    the facts' reach (0.58-0.61 units for every shape and style) sizes the
-    envelope. Support columns stand under TrackPiece.Supports samples where the
-    frame is within 45° of upright. The station reservation is checked with
-    StationSite.Permits per sample at CoasterPieces.MetresPerUnit.
-  status: todo
+    Island.Core.Rides: CoasterValidator.Validate(coaster, ground, station)
+    returns CoasterIssues (piece index or -1, a CoasterProblem code, the other
+    piece for a collision, a plain reason), sorted. CoasterSpace makes the
+    coaster's grid the island's world space in sub-units (1/32 m, origin at the
+    island's centre); ICoasterGround with FlatGround and HeightfieldGround
+    (fixed-point bilinear, rounded up). Clearance is a per-sample cylinder:
+    3/4 unit sideways, reach + one unit vertically; neighbours are compared
+    except near the joint they share. Supports where TrackPiece.Supports and
+    IsUpright (bank within an eighth) agree, at most 12 units tall. The
+    reservation uses the footprint and corridor rectangles StationSite.Permits
+    uses. DECISIONS.md, 2026-11-12.
+  status: done
 
 - id: RC-01
   title: Coasters saved and edited with undo
