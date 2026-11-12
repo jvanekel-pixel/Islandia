@@ -554,6 +554,7 @@ packages:
     - "A three-item placeholder catalogue (one plant, one wall, one prop) loads from data [L1]"
     - "Place, move and delete each item; every action is undoable and saved [L3]"
     - "Each placed item reports to the ledger [L3]"
+    - "Placement on the station or its track is refused through TR-01a's StationSite.Permits, and a test tries [L1]"
   status: todo
 
 - id: V-11
@@ -719,20 +720,48 @@ packages:
 
 # ───────────────────────────── M4  ISLANDS AND THE TRAIN ─────────────────────────────
 # The heart of the gift, with M5: the person it is for loves trains. Spec: 02-ARCHITECTURE.md ADR-24.
-# TR-01 is engine-free and may be taken early whenever the current milestone is waiting.
+# TR-01a and TR-01 are engine-free and may be taken early whenever the current milestone is waiting.
 
-- id: TR-01
-  title: A world of islands in Core — world index, island seeds, station reservation
+- id: TR-01a
+  title: Island seeds in Core — starting terrain, station site and its reservation
   ms: M4
   risk: high
   deps: [V-02, V-06]
   refs: [adr ADR-24, adr ADR-08, adr ADR-09]
   accept:
-    - "A world index lists islands by stable id with name, seed, theme, creation time and thumbnail reference; islands are created on demand and the list has no fixed upper bound [L1]"
     - "A new island's starting terrain and its station position derive deterministically from its seed, inside the 64 m extent, with the station on the shoreline facing open water [L1]"
     - "The station footprint and the track corridor leaving the island are reserved: brushes and placement cannot alter them, and a test sculpts and places across them without effect [L1]"
+  note: >-
+    Split out of TR-01 on 2026-11-12 because the whole package came to about
+    1,400 hand-written lines (05-OPERATIONS.md §5). Island.Core.World: SeedStream
+    (SplitMix64), IslandGenesis (integer-only terrain and station survey,
+    EnsureStation for ground that has none), StationSite and its STAN save
+    section; Heightfield.Lock and the sculptor's guard. Placement has no system
+    yet: StationSite.Permits is the rule V-10 must call (its acceptance says so).
+    Determinism is pinned by fingerprints of two seeds that Unity's EditMode job
+    also runs, under Mono. DECISIONS.md, 2026-11-12.
+  status: done
+
+- id: TR-01
+  title: A world of islands in Core — world index and one save file per island
+  ms: M4
+  risk: high
+  deps: [TR-01a, V-06]
+  refs: [adr ADR-24, adr ADR-09]
+  accept:
+    - "A world index lists islands by stable id with name, seed, theme, creation time and thumbnail reference; islands are created on demand and the list has no fixed upper bound [L1]"
     - "Each island saves to its own file in the V-06 container and the world index to another; deleting an island removes only its file; a single-island save from an earlier build migrates into a one-island world [L1]"
     - "Loading the world index never loads an island's contents [L1]"
+  note: >-
+    The remainder after TR-01a. Planned shape: a WorldIndex (world seed, next id
+    that only rises, entries of id, name, seed, theme, created-at and a nullable
+    thumbnail path) stored as one WRLD section in its own V-06 container at
+    <root>/world.index; each island at <root>/islands/island-<id>.island holding
+    TERR and STAN; an island's file written before the index lists it, and the
+    index updated before a deleted island's file goes. Migration takes
+    <root>/island.island, surveys a station onto it with
+    IslandGenesis.EnsureStation, keeps its unknown sections, makes it island 1
+    "Home", and renames the old file rather than deleting it.
   status: todo
 
 - id: TR-02

@@ -987,6 +987,50 @@ first minute because VR is novel. So, wherever a package leaves room for judgeme
 
 Package id `dev.islandia.app` is final and the display name stays *Islandia* (ADR-22, D3).
 
+## 2026-11-12 — An island from a seed: integers only, a station on the shore, and its ground locked
+
+**Decided by:** the build session for `TR-01a`, inside ADR-08 and ADR-24.
+
+**`TR-01` is split.** All of it came to about 1,400 hand-written lines, so `TR-01a` (seeds,
+starting terrain, the station site and its reservation) ships first and `TR-01` keeps the world
+index and the per-island files (05-OPERATIONS.md §5). The backlog note on `TR-01` records the
+planned file layout.
+
+- **Seeds are SplitMix64, split by purpose.** Not `System.Random`, whose algorithm differs
+  between Mono and CoreCLR and has changed between .NET versions. Terrain, station, theme and
+  (later) the cat each draw from their own stream, so adding a draw to one never moves another.
+  The first three outputs for seed 0 are pinned against the published values.
+- **Generation is integer arithmetic,** heights in 1/1024 m, converted to metres once by an exact
+  power-of-two division. Floating-point maths is deterministic on one machine but not across
+  them — IL2CPP on the headset may fuse a multiply-add that Mono rounds twice — so none is used.
+  Two seeds' full fingerprints (every height's bits and every weight) are pinned in a test that
+  runs under CoreCLR in `make core-test` and under Mono in Unity's EditMode job.
+- **New islands' surfaces** come from height: sand below `GrassLineMetres` (+0.1 m), grass
+  above `FullGrassMetres`, both derived in `IslandConstants` from the sand line.
+- **The shape:** a landmass near the middle, three to five lobes out towards the coast, up to two
+  hills kept clear of the station. Nothing reaches within 2 m of the 64 m extent, so open water
+  rings every island; a test checks the edge of 150 seeds.
+- **The station faces one of four directions** with a seeded offset of up to 6 m along that side,
+  so its footprint and corridor are axis-aligned rectangles. Its seaward edge is where the
+  station's full width first meets land walking in from the edge, at least 4 m in; the strip in
+  front of it, the station's width out to the edge, is kept as water, so it always faces open
+  water and the 4 m corridor runs down its middle. The 12 m × 8 m footprint is levelled to +0.5 m and painted
+  as path, ground beside and behind it is eased towards it over 2 m, and nothing seaward of it is
+  touched — that is the view down the line. Dimensions are ADR-08 constants.
+- **The site is saved, not recomputed.** A `STAN` section carries it, so a later change to
+  generation can never move a station out from under the ground built around it.
+- **The reservation is a lock on the heightfield,** checked by `TerrainSculptor` itself, so every
+  brush and the undo command that replays one obey it without being told. Loading and generation
+  still write locked samples. Placement has no system yet, so `StationSite.Permits` is the rule,
+  and `V-10` gained an acceptance line that requires it.
+- **`IslandGenesis.EnsureStation`** gives a station to ground that has none (a save from before
+  islands had stations) through the same survey, changing only the samples it must and
+  repainting those by their new height. Reading the `STAN` section locks the ground it is given,
+  so no load path can forget to; `Heightfield.ClearLocks` frees a field for another island.
+- **Themes are provisional ids** (`meadow`, `woodland`, `village`, `harbour`) until `C-02c`
+  admits pack items per theme; the index will store the id, so the list can grow without moving
+  any island's.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

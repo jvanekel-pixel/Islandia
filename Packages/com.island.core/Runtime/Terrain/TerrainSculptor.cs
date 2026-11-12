@@ -57,6 +57,9 @@ namespace Island.Core.Terrain
             for (var z = minZ; z <= maxZ; z++)
             for (var x = minX; x <= maxX; x++)
             {
+                // Reserved for the station and its track (ADR-24): no brush reaches it.
+                if (field.IsLocked(x, z)) continue;
+
                 var dx = Heightfield.WorldXOf(x) - brush.WorldX;
                 var dz = Heightfield.WorldZOf(z) - brush.WorldZ;
                 var distance = (float)Math.Sqrt(dx * dx + dz * dz);

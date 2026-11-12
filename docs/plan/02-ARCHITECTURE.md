@@ -134,6 +134,8 @@ Defined once, in `Island.Core.IslandConstants`. Nothing else may hard-code them.
 | Water level | −0.35 m |
 | Material weights | R sand · G grass/turf · B rock (auto on slope) · A path |
 | Tabletop scale | 1 : 25 |
+| Station footprint | 12 m along the track × 8 m, levelled to +0.5 m (`TR-01a`) |
+| Track corridor | 4 m wide, from the station's seaward edge to the extent's edge, at least 4 m long, kept at or below −0.75 m |
 
 Derived thresholds (sand line, scatter cut-off, cliff angle) are defined relative to these in the
 same file, once.

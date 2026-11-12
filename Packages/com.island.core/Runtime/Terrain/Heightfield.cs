@@ -26,6 +26,7 @@ namespace Island.Core.Terrain
 
         private readonly float[] _heights;
         private readonly byte[] _weights;
+        private bool[] _locked;
 
         /// <summary>A flat island of dry sand, which is where every island starts.</summary>
         public Heightfield()
@@ -227,6 +228,34 @@ namespace Island.Core.Terrain
             for (var c = 0; c < Channels; c++) total += _weights[at + c];
             return total;
         }
+
+        // ---- reserved ground ----------------------------------------------------------------------
+
+        /// <summary>
+        /// Marks samples that brushes must leave alone: the station's footprint and the track's
+        /// corridor off the island (ADR-24). Loading and generating still write them; only
+        /// <see cref="TerrainSculptor"/> refuses to.
+        /// </summary>
+        /// <remarks>
+        /// Held here rather than passed to each stroke so that no caller can forget it: every
+        /// brush goes through the same field. Undo and redo write back only what a stroke
+        /// changed, and a stroke never changes a locked sample, so history cannot undo a lock
+        /// that was in place when the stroke was made.
+        /// </remarks>
+        public void Lock(int minX, int minZ, int maxX, int maxZ)
+        {
+            if (_locked == null) _locked = new bool[Resolution * Resolution];
+            for (var z = Math.Max(minZ, 0); z <= Math.Min(maxZ, Resolution - 1); z++)
+            for (var x = Math.Max(minX, 0); x <= Math.Min(maxX, Resolution - 1); x++)
+                _locked[Index(x, z)] = true;
+        }
+
+        /// <summary>Lifts every lock, for a field about to hold a different island.</summary>
+        public void ClearLocks() => _locked = null;
+
+        /// <summary>Whether brushes must leave this sample alone.</summary>
+        public bool IsLocked(int gridX, int gridZ) =>
+            _locked != null && InRange(gridX, gridZ) && _locked[Index(gridX, gridZ)];
 
         // ---- copying ------------------------------------------------------------------------------
 
