@@ -64,11 +64,11 @@ namespace Island.Core.Tests.World
         {
             // These run under CoreCLR in `make core-test` and under Mono in Unity's EditMode job.
             // The same numbers in both is the evidence that a seed is platform-independent.
-            Assert.That(Fingerprint(IslandGenesis.Generate(1).Terrain), Is.EqualTo(764546157155800590UL), "seed 1");
-            Assert.That(Fingerprint(IslandGenesis.Generate(0xC0FFEE).Terrain), Is.EqualTo(5251678970205641382UL), "seed 0xC0FFEE");
+            Assert.That(Fingerprint(IslandGenesis.Generate(1).Terrain), Is.EqualTo(15280648246636265048UL), "seed 1");
+            Assert.That(Fingerprint(IslandGenesis.Generate(0xC0FFEE).Terrain), Is.EqualTo(10035519950499899449UL), "seed 0xC0FFEE");
             var station = IslandGenesis.Generate(1).Station;
             Assert.That(station.Direction, Is.EqualTo(TrackDirection.North));
-            Assert.That(station.Footprint.ToString(), Is.EqualTo("[110..142] x [180..228]"));
+            Assert.That(station.Footprint.ToString(), Is.EqualTo("[110..142] x [181..229]"));
         }
 
         [Test]
@@ -137,9 +137,11 @@ namespace Island.Core.Tests.World
             for (var x = footprint.MinX; x <= footprint.MaxX; x++)
                 Assert.That(field.HeightAt(x, z), Is.EqualTo(IslandConstants.StationPlatformHeightMetres));
 
-            // In front of it, every sample of the corridor is water, out to the edge of the extent.
-            for (var z = corridor.MinZ; z <= corridor.MaxZ; z++)
-            for (var x = corridor.MinX; x <= corridor.MaxX; x++)
+            // In front of it, across its whole width, everything is water out to the edge of the extent.
+            var front = site.Front;
+            Assert.That(front.Contains(corridor.MinX, corridor.MinZ) && front.Contains(corridor.MaxX, corridor.MaxZ));
+            for (var z = front.MinZ; z <= front.MaxZ; z++)
+            for (var x = front.MinX; x <= front.MaxX; x++)
                 if (!footprint.Contains(x, z))
                     Assert.That(IslandConstants.IsSubmerged(field.HeightAt(x, z)), $"({x}, {z}) is dry under the track (seed {seed})");
 

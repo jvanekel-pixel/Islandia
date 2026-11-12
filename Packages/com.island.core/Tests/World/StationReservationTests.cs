@@ -102,14 +102,14 @@ namespace Island.Core.Tests.World
 
             var terrain = new Heightfield();
             file.ReadInto(new TerrainSaveSection(terrain));
-            var station = new StationSaveSection(null);
+            var station = new StationSaveSection(null, lockInto: terrain);
             Assert.That(file.ReadInto(station), Is.True);
             var site = station.Site;
             Assert.That(site.Direction, Is.EqualTo(island.Station.Direction));
             Assert.That(site.Footprint, Is.EqualTo(island.Station.Footprint));
             Assert.That(site.Corridor, Is.EqualTo(island.Station.Corridor));
 
-            site.LockInto(terrain);
+            // Reading the section locked the ground; nothing else was called.
             var before = Reserved(terrain, site);
             SculptAcross(terrain, site);
             Assert.That(Reserved(terrain, site).Heights, Is.EqualTo(before.Heights));
@@ -119,7 +119,7 @@ namespace Island.Core.Tests.World
         public void GroundWithNoStationIsGivenOneWithoutDisturbingTheRest()
         {
             // A flat island to its edges, as a save from before the station existed would be:
-            // the station is surveyed on, its track cut back to water, and nothing else moves.
+            // the station is surveyed on, the ground in front of it cut back to water, and nothing else moves.
             var field = new Heightfield();
             TerrainSculptor.Apply(field, new TerrainBrush(BrushKind.Raise, 0f, 0f, 6f, 4f), 1f);
             var original = field.CopyHeights();
@@ -133,8 +133,8 @@ namespace Island.Core.Tests.World
                 var height = field.HeightAt(x, z);
                 if (site.Footprint.Contains(x, z))
                     Assert.That(height, Is.EqualTo(IslandConstants.StationPlatformHeightMetres));
-                else if (site.Corridor.Contains(x, z))
-                    Assert.That(IslandConstants.IsSubmerged(height), $"({x}, {z}) is dry under the track");
+                else if (site.Front.Contains(x, z))
+                    Assert.That(IslandConstants.IsSubmerged(height), $"({x}, {z}) is dry in front of the station");
                 else if (x < site.Footprint.MinX - margin || x > site.Footprint.MaxX + margin ||
                          z < site.Footprint.MinZ - margin || z > site.Footprint.MaxZ + margin)
                     Assert.That(height, Is.EqualTo(original[z * (Last + 1) + x]), $"({x}, {z}) moved");

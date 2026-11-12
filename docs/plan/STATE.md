@@ -6,7 +6,7 @@
 | :-- | :-- |
 | **Stage** | 2 — Construction |
 | **Current milestone** | M1 Factory online · engine-free work ahead of it on M2, M4, M5 and M10 |
-| **In flight** | `TR-01a` — island seeds, starting terrain, station site and its reservation, in Core. Awaiting merge |
+| **In flight** | Nothing. `TR-01a` (island seeds, starting terrain, the station and its reserved ground) landed in #39; the rest of `TR-01` is next |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | **Running** on a schedule, a new session each run. Its first run (2026-11-11) was **not** on the `islandia` environment: no .NET, no setup script, unrestricted network. Point the routine at that environment at <https://claude.ai/code/routines> |
 | **Last updated** | 2026-11-12 — `TR-01` split; `TR-01a` built |
@@ -126,7 +126,7 @@ on CI.
 
 ## Recently merged
 
-- `TR-01a` an island from its seed: terrain, station on the shore, reserved ground (2026-11-12)
+- `TR-01a` an island from its seed: terrain, station on the shore, reserved ground (2026-11-12, PR #39)
 - `F-05` OpenXR for the Quest 2 in code, asserted from disk (2026-11-11, PR #36)
 - The owner's re-plan (2026-11-11)
 - `F-04` ADR-03 set in code and asserted (2026-11-11, PR #32)

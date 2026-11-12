@@ -58,11 +58,14 @@ namespace Island.Core.World
         private const int CorridorHalf = (int)(IslandConstants.TrackCorridorWidthMetres * PerMetre) / 2;
         private const int MinCorridor = (int)(IslandConstants.TrackCorridorMinLengthMetres * PerMetre);
         private const int BlendMargin = 2 * PerMetre;
-        private const int LandReach = 30 * PerMetre;
+        private const int LandReach = (int)((IslandConstants.IslandHalfExtentMetres - 2f) * PerMetre);
         private const int SeabedTicks = -5 * TicksPerMetre / 2;
         private const int PlatformTicks = (int)(IslandConstants.StationPlatformHeightMetres * TicksPerMetre);
         private static readonly int CorridorFloorTicks =
             (int)Math.Floor(IslandConstants.TrackCorridorFloorMetres * TicksPerMetre);
+        private static readonly int GrassLineTicks = (int)Math.Floor(IslandConstants.GrassLineMetres * TicksPerMetre);
+        private static readonly int GrassSpanTicks =
+            (int)Math.Floor((IslandConstants.FullGrassMetres - IslandConstants.GrassLineMetres) * TicksPerMetre);
         private const long One = 1L << 16;
 
         public static string ThemeFor(ulong seed) =>
@@ -74,18 +77,19 @@ namespace Island.Core.World
             for (var i = 0; i < ticks.Length; i++) ticks[i] = SeabedTicks;
             var rng = SeedStream.For(seed, SeedStream.Terrain);
 
-            Landmass(ticks, Centre + rng.Range(-4, 4), Centre + rng.Range(-4, 4), rng.Range(88, 100), rng.Range(600, 1200));
+            Landmass(ticks, Centre + rng.Range(-PerMetre, PerMetre), Centre + rng.Range(-PerMetre, PerMetre),
+                     rng.Range(22 * PerMetre, 25 * PerMetre), rng.Range(600, 1200));
 
             var lobes = rng.Range(3, 5);
             for (var lobe = 0; lobe < lobes; lobe++)
             for (var attempt = 0; attempt < 16; attempt++)
             {
-                var radius = rng.Range(40, 64);
-                var dx = rng.Range(-80, 80);
-                var dz = rng.Range(-80, 80);
+                var radius = rng.Range(10 * PerMetre, 16 * PerMetre);
+                var dx = rng.Range(-20 * PerMetre, 20 * PerMetre);
+                var dz = rng.Range(-20 * PerMetre, 20 * PerMetre);
                 var plateau = rng.Range(400, 1000);
                 // Out towards the coast, where a lobe changes its shape, and never past the reach.
-                if (Math.Max(Math.Abs(dx), Math.Abs(dz)) < 48) continue;
+                if (Math.Max(Math.Abs(dx), Math.Abs(dz)) < 12 * PerMetre) continue;
                 if (Math.Abs(dx) + radius > LandReach || Math.Abs(dz) + radius > LandReach) continue;
                 var x = Centre + dx;
                 var z = Centre + dz;
@@ -99,13 +103,13 @@ namespace Island.Core.World
             for (var hill = 0; hill < hills; hill++)
             for (var attempt = 0; attempt < 16; attempt++)
             {
-                var radius = rng.Range(16, 28);
-                var x = Centre + rng.Range(-40, 40);
-                var z = Centre + rng.Range(-40, 40);
+                var radius = rng.Range(4 * PerMetre, 7 * PerMetre);
+                var x = Centre + rng.Range(-10 * PerMetre, 10 * PerMetre);
+                var z = Centre + rng.Range(-10 * PerMetre, 10 * PerMetre);
                 var peak = rng.Range(3 * TicksPerMetre / 2, 4 * TicksPerMetre);
                 var reach = radius + BlendMargin;
                 var clear = new GridRect(x - reach, z - reach, x + reach, z + reach);
-                if (Intersects(clear, site.Footprint) || Intersects(clear, site.Corridor)) continue;
+                if (clear.Intersects(site.Footprint) || clear.Intersects(site.Front)) continue;
                 Hill(ticks, x, z, radius, peak);
                 break;
             }
@@ -116,11 +120,8 @@ namespace Island.Core.World
             for (var z = 0; z < N; z++)
             for (var x = 0; x < N; x++)
             {
-                var height = ticks[z * N + x];
-                field.SetHeight(x, z, height / (float)TicksPerMetre);
-                // Sand on the beach, grass from half a metre up, eased between.
-                var grass = (byte)Math.Max(0, Math.Min(255, (height - 100) * 255 / 400));
-                field.SetWeights(x, z, (byte)(255 - grass), grass, 0, 0);
+                field.SetHeight(x, z, ticks[z * N + x] / (float)TicksPerMetre);
+                PaintByHeight(field, x, z, ticks[z * N + x]);
             }
             PaintPlatform(field, site);
             site.LockInto(field);
@@ -148,7 +149,10 @@ namespace Island.Core.World
             for (var x = 0; x < N; x++)
             {
                 var i = z * N + x;
-                if (ticks[i] != before[i]) field.SetHeight(x, z, ticks[i] / (float)TicksPerMetre);
+                if (ticks[i] == before[i]) continue;
+                field.SetHeight(x, z, ticks[i] / (float)TicksPerMetre);
+                // Ground the station moved takes the surface of its new height: no grass under the track.
+                PaintByHeight(field, x, z, ticks[i]);
             }
             PaintPlatform(field, site);
             site.LockInto(field);
@@ -159,16 +163,17 @@ namespace Island.Core.World
 
         /// <summary>
         /// Picks a side and a line across it, then walks in from the island's edge until the
-        /// corridor's width first meets land: that is the shore, and the station's seaward edge.
+        /// station's width first meets land: that is the shore, and the station's seaward edge, so
+        /// nothing in front of it is land.
         /// </summary>
         private static StationSite Survey(int[] ticks, SeedStream rng)
         {
             var direction = (TrackDirection)rng.Range(0, 3);
-            var across = Centre + rng.Range(-24, 24);
+            var across = Centre + rng.Range(-6 * PerMetre, 6 * PerMetre);
 
             var shore = -1;
             for (var inland = 0; inland <= Centre && shore < 0; inland++)
-            for (var b = across - CorridorHalf; b <= across + CorridorHalf; b++)
+            for (var b = across - FootprintHalf; b <= across + FootprintHalf; b++)
             {
                 var (x, z) = StationSite.ToGrid(direction, inland, b);
                 if (IslandConstants.IsSubmerged(ticks[z * N + x] / (float)TicksPerMetre)) continue;
@@ -187,7 +192,8 @@ namespace Island.Core.World
         }
 
         /// <summary>
-        /// Levels the footprint to a dry platform, keeps the corridor as water, and eases the
+        /// Levels the footprint to a dry platform, keeps the water in front of it — the station's
+        /// width, out to the edge, which holds the corridor — at or below the corridor's floor, and eases the
         /// ground beside and behind the station towards the platform so it sits in the land.
         /// </summary>
         private static void Stamp(int[] ticks, StationSite site)
@@ -203,7 +209,7 @@ namespace Island.Core.World
                 {
                     ticks[i] = PlatformTicks;
                 }
-                else if (site.Corridor.Contains(x, z))
+                else if (site.Front.Contains(x, z))
                 {
                     ticks[i] = Math.Min(ticks[i], CorridorFloorTicks);
                 }
@@ -217,6 +223,13 @@ namespace Island.Core.World
                     ticks[i] += (PlatformTicks - ticks[i]) * (BlendMargin + 1 - gap) / (BlendMargin + 1);
                 }
             }
+        }
+
+        /// <summary>Sand on the beach, grass above the grass line, eased between.</summary>
+        private static void PaintByHeight(Heightfield field, int x, int z, int heightTicks)
+        {
+            var grass = (byte)Math.Max(0, Math.Min(255, (heightTicks - GrassLineTicks) * 255 / GrassSpanTicks));
+            field.SetWeights(x, z, (byte)(255 - grass), grass, 0, 0);
         }
 
         private static void PaintPlatform(Heightfield field, StationSite site)
@@ -262,8 +275,5 @@ namespace Island.Core.World
             if (t >= One) return One;
             return t * t / One * (3 * One - 2 * t) / One;
         }
-
-        private static bool Intersects(GridRect a, GridRect b) =>
-            a.MinX <= b.MaxX && a.MaxX >= b.MinX && a.MinZ <= b.MaxZ && a.MaxZ >= b.MinZ;
     }
 }

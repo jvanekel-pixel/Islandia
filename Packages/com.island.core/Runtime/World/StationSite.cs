@@ -36,6 +36,9 @@ namespace Island.Core.World
 
         public bool Contains(int x, int z) => x >= MinX && x <= MaxX && z >= MinZ && z <= MaxZ;
 
+        public bool Intersects(GridRect other) =>
+            MinX <= other.MaxX && MaxX >= other.MinX && MinZ <= other.MaxZ && MaxZ >= other.MinZ;
+
         /// <summary>Whether a world-space box, in metres, overlaps this rectangle's ground.</summary>
         public bool Overlaps(float minX, float minZ, float maxX, float maxZ) =>
             minX <= Heightfield.WorldXOf(MaxX) && maxX >= Heightfield.WorldXOf(MinX) &&
@@ -69,6 +72,15 @@ namespace Island.Core.World
 
         /// <summary>From the station's seaward edge to the island's edge, over open water.</summary>
         public GridRect Corridor { get; }
+
+        /// <summary>
+        /// The view down the line: the footprint's width, from its seaward edge to the island's
+        /// edge. Open water when the island is made; wider than the corridor, and not reserved.
+        /// </summary>
+        public GridRect Front =>
+            Direction == TrackDirection.East || Direction == TrackDirection.West
+                ? new GridRect(Corridor.MinX, Footprint.MinZ, Corridor.MaxX, Footprint.MaxZ)
+                : new GridRect(Footprint.MinX, Corridor.MinZ, Footprint.MaxX, Corridor.MaxZ);
 
         public bool IsReserved(int gridX, int gridZ) =>
             Footprint.Contains(gridX, gridZ) || Corridor.Contains(gridX, gridZ);
@@ -128,13 +140,24 @@ namespace Island.Core.World
         }
     }
 
-    /// <summary>Saves an island's <see cref="StationSite"/>.</summary>
+    /// <summary>Saves an island's <see cref="StationSite"/>, and locks it into the ground on reading.</summary>
     public sealed class StationSaveSection : ISaveSection
     {
         public const string Id = "STAN";
         public const int Version = 1;
 
-        public StationSaveSection(StationSite site) => Site = site;
+        private readonly Heightfield _lockInto;
+
+        /// <param name="site">The site to write; null when reading.</param>
+        /// <param name="lockInto">
+        /// The island's ground, locked as soon as the site is read, so no load path can leave a
+        /// station unprotected by forgetting to.
+        /// </param>
+        public StationSaveSection(StationSite site, Heightfield lockInto = null)
+        {
+            Site = site;
+            _lockInto = lockInto;
+        }
 
         public StationSite Site { get; private set; }
 
@@ -174,6 +197,7 @@ namespace Island.Core.World
                     var footprint = ReadRect(reader);
                     var corridor = ReadRect(reader);
                     Site = new StationSite((TrackDirection)direction, footprint, corridor);
+                    if (_lockInto != null) Site.LockInto(_lockInto);
                 }
             }
             catch (EndOfStreamException)

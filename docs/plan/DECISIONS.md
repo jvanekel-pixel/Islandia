@@ -1005,13 +1005,16 @@ planned file layout.
   them — IL2CPP on the headset may fuse a multiply-add that Mono rounds twice — so none is used.
   Two seeds' full fingerprints (every height's bits and every weight) are pinned in a test that
   runs under CoreCLR in `make core-test` and under Mono in Unity's EditMode job.
+- **New islands' surfaces** come from height: sand below `GrassLineMetres` (+0.1 m), grass
+  above `FullGrassMetres`, both derived in `IslandConstants` from the sand line.
 - **The shape:** a landmass near the middle, three to five lobes out towards the coast, up to two
   hills kept clear of the station. Nothing reaches within 2 m of the 64 m extent, so open water
   rings every island; a test checks the edge of 150 seeds.
 - **The station faces one of four directions** with a seeded offset of up to 6 m along that side,
   so its footprint and corridor are axis-aligned rectangles. Its seaward edge is where the
-  corridor's width first meets land walking in from the edge; ground nearer the edge than 4 m is
-  cut back to water under the track. The 12 m × 8 m footprint is levelled to +0.5 m and painted
+  station's full width first meets land walking in from the edge, at least 4 m in; the strip in
+  front of it, the station's width out to the edge, is kept as water, so it always faces open
+  water and the 4 m corridor runs down its middle. The 12 m × 8 m footprint is levelled to +0.5 m and painted
   as path, ground beside and behind it is eased towards it over 2 m, and nothing seaward of it is
   touched — that is the view down the line. Dimensions are ADR-08 constants.
 - **The site is saved, not recomputed.** A `STAN` section carries it, so a later change to
@@ -1021,7 +1024,9 @@ planned file layout.
   still write locked samples. Placement has no system yet, so `StationSite.Permits` is the rule,
   and `V-10` gained an acceptance line that requires it.
 - **`IslandGenesis.EnsureStation`** gives a station to ground that has none (a save from before
-  islands had stations) through the same survey, changing only the samples it must.
+  islands had stations) through the same survey, changing only the samples it must and
+  repainting those by their new height. Reading the `STAN` section locks the ground it is given,
+  so no load path can forget to; `Heightfield.ClearLocks` frees a field for another island.
 - **Themes are provisional ids** (`meadow`, `woodland`, `village`, `harbour`) until `C-02c`
   admits pack items per theme; the index will store the id, so the list can grow without moving
   any island's.

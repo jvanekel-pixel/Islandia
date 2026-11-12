@@ -238,7 +238,9 @@ namespace Island.Core.Terrain
         /// </summary>
         /// <remarks>
         /// Held here rather than passed to each stroke so that no caller can forget it: every
-        /// brush, and the undo command that replays one, goes through the same field.
+        /// brush goes through the same field. Undo and redo write back only what a stroke
+        /// changed, and a stroke never changes a locked sample, so history cannot undo a lock
+        /// that was in place when the stroke was made.
         /// </remarks>
         public void Lock(int minX, int minZ, int maxX, int maxZ)
         {
@@ -247,6 +249,9 @@ namespace Island.Core.Terrain
             for (var x = Math.Max(minX, 0); x <= Math.Min(maxX, Resolution - 1); x++)
                 _locked[Index(x, z)] = true;
         }
+
+        /// <summary>Lifts every lock, for a field about to hold a different island.</summary>
+        public void ClearLocks() => _locked = null;
 
         /// <summary>Whether brushes must leave this sample alone.</summary>
         public bool IsLocked(int gridX, int gridZ) =>

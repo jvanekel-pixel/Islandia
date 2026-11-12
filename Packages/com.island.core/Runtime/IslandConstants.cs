@@ -97,6 +97,12 @@ namespace Island.Core
         /// </summary>
         public const float PlantSubmergedCutoffMetres = WaterLevelMetres - 0.05f;
 
+        /// <summary>A new island is sand below this and starts turning to grass above it: +0.1 m.</summary>
+        public const float GrassLineMetres = SandLineMetres + 0.3f;
+
+        /// <summary>A new island is all grass above this: about +0.5 m.</summary>
+        public const float FullGrassMetres = GrassLineMetres + 0.4f;
+
         // ---- The station and its track (ADR-24) ---------------------------------------------
 
         /// <summary>Length of the station's reserved footprint along the track, in metres.</summary>
