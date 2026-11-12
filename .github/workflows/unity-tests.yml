@@ -119,21 +119,15 @@ jobs:
           code=$?
           echo "::group::Editor log (tail)"; tail -120 /tmp/playmode.log || true; echo "::endgroup::"
 
-          # There are no PlayMode tests yet — they arrive with F-06's boot tests. Until then an
-          # empty run is the expected state, and is reported rather than failed. The moment a
-          # PlayMode assembly exists this becomes a real gate, because the summariser refuses an
-          # empty run and the condition below stops excusing it.
+          # A real gate since F-06 added the boot tests: no results, or zero tests, is a failure.
+          # The summariser refuses an empty run, which is what a PlayMode assembly that did not
+          # compile looks like from out here.
           if [ ! -f /tmp/playmode.xml ]; then
-            echo "No PlayMode results: no PlayMode test assembly exists yet (F-06)."
-            exit 0
+            echo "::error title=No PlayMode results::the editor wrote no PlayMode results (exit $code)"
+            exit 1
           fi
           python3 tools/unity/test_summary.py /tmp/playmode.xml
           summary=$?
-          total=$(python3 -c "import xml.etree.ElementTree as E,sys; print(E.parse('/tmp/playmode.xml').getroot().get('total','0'))" 2>/dev/null || echo 0)
-          if [ "$total" = "0" ]; then
-            echo "No PlayMode tests yet (F-06 adds the first). Not treated as a failure."
-            exit 0
-          fi
           if [ "$code" -ne 0 ] || [ "$summary" -ne 0 ]; then
             echo "::error title=PlayMode tests failed::editor exit $code, summary exit $summary"
             exit 1
@@ -142,18 +136,22 @@ jobs:
       # ADR-06: batchmode runs have historically reset XR settings. Two editor sessions have just
       # opened this project; if either rewrote the committed XR assets, the settings a build would
       # use are not the ones the tests read, so the run fails here and shows the change.
-      - name: The committed XR settings survived the editor
+      #
+      # F-06 adds the boot scene to the same check: BootSceneTests runs the builder again, and a
+      # rerun that rewrote the scene would show up here even if the test somehow missed it.
+      - name: The committed XR settings and boot scene survived the editor
         if: always() && steps.editmode.outcome != 'skipped'
         run: |
-          changed="$(git status --porcelain -- Assets/XR ProjectSettings/EditorBuildSettings.asset)"
+          watched="Assets/XR Assets/Island/Generated/Scenes ProjectSettings/EditorBuildSettings.asset"
+          changed="$(git status --porcelain -- $watched)"
           if [ -n "$changed" ]; then
             echo "$changed"
-            git --no-pager diff --stat -- Assets/XR ProjectSettings/EditorBuildSettings.asset || true
-            git --no-pager diff -- Assets/XR ProjectSettings/EditorBuildSettings.asset | head -200 || true
-            echo "::error title=XR settings rewritten::an editor run changed the committed XR settings"
+            git --no-pager diff --stat -- $watched || true
+            git --no-pager diff -- $watched | head -200 || true
+            echo "::error title=Generated assets rewritten::an editor run changed the committed XR settings or boot scene"
             exit 1
           fi
-          echo "Assets/XR and the build's config-object registry are unchanged."
+          echo "Assets/XR, the boot scene and the build settings are unchanged."
 
       - name: Keep the results
         if: always()
@@ -183,7 +181,7 @@ jobs:
             if [ -f /tmp/playmode.xml ]; then
               python3 tools/unity/test_summary.py /tmp/playmode.xml --markdown || true
             else
-              echo "_None yet — the first arrive with F-06._"
+              echo "_No results were written._"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 

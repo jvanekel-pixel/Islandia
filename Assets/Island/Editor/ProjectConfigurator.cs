@@ -62,6 +62,10 @@ namespace Island.Editor
 
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
+
+                // The boot scene last: it is the one generated asset that depends on the others
+                // (the camera needs the pipeline to exist). F-06.
+                BootSceneBuilder.Build();
                 Debug.Log($"[Island] Project configured. Pipeline at {PipelineAssetPath}, XR in {XrConfigurator.XrFolder}.");
             }
             catch (Exception error)
