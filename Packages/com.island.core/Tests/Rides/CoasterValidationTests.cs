@@ -357,7 +357,7 @@ namespace Island.Core.Tests.Rides
                 total += expected.Length;
             }
             Assert.That(total, Is.GreaterThan(100), "the coasters do run into themselves");
-            Assert.That(EveryPair(coasters[4]).Select(i => i.Piece), Does.Contain(150).And.Contain(154), "the circle's ends");
+            Assert.That(EveryPair(coasters[4]).Select(i => i.Piece), Has.Member(150).And.Member(154), "the circle's ends");
         }
 
         /// <summary>
