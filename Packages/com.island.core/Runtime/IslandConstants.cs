@@ -97,6 +97,29 @@ namespace Island.Core
         /// </summary>
         public const float PlantSubmergedCutoffMetres = WaterLevelMetres - 0.05f;
 
+        // ---- The station and its track (ADR-24) ---------------------------------------------
+
+        /// <summary>Length of the station's reserved footprint along the track, in metres.</summary>
+        public const float StationFootprintLengthMetres = 12f;
+
+        /// <summary>Width of the station's reserved footprint across the track, in metres.</summary>
+        public const float StationFootprintWidthMetres = 8f;
+
+        /// <summary>Width of the reserved corridor the track leaves the island along, in metres.</summary>
+        public const float TrackCorridorWidthMetres = 4f;
+
+        /// <summary>
+        /// The shortest the corridor may be: open water at least this far in front of the
+        /// station. Ground that reaches nearer the edge is cut back to water under the track.
+        /// </summary>
+        public const float TrackCorridorMinLengthMetres = 4f;
+
+        /// <summary>The height the station's footprint is levelled to, in metres: a dry platform.</summary>
+        public const float StationPlatformHeightMetres = 0.5f;
+
+        /// <summary>The depth the corridor is kept at or below, in metres, so the track always crosses water.</summary>
+        public const float TrackCorridorFloorMetres = WaterLevelMetres - 0.4f;
+
         // ---- Surface weights ------------------------------------------------------------------
 
         /// <summary>Vertex colour channel carrying sand, the surface a fresh island starts as.</summary>
