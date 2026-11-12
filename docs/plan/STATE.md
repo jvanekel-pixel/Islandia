@@ -6,10 +6,10 @@
 | :-- | :-- |
 | **Stage** | 2 — Construction |
 | **Current milestone** | M1 Factory online · engine-free work ahead of it on M2, M4, M5 and M10 |
-| **In flight** | Nothing. `TR-01a` (island seeds, starting terrain, the station and its reserved ground) landed in #39; the rest of `TR-01` is next |
+| **In flight** | Nothing once `TR-01` (the world index and one save file per island) lands |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | **Running** on a schedule, a new session each run. Its first run (2026-11-11) was **not** on the `islandia` environment: no .NET, no setup script, unrestricted network. Point the routine at that environment at <https://claude.ai/code/routines> |
-| **Last updated** | 2026-11-12 — `TR-01` split; `TR-01a` built |
+| **Last updated** | 2026-11-12 — `TR-01` done: a world of islands, indexed, one file each |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## The plan changed on 2026-11-11
@@ -82,14 +82,13 @@ link `kenney.nl/assets/mini-forest` but no archive for it was uploaded.
 
 Take the first `todo` package in `BACKLOG.yaml` whose dependencies are `done` — `make next` prints
 them. As of this writing: **`F-06`** (assemblies, composition root, boot scene — the next M1 step), **`C-02b`** (the Blender
-normalisation pipeline), **`V-07b`**, and the engine-free starts of the new features — **`TR-01`**
-(the world index and per-island files, now that `TR-01a` has the seeds and the station), **`RC-01`** (coaster track model), **`PNT-01`** (paint segmentation) — plus
+normalisation pipeline), **`V-07b`**, and the engine-free starts of the new features — **`RC-01`** (coaster track model), **`PNT-01`** (paint segmentation) — plus
 `I-04` and `I-05`. Prefer the current milestone; take an engine-free package when it is waiting
 on CI.
 
-**23 of 135 live packages are done** (7 more were cut on 2026-11-11). `F-01`–`F-05`,
+**24 of 135 live packages are done** (7 more were cut on 2026-11-11). `F-01`–`F-05`,
 `F-07a`–`F-07c`, `F-08`, `F-13`, `V-02`, `V-06`, `V-07a`, `V-08`, `SB-01a`–`SB-01d`, `C-01a`,
-`C-01b`, `C-02a`, `I-01`, `TR-01a`.
+`C-01b`, `C-02a`, `I-01`, `TR-01a`, `TR-01`.
 
 ### What exists now
 
@@ -126,6 +125,7 @@ on CI.
 
 ## Recently merged
 
+- `TR-01` the world of islands: an index that never loads islands, one save file each, deletion, and migration of an old single-island save (2026-11-12)
 - `TR-01a` an island from its seed: terrain, station on the shore, reserved ground (2026-11-12, PR #39)
 - `F-05` OpenXR for the Quest 2 in code, asserted from disk (2026-11-11, PR #36)
 - The owner's re-plan (2026-11-11)
@@ -144,7 +144,7 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 
 | Fact | Value | Source |
 | :-- | :-- | :-- |
-| Local gate `make check` | 7 lint checks, 134 tooling tests, 334 core tests, 30 contract tests, 11 end-to-end — about 60 s | everything merged to 2026-11-12 |
+| Local gate `make check` | 7 lint checks, 134 tooling tests, 343 core tests, 30 contract tests, 11 end-to-end — about 60 s | everything merged to 2026-11-12 |
 | Unity EditMode tests in CI | **349** — the 312 `Island.Core` ones, 22 asserting ADR-03, 15 asserting the XR setup | F-04, F-05, F-07b |
 | Unity image for configure and tests | `ubuntu-6000.3.28f1-android-3` — OpenXR needs the Android module to write Android settings. Pulled and ran without disk trouble | F-05 |
 | .NET SDK in a cloud session | not present; installs to `~/.dotnet` in ~40 s | F-08 |

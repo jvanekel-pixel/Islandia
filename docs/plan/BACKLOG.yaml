@@ -762,7 +762,7 @@ packages:
     <root>/island.island, surveys a station onto it with
     IslandGenesis.EnsureStation, keeps its unknown sections, makes it island 1
     "Home", and renames the old file rather than deleting it.
-  status: todo
+  status: done
 
 - id: TR-02
   title: One island at a time — load, unload and memory
