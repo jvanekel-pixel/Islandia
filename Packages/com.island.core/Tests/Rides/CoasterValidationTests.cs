@@ -552,23 +552,31 @@ namespace Island.Core.Tests.Rides
         [Test]
         public void TheReservationAgreesWithStationSitePermits()
         {
-            foreach (var x in new[] { 26, 27, 448, 300 })
+            // Started at x = 388 the far side runs along x = 900, in the gap between the
+            // footprint's east edge (896) and the corridor's west edge (904); a box of reach 37
+            // around it (863–937) touches both. Within the footprint's z 0–256 are the hill down's
+            // last sample (z 256), the straight (256 to 0) and the first sample of the turn after
+            // it (z 0); only the straight passes the corridor's z 96–160. The rest of the track is
+            // at z 475 and beyond with its reach, or west of x 576 wherever z is near 0.
+            var coaster = Build(new TrackPoint(388, 0, 0), Rectangle());
+            Assert.That(coaster.EntryOf(5).Position, Is.EqualTo(new TrackPoint(900, 0, 256)));
+            Assert.That(coaster.EntryOf(7).Position, Is.EqualTo(new TrackPoint(644, 0, -256)));
+            Assert.That(Check(coaster, station: East).Issues, Is.EqualTo(new[]
             {
-                var coaster = Build(new TrackPoint(x, 0, 0), Rectangle());
-                var flagged = Check(coaster, station: East).Issues
-                    .Where(i => i.Problem == CoasterProblem.InStation || i.Problem == CoasterProblem.InTrainCorridor)
-                    .Select(i => i.Piece).Distinct().ToArray();
-                var refused = new List<int>();
-                for (var i = 0; i < coaster.Count; i++)
-                {
-                    var reach = coaster.PieceAt(i).Shape.Reach;
-                    var entry = coaster.EntryOf(i);
-                    if (coaster.PieceAt(i).Samples.Select(entry.Place).Any(p => !East.Permits(
-                            (p.X - reach) / 32f, (p.Z - reach) / 32f, (p.X + reach) / 32f, (p.Z + reach) / 32f)))
-                        refused.Add(i);
-                }
-                Assert.That(flagged, Is.EqualTo(refused), $"start x {x}");
-            }
+                new CoasterIssue(4, CoasterProblem.InStation),
+                new CoasterIssue(5, CoasterProblem.InStation), new CoasterIssue(5, CoasterProblem.InTrainCorridor),
+                new CoasterIssue(6, CoasterProblem.InStation),
+            }));
+
+            // StationSite.Permits, asked in metres, says the same: the straight's middle sample
+            // (900, 128) with its reach is refused; the last turn's first sample (644, −256) is
+            // not; and the gap itself, 897–903, is clear of both.
+            static float M(int subUnits) => subUnits / 32f;
+            Assert.That(East.Permits(M(900 - 37), M(128 - 37), M(900 + 37), M(128 + 37)), Is.False);
+            Assert.That(East.Footprint.Overlaps(M(900 - 37), M(128 - 37), M(900 + 37), M(128 + 37)), Is.True);
+            Assert.That(East.Corridor.Overlaps(M(900 - 37), M(128 - 37), M(900 + 37), M(128 + 37)), Is.True);
+            Assert.That(East.Permits(M(644 - 37), M(-256 - 37), M(644 + 37), M(-256 + 37)), Is.True);
+            Assert.That(East.Permits(M(897), M(128), M(903), M(128)), Is.True);
         }
 
         // ---- reasons -----------------------------------------------------------------------------
