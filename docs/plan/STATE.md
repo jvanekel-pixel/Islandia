@@ -167,7 +167,7 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 | Terrain on disk | ~129 KB before packing; whole island well under 400 KB | V-06 |
 | GitHub REST from a session | runs, check-runs, status, pulls, issues all readable; `actions/secrets` blocked | F-01 |
 | Driver self-merge | **Refused** by the permission classifier unless `.claude/settings.json` allows it. See `05-OPERATIONS.md` §7 step 4 | F-01 |
-| CI: warm test run / Android build | tests ~7 min end to end even cold; Android build ~28 min cold (IL2CPP, ARM64) | F-06, F-07 |
+| CI: warm test run / Android build | tests ~6 min end to end cold (EditMode 3.4, PlayMode 0.6); Android build step 17 min cold, job ~23 min (IL2CPP, ARM64); APK 39.7 MB debug-signed | F-06, F-07 |
 | Runner minutes per Unity package | — | S-05 |
 | Device strings and tier | — | HG-1 |
 | Frame time, empty island | — | HG-1 |
