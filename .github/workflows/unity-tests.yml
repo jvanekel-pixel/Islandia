@@ -162,6 +162,7 @@ jobs:
             /tmp/playmode.xml
             /tmp/editmode.log
             /tmp/playmode.log
+            /tmp/project-changes.patch
           if-no-files-found: warn
           retention-days: 14
 

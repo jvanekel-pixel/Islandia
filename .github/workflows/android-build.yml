@@ -152,7 +152,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-build-log
-          path: /tmp/android-build.log
+          path: |
+            /tmp/android-build.log
+            /tmp/project-changes.patch
           if-no-files-found: warn
           retention-days: 14
 

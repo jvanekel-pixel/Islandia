@@ -19,7 +19,12 @@ if [ -z "$changed" ]; then
   exit 0
 fi
 
-echo "${what} left these changed or new:"
+# The whole patch, for the workflow to keep as an artefact: the log below is cut short, and a
+# 900-line settings diff is exactly the case where the cut-off part is the interesting one.
+patch="${PROJECT_CHANGES_PATCH:-/tmp/project-changes.patch}"
+{ git --no-pager diff -- "${watched[@]}"; git ls-files --others --exclude-standard -- "${watched[@]}"; } > "$patch" 2>/dev/null || true
+
+echo "${what} left these changed or new (whole patch: $patch):"
 echo "$changed"
 echo
 git --no-pager diff --stat -- "${watched[@]}" || true
