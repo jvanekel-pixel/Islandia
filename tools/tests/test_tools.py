@@ -319,6 +319,58 @@ class AssemblyRulesTests(unittest.TestCase):
         self.assertEqual(self._problems(), [])
 
 
+class AssertUnchangedTests(unittest.TestCase):
+    """tools/unity/assert_unchanged.sh: an editor run may leave nothing changed or new (F-07)."""
+
+    SCRIPT = REPO / "tools" / "unity" / "assert_unchanged.sh"
+
+    def setUp(self) -> None:
+        self._dir = tempfile.TemporaryDirectory()
+        self.repo = Path(self._dir.name)
+        git = ["git", "-C", str(self.repo)]
+        subprocess.run([*git, "init", "-q"], check=True)
+        for name in ("Assets/a.cs", "Assets/a.cs.meta", "ProjectSettings/ProjectSettings.asset",
+                     "Packages/packages-lock.json"):
+            path = self.repo / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("committed\n", encoding="utf-8")
+        (self.repo / ".gitignore").write_text("/Library/\n/Builds/\n", encoding="utf-8")
+        subprocess.run([*git, "add", "-A"], check=True)
+        subprocess.run([*git, "-c", "user.name=t", "-c", "user.email=t@example.invalid",
+                        "commit", "-q", "-m", "base"], check=True)
+
+    def tearDown(self) -> None:
+        self._dir.cleanup()
+
+    def _run(self) -> subprocess.CompletedProcess:
+        return subprocess.run(["bash", str(self.SCRIPT), "the test"], cwd=self.repo,
+                              capture_output=True, text=True)
+
+    def test_a_clean_tree_passes(self):
+        (self.repo / "Library").mkdir()
+        (self.repo / "Library" / "junk").write_text("x", encoding="utf-8")
+        (self.repo / "Builds").mkdir()
+        (self.repo / "Builds" / "Islandia.apk").write_text("x", encoding="utf-8")
+        result = self._run()
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_a_changed_setting_fails(self):
+        (self.repo / "ProjectSettings" / "ProjectSettings.asset").write_text("rewritten\n", encoding="utf-8")
+        result = self._run()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("ProjectSettings/ProjectSettings.asset", result.stdout)
+
+    def test_a_new_meta_fails(self):
+        (self.repo / "Assets" / "Generated.meta").write_text("guid: x\n", encoding="utf-8")
+        result = self._run()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Assets/Generated.meta", result.stdout)
+
+    def test_a_rewritten_lock_file_fails(self):
+        (self.repo / "Packages" / "packages-lock.json").write_text("{}\n", encoding="utf-8")
+        self.assertEqual(self._run().returncode, 1)
+
+
 class ScriptsRunCleanTests(unittest.TestCase):
     """Each check passes on the repository as it stands right now."""
 
