@@ -31,11 +31,7 @@ finished M14. Older documents and log entries use the old numbers.
 
 ## With the owner now
 
-Being walked through one at a time in the planning conversation. None blocks the next packages.
-
-| What | Unblocks |
-| :-- | :-- |
-| Unity credentials in the cloud environment, if the owner wants sessions to run Unity directly | `S-01`'s optional accelerator |
+Nothing — the owner's setup list is complete.
 
 ## Settled with the owner on 2026-11-11
 
@@ -55,6 +51,9 @@ Being walked through one at a time in the planning conversation. None blocks the
   can sit out of the wearer's line of sight; a charge-only cable shows as a connect chime every
   ~30 s.
 - **Environment:** the routine now runs on `islandia`.
+- **Unity stays in CI only** (2026-11-12): no Unity credentials in the cloud environment, so
+  sessions never run the editor themselves. `S-01` records its findings and offers nothing. See
+  `DECISIONS.md`.
 - **Who plays it:** the owner's own Quest 2, played by their partner, who thinks VR is dumb and
   asked for exactly this game. See `DECISIONS.md`.
 

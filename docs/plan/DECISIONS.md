@@ -1122,6 +1122,19 @@ slopes, the S-bend and the airtime bumps *lively*; the loop and the leans *thril
 the builder's palette and the gentle setting, which can offer only gentle pieces by default, until
 `RC-02` rates whole coasters from their forces. Nothing else was added for rides.
 
+## 2026-11-12 — Unity runs in CI only
+
+**Decided by:** the owner. Unity credentials do not go into the cloud environment, so sessions
+never run the editor themselves; Unity work is done by the `unity-*` workflows.
+
+- CI already runs Unity, free, on every change that needs it.
+- A Unity login would have to sit in every session as a plain-text environment variable, which
+  CLAUDE.md forbids for keys.
+- A session that dies while holding the Personal seat can leave CI unable to activate Unity.
+
+`S-01` stays in the backlog for its timing measurements; it records findings and opens no
+human-gate issue, since the accelerator it would offer has been declined.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

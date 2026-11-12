@@ -255,6 +255,10 @@ packages:
   accept:
     - "Time-boxed to one session. Answer recorded: can the editor image be pulled via the registry mirror, which hosts must be allowed, how long does a cold compile take [L0]"
     - "If viable, a human-gate issue offers it to the owner as an optional accelerator, stating that it needs their licence in the environment. Not adopted without their yes [L0]"
+  note: >-
+    The owner has already declined the accelerator (2026-11-12, DECISIONS.md
+    "Unity runs in CI only"), so the second line is answered: the spike records
+    its findings and timings only and opens no human-gate issue.
   status: todo
 
 - id: S-02
