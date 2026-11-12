@@ -3,6 +3,8 @@
     "rootNamespace": "Island.Editor",
     "references": [
         "Island.Core",
+        "Island.Runtime",
+        "Island.XR",
         "Unity.RenderPipelines.Universal.Runtime",
         "Unity.RenderPipelines.Universal.Editor",
         "Unity.RenderPipelines.Core.Runtime",

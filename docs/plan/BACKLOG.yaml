@@ -151,10 +151,10 @@ packages:
   refs: [adr ADR-06, adr ADR-07]
   accept:
     - "asmdefs exist for Core, Runtime, XR, Editor and their test assemblies with the ADR-07 reference rules enforced by an L0 check [L0]"
-    - "`BootSceneBuilder.Build` generates Assets/Island/Scenes/Boot.unity with XR rig and CompositionRoot; rerun is a no-op [L2]"
+    - "`BootSceneBuilder.Build` generates Assets/Island/Generated/Scenes/Boot.unity with XR rig and CompositionRoot; rerun is a no-op [L2]"
     - "BootTests: boot scene loads in simulation mode with scripted IInputSource and IClock, log is clean [L3]"
     - "Decision recorded: which generated asset types are committed versus rebuilt in CI [L0]"
-  status: todo
+  status: done
 
 - id: F-07a
   title: Run the non-Unity checks in CI on every push
@@ -668,6 +668,10 @@ packages:
     - "Seated mode and height reset exist in settings and are saved [L3]"
     - "Comfortable for ten minutes of continuous use [L7]"
   status: todo
+  note: >-
+    The project's active input handler is still the legacy Input Manager (F-06 found
+    activeInputHandler 0). XR Interaction Toolkit needs the Input System, so this package switches
+    it in ProjectConfigurator and adds XROrigin to the rig in BootSceneBuilder.
 
 - id: W-03
   title: Water, ponds and submerged rules

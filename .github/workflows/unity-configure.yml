@@ -23,6 +23,9 @@ on:
     paths:
       - 'Assets/Island/Editor/ProjectConfigurator.cs'
       - 'Assets/Island/Editor/XrConfigurator.cs'
+      - 'Assets/Island/Editor/BootSceneBuilder.cs'
+      - 'Assets/Island/Runtime/**'
+      - 'Assets/Island/XR/**'
       - 'Assets/Island/Editor/Island.Editor.asmdef'
       - 'Assets/Island/Tests/Editor/**'
       - '.github/workflows/unity-configure.yml'
@@ -122,8 +125,11 @@ jobs:
             exit 0
           fi
 
+          # The work package from the branch name (claude/wp-<ID>-<slug>), so the commit follows
+          # the `<WP-ID>: summary` convention; a dispatch from anywhere else says so instead.
+          wp="$(printf '%s' "$GITHUB_REF_NAME" | sed -nE 's#^claude/wp-([A-Z]+-[0-9]+[a-z]?)-.*#\1#p')"
           {
-            printf 'F-05: the project configuration, generated\n\n'
+            printf '%s: the project configuration and boot scene, generated\n\n' "${wp:-generated}"
             printf 'Written by Island.Editor.ProjectConfigurator, not by hand. ADR-06 forbids\n'
             printf 'hand-writing Unity YAML: a hand-made settings file opens fine and is subtly\n'
             printf 'wrong in ways that only appear on a device.\n\n'

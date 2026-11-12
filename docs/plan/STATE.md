@@ -6,10 +6,10 @@
 | :-- | :-- |
 | **Stage** | 2 — Construction |
 | **Current milestone** | M1 Factory online · engine-free work ahead of it on M2, M4, M5 and M10 |
-| **In flight** | `RC-01a` (coaster track pieces and frames, derived from the owner's pack) |
+| **In flight** | Nothing from the driver. `RC-01b` is open as PR #42 from the planning conversation |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | **Running** on a schedule, a new session each run. Its first run (2026-11-11) was **not** on the `islandia` environment: no .NET, no setup script, unrestricted network. Point the routine at that environment at <https://claude.ai/code/routines> |
-| **Last updated** | 2026-11-12 — `RC-01a` done: 37 coaster pieces measured from the pack, frames composed in integers |
+| **Last updated** | 2026-11-12 — `F-06` done: the boot scene, the composition root and simulation mode; the first PlayMode tests |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## The plan changed on 2026-11-11
@@ -81,12 +81,12 @@ link `kenney.nl/assets/mini-forest` but no archive for it was uploaded.
 ## Next up
 
 Take the first `todo` package in `BACKLOG.yaml` whose dependencies are `done` — `make next` prints
-them. As of this writing: **`F-06`** (assemblies, composition root, boot scene — the next M1 step), **`C-02b`** (the Blender
-normalisation pipeline), **`V-07b`**, and the engine-free starts of the new features — **`RC-01b`** (coaster validation), **`RC-01`** (coasters saved, with undo), **`RC-02`** (ride physics), **`PNT-01`** (paint segmentation) — plus
+them. As of this writing: **`F-07`** (the Android build, Library cache and APK artefact — the next M1 step, now that a boot scene exists), **`C-02b`** (the Blender
+normalisation pipeline), **`V-07b`**, and the engine-free starts of the new features — **`RC-01b`** (coaster validation — PR #42 is already open for it, so skip it), **`RC-01`** (coasters saved, with undo), **`RC-02`** (ride physics), **`PNT-01`** (paint segmentation) — plus
 `I-04` and `I-05`. Prefer the current milestone; take an engine-free package when it is waiting
 on CI.
 
-**25 of 137 live packages are done** (7 more were cut on 2026-11-11; `RC-01` was split in three on 2026-11-12). `F-01`–`F-05`,
+**26 of 137 live packages are done** (7 more were cut on 2026-11-11; `RC-01` was split in three on 2026-11-12). `F-01`–`F-06`,
 `F-07a`–`F-07c`, `F-08`, `F-13`, `V-02`, `V-06`, `V-07a`, `V-08`, `SB-01a`–`SB-01d`, `C-01a`,
 `C-01b`, `C-02a`, `I-01`, `TR-01a`, `TR-01`, `RC-01a`.
 
@@ -114,6 +114,11 @@ on CI.
 3. **A workflow's own commit triggers nothing.** After dispatching `unity-configure` or
    `unity-create-project`, dispatch `unity-tests` by hand — pushes made with `GITHUB_TOKEN` do not
    start workflow runs.
+4. **The Unity workflows share one queue slot.** They all use the `unity-licence` concurrency
+   group, which keeps one run going and *one* waiting; a newer waiting run cancels the older. A
+   push to a pull request's branch queues `unity-tests` twice (push and pull_request), which can
+   cancel a queued `unity-configure`. When a package needs generated assets, cancel the doomed
+   test runs, dispatch `unity-configure`, then dispatch `unity-tests` (F-06 did this).
 
 ### Open, not blocking
 
@@ -125,6 +130,7 @@ on CI.
 
 ## Recently merged
 
+- `F-06` the boot scene and composition root: `Island.Runtime` and `Island.XR`, ADR-07 checked by lint, a generated scene that a rerun leaves alone, and the first PlayMode tests booting it in simulation (2026-11-12)
 - `RC-01a` coaster pieces from the owner's pack: 37 pieces, frames in integer sub-units, a 200-piece circuit that closes exactly (2026-11-12)
 - `TR-01` the world of islands: an index that never loads islands, one save file each, deletion, and migration of an old single-island save (2026-11-12)
 - `TR-01a` an island from its seed: terrain, station on the shore, reserved ground (2026-11-12, PR #39)
@@ -145,9 +151,10 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 
 | Fact | Value | Source |
 | :-- | :-- | :-- |
-| Local gate `make check` | 7 lint checks, 143 tooling tests, 363 core tests, 30 contract tests, 11 end-to-end — about 60 s | everything merged to 2026-11-12 |
+| Local gate `make check` | 7 lint checks, 155 tooling tests, 363 core tests, 30 contract tests, 11 end-to-end — about 60 s | everything merged to 2026-11-12 |
 | Coaster pack geometry | grid unit = pack unit (64 sub-units, planned at 2 m); straight 4, turns radius 2 and 4, loop 4 tall; all six styles within 0.58–0.61 units of one centreline | `RC-01a`, `content/facts/rides/coaster-kit.json` |
-| Unity EditMode tests in CI | **349** — the 312 `Island.Core` ones, 22 asserting ADR-03, 15 asserting the XR setup | F-04, F-05, F-07b |
+| Unity EditMode tests in CI | **406** — `Island.Core`, ADR-03, the XR setup, the boot scene and the XR platform | F-06 |
+| Unity PlayMode tests in CI | **11** — the boot scene in simulation on scripted input and clock, and the simulation parts; ~0.5 s | F-06 |
 | Unity image for configure and tests | `ubuntu-6000.3.28f1-android-3` — OpenXR needs the Android module to write Android settings. Pulled and ran without disk trouble | F-05 |
 | .NET SDK in a cloud session | not present; installs to `~/.dotnet` in ~40 s | F-08 |
 | Unity editor pinned | `6000.3.28f1` — the newest 6000.3 tag with an Android module | F-02 |
@@ -157,7 +164,6 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 | Terrain on disk | ~129 KB before packing; whole island well under 400 KB | V-06 |
 | GitHub REST from a session | runs, check-runs, status, pulls, issues all readable; `actions/secrets` blocked | F-01 |
 | Driver self-merge | **Refused** by the permission classifier unless `.claude/settings.json` allows it. See `05-OPERATIONS.md` §7 step 4 | F-01 |
-| Unity editor version pinned | — | F-03 |
 | CI: warm test run / Android build | — | S-05 |
 | Runner minutes per Unity package | — | S-05 |
 | Device strings and tier | — | HG-1 |

@@ -101,7 +101,9 @@ device gate, behind a flag, and only if it measures better.
 - XR settings assets are generated once, **committed**, and asserted by a test, because batchmode
   builds have historically reset them.
 - Generated assets live in `Assets/Island/Generated/` and are reproducible from source. Whether a
-  generated asset is committed or rebuilt in CI is decided per asset type in `F-06` and recorded.
+  generated asset is committed or rebuilt in CI is decided per asset type — `DECISIONS.md`,
+  2026-11-12, "The boot scene, the composition root…": settings, rendering assets and the boot
+  scene are committed; content output, caches and the APK are rebuilt.
 - `.meta` files: scripts and folders get deterministic GUIDs from `tools/gen_meta.py`. CI fails if
   an import produces uncommitted `.meta` changes.
 

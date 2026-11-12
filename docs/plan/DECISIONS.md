@@ -1122,6 +1122,65 @@ slopes, the S-bend and the airtime bumps *lively*; the loop and the leans *thril
 the builder's palette and the gentle setting, which can offer only gentle pieces by default, until
 `RC-02` rates whole coasters from their forces. Nothing else was added for rides.
 
+## 2026-11-12 — The boot scene, the composition root, and which generated assets are committed
+
+**`F-06`.** One boot scene, made by `Island.Editor.BootSceneBuilder` from `ProjectConfigurator.Apply`,
+holding a `CompositionRoot` and a plain rig (origin, offset, camera) and nothing else. The root picks
+the platform once at boot: one a test supplied, else the headset if `Island.XR` finds an XR loader
+running, else the idle simulation. The editor and every PlayMode test have no loader (Standalone has
+none, F-05), so they boot the simulation without being told to.
+
+**Committed or rebuilt, per generated asset type** — the decision ADR-06 deferred to this package:
+
+| Asset type | Where | Committed? | Why |
+| :-- | :-- | :-- | :-- |
+| Project and XR settings (`ProjectSettings/*`, `Assets/XR/*`) | as Unity places them | **Committed** | ADR-06: batchmode builds have reset them before; tests assert what is on disk |
+| Rendering assets | `Assets/Island/Generated/Rendering` | **Committed** | F-04; tests read them back |
+| The boot scene and the build's scene list | `Assets/Island/Generated/Scenes`, `EditorBuildSettings.asset` | **Committed** | A build and the PlayMode tests load it from the checkout; generating it in every job would put a Unity step in front of every test run |
+| `.meta` for scripts and folders | beside them | **Committed** | Deterministic GUIDs from `tools/gen_meta.py` |
+| Content GLBs, thumbnails, atlases from the packs | CI artefact or draft release | **Rebuilt in CI** | Large, binary, and fully reproducible from the packs and the pipeline (`C-02*`) |
+| `Library/`, import caches, the APK | runner | **Rebuilt** (cached by lockfile hash, F-07) | Machine state, never source |
+
+The rule behind the table: commit what a build or test *reads* and is small text; rebuild what is
+large, binary, or a cache. A committed generated asset is always backed by a test that its generator
+would not change it — for the scene, `BootSceneTests.RunningTheBuilderAgainWritesNothing`, and the
+`unity-tests` job fails if any editor run leaves the scene or the XR settings changed.
+
+**The scene is in `Assets/Island/Generated/Scenes`, not `Assets/Island/Scenes`.** The criterion named
+the second; ADR-06 says generated assets live under `Generated/`, and the ADR is the higher
+authority. The criterion's path was corrected to match.
+
+**Rerunning is a no-op by comparison, not by determinism.** Unity gives a freshly made scene new
+file IDs, so regenerating a correct scene would rewrite it for nothing. The builder describes the
+scene on disk — names, components, tag, clip planes, any moved transform — and only rebuilds when
+that differs from its specification. The same description is the test that the committed scene is
+right.
+
+**No tracked-pose component and no `XROrigin` in the rig.** The head is placed by the root from
+`IInputSource` every frame, and again just before rendering on a headset — the same path in the
+simulation and on the device, which is what ADR-07 asks for. Two findings made this the safer
+choice as well: the project's active input handler is the **legacy Input Manager**
+(`activeInputHandler: 0`), so an Input System `TrackedPoseDriver` would see no devices; and the
+headset input reads `UnityEngine.XR.InputDevices`, which works under either handler and allocates
+nothing. `U-02` brings in XR Interaction Toolkit, which needs the Input System — that package must
+switch the handler and add `XROrigin`; noted on it.
+
+**Two clocks.** `Island.Runtime.IClock` is the frame clock ADR-07 names: advanced once per frame by
+the root, scripted in tests on a fixed 1/72 s step. `Island.Core.StreamBox.IClock` is the StreamBox
+client's wall clock with async delays. Different jobs, kept apart by namespace rather than merged.
+
+**"Log is clean" means no warnings either.** The test framework already fails a test on a logged
+error; the boot tests also fail on any warning, from anyone. A warning that genuinely has to be
+tolerated goes in the test's `Tolerated` list with its reason.
+
+**The PlayMode step is a real gate now.** `unity-tests` excused an empty PlayMode run until a PlayMode
+assembly existed; this package adds the first, so a missing or empty PlayMode result fails.
+
+**ADR-07 is checked, not just written.** `tools/lint/check_layering.py` holds the table as data:
+every assembly definition in the project must be one it names, each references only what its row
+allows, test assemblies must reference what they test, `Island.Editor` is editor-only, and
+`Island.Runtime`'s sources may not use XR, Input System or editor types.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

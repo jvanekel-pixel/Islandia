@@ -4,6 +4,7 @@
     "references": [
         "Island.Editor",
         "Island.Core",
+        "Island.Runtime",
         "Unity.RenderPipelines.Universal.Runtime",
         "Unity.RenderPipelines.Core.Runtime",
         "Unity.RenderPipelines.GPUDriven.Runtime",
