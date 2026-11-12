@@ -1223,6 +1223,24 @@ Still, it was exceeded, and this entry says so rather than leaving it unrecorded
 headset under that id would be orphaned by the first correctly identified build, so `F-14` (new,
 M1) sets it before HG-1 puts anything on the headset.
 
+## 2026-11-12 — The package id in code, and the APK build that never ran on main
+
+**`F-14`.** `ProjectConfigurator` sets the Android package id to `dev.islandia.app` and the product
+name to *Islandia* (ADR-22), first thing in the player configuration. EditMode tests read both back
+from the editor and from the committed `ProjectSettings.asset` text. `android-build` reads the id out
+of the built APK with the image's own `aapt2`/`aapt` and fails on anything else. Before this the
+APK installed as Unity's default id, and any island saved on the headset under it would have been
+orphaned by the first correct build.
+
+**`android-build` "on merge to main" never ran.** That was a defect in `F-07`, found here. Auto-merge
+squashes with `GITHUB_TOKEN`, and a push made with that token starts no workflow, so the `push:
+branches: [main]` trigger could never fire for anything the driver lands. `checks` has the same
+blind spot, but nothing depended on it. A `workflow_dispatch` sent with the same token *does*
+start a run, so auto-merge now dispatches `android-build` on `main` after merging a pull request
+that touched `Assets`, `Packages` or `ProjectSettings`. That needs `actions: write` on the
+auto-merge workflow, which is the only permission it gained. The `push` trigger stays for merges
+a person makes.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced
