@@ -1135,6 +1135,44 @@ never run the editor themselves; Unity work is done by the `unity-*` workflows.
 `S-01` stays in the backlog for its timing measurements; it records findings and opens no
 human-gate issue, since the accelerator it would offer has been declined.
 
+## 2026-11-12 — Coaster validation: where a coaster is, and how much room it needs
+
+**Decided by:** the build session for `RC-01b`, inside ADR-25 and ADR-24.
+
+- **A coaster's grid is the island's world space, in sub-units.** Origin at the island's centre
+  at height 0, the island's axes, 32 sub-units to the metre; `Coaster.Start` is where it is.
+  Nothing else places a coaster, so nothing can disagree with it. Every heightfield sample is a
+  whole 8 sub-units, so track and ground meet on integers (`CoasterSpace`, pinned by tests).
+- **Ground through an interface,** `ICoasterGround`: flat for tests and the tabletop, and the
+  island's `Heightfield` read in fixed point — each sample's height in 1/1024 sub-unit (exact,
+  since it is a float times a power of two), bilinear weights in whole eighths, rounded up.
+  Floating interpolation would not promise the same answer on the headset.
+- **The clearance envelope is not the reach doubled.** Each piece's measured reach (0.58–0.61
+  units) is the furthest its geometry gets from the centreline, but the pack's own loop puts its
+  way out one unit beside the track leading in, so a sphere of the reach around each track
+  would reject the pack's signature piece. The envelope is a cylinder per centreline
+  sample: two samples of different pieces collide when they are closer than **¾ unit sideways**
+  (cars are 0.7 wide; the loop passes) and closer vertically than **the taller piece's reach
+  plus one unit of headroom** (2 m for a seated rider; symmetric, since riders hang below the
+  track at a loop's top). So a track may cross another two units above it, not one.
+- **Neighbours are compared too,** except pairs of samples both within 1½ units of the end the
+  two pieces share — a right loop followed by a left one collides at the top, far from their
+  joint. The last piece and the first share an end whenever the open end is on the start, even
+  leaning: that is an open circuit, not a collision.
+- **Supports** stand where the piece's facts allow one (the loop's top does not) and the track is
+  banked no more than an eighth, interpolated evenly across a lean. The tallest column is
+  **12 units (24 m)**, a planning figure: the island's ground tops out at 18 m and a coaster that
+  needs more is over the sea floor or very tall. Any sample below the ground is *buried*; any
+  beyond the island's edge is *off the island*.
+- **The station's reservation is two-dimensional,** as `StationSite.Permits` is: a box of the
+  piece's reach around each sample may not touch the footprint or the train's corridor at any
+  height. A test checks the validator and `Permits` agree piece by piece.
+- **Reports, not refusals.** Each issue is a piece index (−1 for the coaster: no track, no
+  station), a problem code, the other piece for a collision, and a plain reason; sorted, so the
+  same coaster always gives the same list. A second station is reported where it is; the lift is
+  looked for in ride order from the station, round the circuit. `RC-03` colours pieces from this
+  and stands columns where `CoasterValidator.IsUpright` and the facts agree.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced
