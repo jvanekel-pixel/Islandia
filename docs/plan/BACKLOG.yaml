@@ -154,7 +154,7 @@ packages:
     - "`BootSceneBuilder.Build` generates Assets/Island/Generated/Scenes/Boot.unity with XR rig and CompositionRoot; rerun is a no-op [L2]"
     - "BootTests: boot scene loads in simulation mode with scripted IInputSource and IClock, log is clean [L3]"
     - "Decision recorded: which generated asset types are committed versus rebuilt in CI [L0]"
-  status: todo
+  status: done
 
 - id: F-07a
   title: Run the non-Unity checks in CI on every push
