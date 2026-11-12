@@ -1180,6 +1180,23 @@ human-gate issue, since the accelerator it would offer has been declined.
   before it ever goes downhill, and every descent of the track lies inside some piece (pieces
   share their end samples), so checking each piece's own samples finds the first descent
   exactly. Climbs and lifts never fall; a test pins that for the whole set.
+- **Collisions: a grid first, and at most four per piece** (revised the same day, on review).
+  Comparing every pair of pieces was ~524k box tests for 1,024 pieces, and a tangled unfinished
+  coaster — 1,024 tight turns on one circle — reported 783,360 collisions and took 135 ms on
+  desktop CoreCLR, several times that on the Quest 2, on every edit. Now the pieces' boxes are
+  binned into a uniform XZ grid over the coaster (cells at least one straight, 4 units, across
+  and at most 64 a side), and samples are compared only for pairs whose boxes come within the
+  envelope, in index order, with the boxes and reaches computed once and no allocation per
+  pair. **Each piece names at most `CoasterValidator.MaxCollisionsPerPiece` = 4 others, its
+  lowest-numbered**, so a coaster reports at most 4 × 1,024 collisions; a pair is not compared
+  once neither piece could take another. Four because one piece crossing over a joint
+  legitimately touches both sides of it, and the pack's tightest pile in the tests names three.
+  The answer is still integers and still deterministic: a test compares it with a brute-force
+  every-pair reference (a test-only helper) on 50 varied coasters, and every earlier test is
+  unchanged. Measured in Release on desktop CoreCLR, whole `Validate`, median of 30: a
+  wandering 1,024-piece coaster 3.2 → 1.7 ms (the clearance part about 2.2 → 0.7 ms); the
+  stacked 1,024 turns 135 → 3.4 ms, with 5,121 issues instead of 784,385. No timing is asserted
+  in the suite.
 
 ## Open questions for the owner
 

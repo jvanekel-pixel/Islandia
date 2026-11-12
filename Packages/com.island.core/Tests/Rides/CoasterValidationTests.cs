@@ -275,6 +275,160 @@ namespace Island.Core.Tests.Rides
             Assert.That(others, Is.EqualTo(new[] { 3, 4, 5 }));
         }
 
+        [Test]
+        public void AThousandTurnsOnOneCircleReportFourCollisionsAPiece()
+        {
+            // 1024 tight right turns: 256 laps of the same circle. Every pair of pieces on the
+            // same quarter, or on quarters that meet, collides unless they are neighbours — some
+            // 390,000 pairs. Each piece names only its four lowest-numbered: piece 0 lies on 4
+            // and 8 and meets 3, 5 and 7 at its ends (1023 is its neighbour across the start).
+            var turn = P.TurnSmallRight;
+            var stacked = new Coaster(1, new TrackFrame(new TrackPoint(0, 0, 0), 0));
+            for (var i = 0; i < Coaster.MaxPieces; i++) stacked.Add(turn);
+            Assert.That(stacked.IsClosed, Is.True);
+
+            var collisions = Check(stacked).Issues.Where(i => i.Problem == CoasterProblem.Collides).ToArray();
+            Assert.That(collisions.Length, Is.EqualTo(CoasterValidator.MaxCollisionsPerPiece * Coaster.MaxPieces));
+            for (var piece = 0; piece < stacked.Count; piece++)
+                Assert.That(collisions.Count(i => i.Piece == piece), Is.EqualTo(CoasterValidator.MaxCollisionsPerPiece), $"piece {piece}");
+            Assert.That(collisions.Where(i => i.Piece == 0).Select(i => i.Other), Is.EqualTo(new[] { 3, 4, 5, 7 }));
+        }
+
+        /// <summary>
+        /// Three laps of a tight circle (pieces 0–11), then out north and round to come back west
+        /// along z = 64, crossing the circle's second quarter — pieces 1, 5 and 9 — and stopping
+        /// before its first. Piece 9 already has four lower-numbered collisions (0, 1, 2, 4, 5
+        /// and 6 all touch it), but for pieces 20 and 21 it is one of only three.
+        /// </summary>
+        private static Coaster ThreeLapsAndACrossing() => Build(new TrackPoint(0, 0, 0),
+            Enumerable.Repeat(P.TurnSmallRight, 12).Concat(new[]
+            {
+                P.Straight,                                         // 12: → (0,256) north
+                P.TurnLargeRight, P.Straight,                       // 13, 14: → (256,512) east, → (512,512)
+                P.TurnSmallRight,                                   // 15: → (640,384) south
+                P.StraightShort, P.StraightShort, P.StraightShort,  // 16–18: → (640,192)
+                P.TurnSmallRight,                                   // 19: → (512,64) west
+                P.Straight, P.StraightShort,                        // 20, 21: → (256,64), → (192,64)
+            }).ToArray());
+
+        [Test]
+        public void APieceWithFourCollisionsStillCountsForTheLaterPiecesItMeets()
+        {
+            var coaster = ThreeLapsAndACrossing();
+            Assert.That(coaster.OpenEnd.Position, Is.EqualTo(new TrackPoint(192, 0, 64)));
+            var result = Check(coaster);
+            int[] Others(int piece) => result.At(piece).Where(i => i.Problem == CoasterProblem.Collides).Select(i => i.Other).ToArray();
+            Assert.That(Others(9), Is.EqualTo(new[] { 0, 1, 2, 4 }));
+            Assert.That(Others(20), Is.EqualTo(new[] { 1, 5, 9 }));
+            Assert.That(Others(21), Is.EqualTo(new[] { 1, 5, 9 }));
+        }
+
+        [Test]
+        public void TheGridFindsExactlyWhatComparingEveryPairFinds()
+        {
+            var turn = P.TurnSmallRight;
+            var stacked = Enumerable.Repeat(turn, 256).ToArray();
+            // A full circle in the middle of a long line: the straight after it starts where the
+            // circle did.
+            var line = Enumerable.Repeat(P.Straight, 150).Concat(Enumerable.Repeat(P.TurnLargeRight, 4))
+                .Concat(Enumerable.Repeat(P.Straight, 150)).ToArray();
+            var coasters = new List<Coaster>
+            {
+                Build(new TrackPoint(0, 0, 0), FigureEight(1)),
+                Build(new TrackPoint(0, 0, 0), FigureEight(2)),
+                Build(new TrackPoint(0, 0, 0), P.LoopRight, P.LoopLeft, P.LoopRight, P.LoopRight, P.TurnSmallLeft),
+                Build(new TrackPoint(-3000, -50, 7000), stacked),
+                // Long enough that the grid's cells grow past a straight's length.
+                Build(new TrackPoint(-20000, 0, -1000), line),
+                // Wide turns: each quarter spans two cells, so a piece's neighbours come from
+                // several cells and out of order.
+                Build(new TrackPoint(0, 0, 0), Enumerable.Repeat(P.TurnLargeRight, 128).ToArray()),
+                ThreeLapsAndACrossing(),
+                Wander(1, 400),
+                Wander(2, 600),
+                Wander(3, 800),
+            }.Concat(Enumerable.Range(10, 40).Select(seed => Wander((uint)seed, 160))).ToList();
+            var total = 0;
+            foreach (var coaster in coasters)
+            {
+                var actual = Check(coaster).Issues.Where(i => i.Problem == CoasterProblem.Collides).ToArray();
+                var expected = EveryPair(coaster);
+                Assert.That(actual, Is.EqualTo(expected), $"{coaster.Count} pieces from {coaster.Start.Position}");
+                total += expected.Length;
+            }
+            Assert.That(total, Is.GreaterThan(100), "the coasters do run into themselves");
+            Assert.That(EveryPair(coasters[4]).Select(i => i.Piece), Does.Contain(150).And.Contain(154), "the circle's ends");
+        }
+
+        /// <summary>
+        /// A coaster of up to <paramref name="pieces"/> pieces chosen by a fixed sequence (a linear
+        /// congruential generator, the same on every runtime) from those that fit at the open end.
+        /// </summary>
+        private static Coaster Wander(uint seed, int pieces)
+        {
+            var coaster = new Coaster(1, new TrackFrame(new TrackPoint(0, 256, 0), 0));
+            var state = seed;
+            for (var tries = 0; coaster.Count < pieces && tries < 50 * pieces; tries++)
+            {
+                state = state * 1664525u + 1013904223u;
+                var piece = P.All[(state >> 8) % (uint)P.All.Length];
+                if (coaster.CanAdd(piece)) coaster.Add(piece);
+            }
+            return coaster;
+        }
+
+        /// <summary>
+        /// The clearance rule by brute force: every sample of every piece against every sample of
+        /// every later piece, skipping only pairs both near an end two pieces share; then each
+        /// piece keeps its <see cref="CoasterValidator.MaxCollisionsPerPiece"/> lowest-numbered.
+        /// </summary>
+        private static CoasterIssue[] EveryPair(Coaster coaster)
+        {
+            var count = coaster.Count;
+            var placed = new TrackPoint[count][];
+            for (var i = 0; i < count; i++) placed[i] = coaster.PieceAt(i).Samples.Select(coaster.EntryOf(i).Place).ToArray();
+            var partners = new List<int>[count];
+            for (var i = 0; i < count; i++) partners[i] = new List<int>();
+
+            const long lateral2 = (long)CoasterClearance.Lateral * CoasterClearance.Lateral;
+            const long joint2 = (long)CoasterClearance.JointRadius * CoasterClearance.JointRadius;
+            for (var i = 0; i < count; i++)
+            {
+                for (var j = i + 1; j < count; j++)
+                {
+                    var joints = new List<TrackPoint>();
+                    if (j == i + 1) joints.Add(coaster.EntryOf(j).Position);
+                    if (i == 0 && j == count - 1 && coaster.OpenEnd.Position == coaster.Start.Position) joints.Add(coaster.Start.Position);
+                    var vertical = Math.Max(coaster.PieceAt(i).Shape.Reach, coaster.PieceAt(j).Shape.Reach) + CoasterClearance.Headroom;
+                    var hit = false;
+                    foreach (var p in placed[i])
+                    {
+                        foreach (var q in placed[j])
+                        {
+                            long dx = p.X - q.X, dz = p.Z - q.Z;
+                            if (dx * dx + dz * dz >= lateral2 || Math.Abs(p.Y - q.Y) >= vertical) continue;
+                            var atJoint = false;
+                            foreach (var at in joints) atJoint |= Distance2(p, at) < joint2 && Distance2(q, at) < joint2;
+                            hit |= !atJoint;
+                        }
+                    }
+                    if (!hit) continue;
+                    partners[i].Add(j);
+                    partners[j].Add(i);
+                }
+            }
+            return Enumerable.Range(0, count)
+                .SelectMany(i => partners[i].OrderBy(j => j).Take(CoasterValidator.MaxCollisionsPerPiece)
+                    .Select(j => new CoasterIssue(i, CoasterProblem.Collides, j)))
+                .ToArray();
+        }
+
+        private static long Distance2(TrackPoint a, TrackPoint b)
+        {
+            long dx = a.X - b.X, dy = a.Y - b.Y, dz = a.Z - b.Z;
+            return dx * dx + dy * dy + dz * dz;
+        }
+
         // ---- the ground and supports -------------------------------------------------------------
 
         [Test]

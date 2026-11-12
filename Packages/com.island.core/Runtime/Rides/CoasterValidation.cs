@@ -20,7 +20,11 @@ namespace Island.Core.Rides
         /// a dip, a bump or a loop as much as a drop — when no lift comes between the station and it.
         /// </summary>
         NoLiftBeforeDrop = 5,
-        /// <summary>Within the clearance envelope of another piece; <see cref="CoasterIssue.Other"/> names it.</summary>
+        /// <summary>
+        /// Within the clearance envelope of another piece; <see cref="CoasterIssue.Other"/> names it.
+        /// A piece carries at most <see cref="CoasterValidator.MaxCollisionsPerPiece"/>, naming its
+        /// lowest-numbered others.
+        /// </summary>
         Collides = 6,
         /// <summary>Some of the piece is below the ground.</summary>
         Buried = 7,
@@ -226,37 +230,83 @@ namespace Island.Core.Rides
 
         // ---- clearance --------------------------------------------------------------------------
 
+        /// <summary>
+        /// The most <see cref="CoasterProblem.Collides"/> issues one piece carries: it names the
+        /// lowest-numbered pieces it runs into, up to this many. A tangled, unfinished coaster —
+        /// a thousand turns stacked on one circle — then reports at most this many per piece
+        /// instead of every pair, and the pairs it could no longer report are not compared at all.
+        /// </summary>
+        public const int MaxCollisionsPerPiece = 4;
+
+        /// <summary>
+        /// Pairs of pieces closer than the clearance envelope. A uniform grid over the coaster's
+        /// footprint (XZ) finds the pieces whose boxes come within reach of each other; their
+        /// samples are compared only then, in index order, so the answer is the same as comparing
+        /// every pair and keeping each piece's <see cref="MaxCollisionsPerPiece"/> lowest-numbered.
+        /// </summary>
         private static void CheckClearance(Coaster coaster, TrackPoint[][] points, List<CoasterIssue> issues)
         {
             var count = coaster.Count;
             var boxes = new Box[count];
-            for (var i = 0; i < count; i++) boxes[i] = Box.Around(points[i]);
-
+            var reach = new int[count];
             for (var i = 0; i < count; i++)
             {
-                for (var j = i + 1; j < count; j++)
+                boxes[i] = Box.Around(points[i]);
+                reach[i] = coaster.PieceAt(i).Shape.Reach;
+            }
+
+            var grid = new Grid(boxes);
+            var reported = new int[count];
+            var seen = new int[count];
+            for (var i = 0; i < count; i++) seen[i] = -1;
+            var candidates = new int[count];
+            var joints = new TrackPoint[2];
+            var lastMeetsFirst = coaster.OpenEnd.Position == coaster.Start.Position;
+
+            // Pieces after the current one that can still take an issue; once there are none and
+            // the current piece is full too, nothing it could find would be reported.
+            var open = count;
+            for (var i = 0; i < count; i++)
+            {
+                if (reported[i] < MaxCollisionsPerPiece) open--;
+                var iFull = reported[i] >= MaxCollisionsPerPiece;
+                if (iFull && open == 0) continue;
+
+                var found = grid.Near(i, boxes, reach, seen, candidates);
+                // Lower-numbered partners reached piece i first; its own are taken in order.
+                if (!iFull) Array.Sort(candidates, 0, found);
+
+                for (var c = 0; c < found; c++)
                 {
-                    var vertical = Math.Max(coaster.PieceAt(i).Shape.Reach, coaster.PieceAt(j).Shape.Reach) + CoasterClearance.Headroom;
-                    if (!boxes[i].Near(boxes[j], CoasterClearance.Lateral, vertical)) continue;
+                    var j = candidates[c];
+                    var takesI = reported[i] < MaxCollisionsPerPiece;
+                    var takesJ = reported[j] < MaxCollisionsPerPiece;
+                    if (!takesI && !takesJ) continue;
 
                     // The ends two neighbours share: one, or both for a circuit of two pieces. The
                     // last piece meets the first wherever its end is on the start, closed or not:
                     // an end that arrives leaning is open, not a collision.
-                    var joints = new List<TrackPoint>(2);
-                    if (j == i + 1) joints.Add(coaster.EntryOf(j).Position);
-                    if (i == 0 && j == count - 1 && coaster.OpenEnd.Position == coaster.Start.Position)
-                        joints.Add(coaster.Start.Position);
+                    var jointCount = 0;
+                    if (j == i + 1) joints[jointCount++] = coaster.EntryOf(j).Position;
+                    if (i == 0 && j == count - 1 && lastMeetsFirst) joints[jointCount++] = coaster.Start.Position;
 
-                    if (Collide(points[i], points[j], joints, vertical))
+                    var vertical = Math.Max(reach[i], reach[j]) + CoasterClearance.Headroom;
+                    if (!Collide(points[i], points[j], joints, jointCount, vertical)) continue;
+                    if (takesI)
                     {
                         issues.Add(new CoasterIssue(i, CoasterProblem.Collides, j));
+                        reported[i]++;
+                    }
+                    if (takesJ)
+                    {
                         issues.Add(new CoasterIssue(j, CoasterProblem.Collides, i));
+                        if (++reported[j] == MaxCollisionsPerPiece) open--;
                     }
                 }
             }
         }
 
-        private static bool Collide(TrackPoint[] a, TrackPoint[] b, List<TrackPoint> joints, int vertical)
+        private static bool Collide(TrackPoint[] a, TrackPoint[] b, TrackPoint[] joints, int jointCount, int vertical)
         {
             const long lateral2 = (long)CoasterClearance.Lateral * CoasterClearance.Lateral;
             foreach (var p in a)
@@ -265,18 +315,18 @@ namespace Island.Core.Rides
                 {
                     long dx = p.X - q.X, dz = p.Z - q.Z;
                     if (dx * dx + dz * dz >= lateral2 || Math.Abs(p.Y - q.Y) >= vertical) continue;
-                    if (AtJoint(p, q, joints)) continue;
+                    if (AtJoint(p, q, joints, jointCount)) continue;
                     return true;
                 }
             }
             return false;
         }
 
-        private static bool AtJoint(TrackPoint p, TrackPoint q, List<TrackPoint> joints)
+        private static bool AtJoint(TrackPoint p, TrackPoint q, TrackPoint[] joints, int jointCount)
         {
             const long radius2 = (long)CoasterClearance.JointRadius * CoasterClearance.JointRadius;
-            foreach (var joint in joints)
-                if (Distance2(p, joint) < radius2 && Distance2(q, joint) < radius2) return true;
+            for (var k = 0; k < jointCount; k++)
+                if (Distance2(p, joints[k]) < radius2 && Distance2(q, joints[k]) < radius2) return true;
             return false;
         }
 
@@ -294,12 +344,12 @@ namespace Island.Core.Rides
                 MaxX = maxX; MaxY = maxY; MaxZ = maxZ;
             }
 
-            private int MinX { get; }
-            private int MinY { get; }
-            private int MinZ { get; }
-            private int MaxX { get; }
-            private int MaxY { get; }
-            private int MaxZ { get; }
+            public int MinX { get; }
+            public int MinY { get; }
+            public int MinZ { get; }
+            public int MaxX { get; }
+            public int MaxY { get; }
+            public int MaxZ { get; }
 
             public static Box Around(TrackPoint[] points)
             {
@@ -318,6 +368,89 @@ namespace Island.Core.Rides
                 MinX - other.MaxX < lateral && other.MinX - MaxX < lateral &&
                 MinZ - other.MaxZ < lateral && other.MinZ - MaxZ < lateral &&
                 MinY - other.MaxY < vertical && other.MinY - MaxY < vertical;
+        }
+
+        /// <summary>
+        /// The pieces' boxes binned into square cells over the coaster's XZ extent, each cell
+        /// listing its pieces in index order. Cells are at least a straight long and there are
+        /// at most <see cref="MaxCellsPerSide"/> a side, so a coaster of any size costs at most
+        /// a few thousand cells and each piece sits in a handful.
+        /// </summary>
+        private sealed class Grid
+        {
+            private const int MinCell = 4 * CoasterShapes.SubUnitsPerUnit;
+            private const int MaxCellsPerSide = 64;
+
+            private readonly int _originX, _originZ, _cell, _columns, _rows;
+            private readonly int[] _start;   // per cell, where its pieces begin in _pieces; one extra at the end
+            private readonly int[] _pieces;
+
+            public Grid(Box[] boxes)
+            {
+                int minX = int.MaxValue, minZ = int.MaxValue, maxX = int.MinValue, maxZ = int.MinValue;
+                foreach (var box in boxes)
+                {
+                    minX = Math.Min(minX, box.MinX); maxX = Math.Max(maxX, box.MaxX);
+                    minZ = Math.Min(minZ, box.MinZ); maxZ = Math.Max(maxZ, box.MaxZ);
+                }
+                var span = Math.Max((long)maxX - minX, (long)maxZ - minZ) + 1;
+                _cell = (int)Math.Max(MinCell, (span + MaxCellsPerSide - 1) / MaxCellsPerSide);
+                _originX = minX;
+                _originZ = minZ;
+                _columns = (int)(((long)maxX - minX) / _cell) + 1;
+                _rows = (int)(((long)maxZ - minZ) / _cell) + 1;
+
+                _start = new int[_columns * _rows + 1];
+                foreach (var box in boxes)
+                    for (var r = Row(box.MinZ); r <= Row(box.MaxZ); r++)
+                        for (var c = Column(box.MinX); c <= Column(box.MaxX); c++)
+                            _start[r * _columns + c + 1]++;
+                for (var k = 1; k < _start.Length; k++) _start[k] += _start[k - 1];
+
+                _pieces = new int[_start[_start.Length - 1]];
+                var fill = new int[_columns * _rows];
+                Array.Copy(_start, fill, fill.Length);
+                for (var i = 0; i < boxes.Length; i++)
+                    for (var r = Row(boxes[i].MinZ); r <= Row(boxes[i].MaxZ); r++)
+                        for (var c = Column(boxes[i].MinX); c <= Column(boxes[i].MaxX); c++)
+                            _pieces[fill[r * _columns + c]++] = i;
+            }
+
+            /// <summary>
+            /// The pieces after <paramref name="i"/> whose boxes come within the clearance
+            /// envelope of its box, written to <paramref name="found"/> in no particular order;
+            /// returns how many. <paramref name="seen"/> marks each piece with the last
+            /// <paramref name="i"/> that looked at it, so one in several cells is listed once.
+            /// </summary>
+            public int Near(int i, Box[] boxes, int[] reach, int[] seen, int[] found)
+            {
+                var box = boxes[i];
+                const int lateral = CoasterClearance.Lateral;
+                int c0 = Column(box.MinX - lateral + 1), c1 = Column(box.MaxX + lateral - 1);
+                int r0 = Row(box.MinZ - lateral + 1), r1 = Row(box.MaxZ + lateral - 1);
+                var count = 0;
+                for (var r = r0; r <= r1; r++)
+                {
+                    for (var c = c0; c <= c1; c++)
+                    {
+                        var cell = r * _columns + c;
+                        for (var k = _start[cell]; k < _start[cell + 1]; k++)
+                        {
+                            var j = _pieces[k];
+                            if (j <= i || seen[j] == i) continue;
+                            seen[j] = i;
+                            var vertical = Math.Max(reach[i], reach[j]) + CoasterClearance.Headroom;
+                            if (box.Near(boxes[j], lateral, vertical)) found[count++] = j;
+                        }
+                    }
+                }
+                return count;
+            }
+
+            private int Column(int x) => Clamp((int)(((long)x - _originX) / _cell), _columns);
+            private int Row(int z) => Clamp((int)(((long)z - _originZ) / _cell), _rows);
+
+            private static int Clamp(int value, int size) => value < 0 ? 0 : value >= size ? size - 1 : value;
         }
 
         // ---- the ground and supports ------------------------------------------------------------
