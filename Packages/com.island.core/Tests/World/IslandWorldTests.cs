@@ -339,7 +339,9 @@ namespace Island.Core.Tests.World
             world.CreateIsland(name, Monday);
             var saved = Open().Index.Islands[0].Name;
             Assert.That(saved, Is.EqualTo(new string('a', WorldIndex.MaxNameLength - 1)));
-            Assert.That(saved, Does.Not.Contain("�"));
+            // By char, which is ordinal everywhere: on Unity's Mono a culture-sensitive string search
+            // for U+FFFD matches any string at all, so Does.Not.Contain with it always fails there.
+            Assert.That(saved.IndexOf('\uFFFD'), Is.EqualTo(-1), "no replacement character");
         }
     }
 }
