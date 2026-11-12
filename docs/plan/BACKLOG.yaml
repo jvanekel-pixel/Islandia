@@ -180,7 +180,7 @@ packages:
     - "CI fails if import leaves uncommitted .meta or settings changes [L2]"
     - "After the Android build, the committed Assets/XR and ProjectSettings/EditorBuildSettings.asset are unchanged — the same check unity-tests runs since F-05 (ADR-06: batchmode builds have reset XR settings) [L4]"
     - "The APK from main is downloadable as an artefact — unless the build holds a private-use pack, when it goes to a draft release instead (ADR-11) [L4]"
-  status: todo
+  status: done
 
 - id: F-14
   title: The app's identity in code — package id and name under the icon

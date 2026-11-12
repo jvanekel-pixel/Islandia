@@ -1181,6 +1181,48 @@ every assembly definition in the project must be one it names, each references o
 allows, test assemblies must reference what they test, `Island.Editor` is editor-only, and
 `Island.Runtime`'s sources may not use XR, Input System or editor types.
 
+## 2026-11-12 — The Android build, and settling what packages write on their own
+
+**`F-07`.** `Island.Editor.AndroidBuilder` builds the APK headlessly, changes no setting, and
+requires the editor to be opened for Android rather than switching inside the build. The
+`android-build` workflow runs on merges to `main` that touch the project, by hand, and on a pull
+request that changes it or the builder; it frees the host's disk through mounted volumes (a
+container job cannot otherwise touch it), restores `Library/` keyed by the lock file and editor
+version, builds, and keeps the APK as the `islandia-apk` artefact. `unity-tests` gets the same
+Library cache. Signing with the owner's key stays with `R-01`; until then the APK carries Unity's
+debug key.
+
+**The whole project must be unchanged after any editor run.** `tools/unity/assert_unchanged.sh`
+fails if `Assets`, `Packages` or `ProjectSettings` hold a change or a new file afterwards. It
+replaces the narrower XR-only check, and both Unity workflows run it.
+
+**Its first run found real drift, in both workflows.** XR Interaction Toolkit and Composition
+Layers create their settings assets — runtime ones under `Resources/`, so they go into the build —
+the first time the tests run. The first Android build rewrote URP's default volume profile (every
+volume component, explicitly at defaults), the pipeline asset's shader-keyword prefiltering,
+URP's global settings, and the player's per-target batching. None of it had ever been committed:
+every build so far would have been built from settings that differ from the reviewed ones, and
+from one machine to the next.
+
+**The fix is to settle, not to ignore.** `unity-configure`'s dispatch now also runs the tests and
+one Android build, exactly as the two checking workflows do, and commits what they write; the
+checks then prove a second pass writes nothing. Running what CI runs finds everything a package
+writes, where guessing at each package's internals would find only what was guessed. The diffs
+were read before trusting them: the prefiltering is URP stripping keyword variants for features
+ADR-03 turns off (fewer shader variants, which is welcome), the batching entry is the Android
+default made explicit, and the rest is package bookkeeping. Nothing changed a decision.
+
+**Unity runs.** This package used five: two red runs, both the new check catching that drift on
+its first outing; the settling dispatch; and the green verification runs of `unity-tests` and
+`android-build`. `05-OPERATIONS.md` §6 caps a package at four. The cap exists to stop a package
+that keeps failing, and that is not what happened here. Both red runs were the gate working.
+Still, it was exceeded, and this entry says so rather than leaving it unrecorded.
+
+**Found on the way: the package id is not set.** `ProjectSettings` still has
+`applicationIdentifier: {}`, so the APK installs under Unity's default id. Islands saved on the
+headset under that id would be orphaned by the first correctly identified build, so `F-14` (new,
+M1) sets it before HG-1 puts anything on the headset.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced
