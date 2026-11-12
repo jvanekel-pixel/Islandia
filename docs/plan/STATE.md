@@ -35,8 +35,6 @@ Being walked through one at a time in the planning conversation. None blocks the
 
 | What | Unblocks |
 | :-- | :-- |
-| Point the scheduled driver at the `islandia` environment (above) | `F-10`, and sessions that start with the toolchain installed |
-| Headset developer setup: Meta developer organisation, Developer Mode, `adb` on the PC | HG-1 |
 | Unity credentials in the cloud environment, if the owner wants sessions to run Unity directly | `S-01`'s optional accelerator |
 
 ## Settled with the owner on 2026-11-11
@@ -49,6 +47,14 @@ Being walked through one at a time in the planning conversation. None blocks the
   `ANDROID_*` secrets open it in CI (`Signing key` workflow). Fingerprint in `R-01`'s note.
 - **Identity:** package id `dev.islandia.app` is final; the name under the icon is *Islandia*
   (ADR-22).
+- **Headset ready for test builds** (2026-11-12): Meta developer organisation, Developer Mode on,
+  Android platform tools on the owner's PC, USB debugging allowed. **USB, not Wi-Fi**: the PC and
+  the headset are on different networks, and a good data cable works. The HG-1 install script
+  should still accept `adb connect <address>:5555` for later. Two things that cost time and belong
+  in its instructions: the "Allow USB debugging" box appears only after the PC runs `adb`, and it
+  can sit out of the wearer's line of sight; a charge-only cable shows as a connect chime every
+  ~30 s.
+- **Environment:** the routine now runs on `islandia`.
 - **Who plays it:** the owner's own Quest 2, played by their partner, who thinks VR is dumb and
   asked for exactly this game. See `DECISIONS.md`.
 
