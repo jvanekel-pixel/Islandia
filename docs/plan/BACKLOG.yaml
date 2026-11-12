@@ -191,7 +191,7 @@ packages:
   accept:
     - "ProjectConfigurator sets the Android package id to dev.islandia.app and the product name to Islandia; EditMode tests assert both from the committed ProjectSettings [L2]"
     - "The android-build APK's manifest carries dev.islandia.app, checked in CI with aapt from the image's Android SDK [L4]"
-  status: todo
+  status: done
   note: >-
     Found by F-07: ProjectSettings still has applicationIdentifier {}, so the first APK installs
     under Unity's default id. Any island saved under that id would be left behind by the first

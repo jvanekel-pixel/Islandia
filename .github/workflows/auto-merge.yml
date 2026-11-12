@@ -51,6 +51,9 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # Only to dispatch android-build after a merge (F-14 fixing F-07): a merge made with this token
+  # starts no push-triggered workflow, but a workflow_dispatch it sends does.
+  actions: write
 
 concurrency:
   group: auto-merge
@@ -180,6 +183,19 @@ jobs:
               gh api -X POST "repos/$REPO/issues/$number/comments" \
                 -f body="Merged automatically: every check on \`${head_sha:0:8}\` passed. See \`.github/workflows/auto-merge.yml\`." >/dev/null || true
               merged=$((merged + 1))
+
+              # A squash made with GITHUB_TOKEN triggers no `push` workflow on main, so the APK
+              # build that F-07 promised "on merge to main" would never run. Dispatch it instead,
+              # when the merge touched the project.
+              if gh api "repos/$REPO/pulls/$number/files?per_page=100" --paginate --jq '.[].filename' \
+                   | grep -qE '^(Assets|Packages|ProjectSettings)/'; then
+                if gh api -X POST "repos/$REPO/actions/workflows/android-build.yml/dispatches" \
+                     -f ref=main >/dev/null 2>&1; then
+                  echo "Dispatched android-build on main."
+                else
+                  echo "::warning::could not dispatch android-build on main after merging #$number"
+                fi
+              fi
             else
               echo "SKIP: GitHub refused the merge. It may have changed since this run started."
               skipped=$((skipped + 1))

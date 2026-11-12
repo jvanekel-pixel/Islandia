@@ -117,6 +117,30 @@ jobs:
           fi
           echo "bytes=$(stat -c %s "$APK")" >> "$GITHUB_OUTPUT"
 
+      # F-14, ADR-22: the APK installs as dev.islandia.app, read from the APK itself with the
+      # image's own Android SDK. The id is final; an APK under any other id would install as a
+      # second app and leave the saved islands behind with the first.
+      - name: The APK is dev.islandia.app
+        if: steps.build.outcome == 'success'
+        run: |
+          set -eu
+          expected="dev.islandia.app"
+          sdk=/opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/SDK
+          aapt2="$(find "$sdk/build-tools" -name aapt2 -type f 2>/dev/null | sort -V | tail -1)"
+          aapt="$(find "$sdk/build-tools" -name aapt -type f 2>/dev/null | sort -V | tail -1)"
+          if [ -n "$aapt2" ]; then
+            actual="$("$aapt2" dump packagename "$APK")"
+          elif [ -n "$aapt" ]; then
+            actual="$("$aapt" dump badging "$APK" | sed -n "s/^package: name='\([^']*\)'.*/\1/p")"
+          else
+            echo "::error title=No aapt::neither aapt2 nor aapt found under $sdk/build-tools"; exit 1
+          fi
+          echo "Package in the APK: $actual"
+          if [ "$actual" != "$expected" ]; then
+            echo "::error title=Wrong package id::the APK is '$actual', ADR-22 requires '$expected'"
+            exit 1
+          fi
+
       # ADR-06 and F-07: an editor that imported and built the project must leave every committed
       # file as it found it. A build that rewrites a setting is building with something other than
       # what was reviewed.

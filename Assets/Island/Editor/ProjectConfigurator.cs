@@ -46,6 +46,17 @@ namespace Island.Editor
         public const int ShadowCascades = 1;
         public const float ShadowDistanceMetres = 15f;
 
+        // ---- ADR-22, identity ---------------------------------------------------------------------
+
+        /// <summary>
+        /// The Android package id. <b>Final, never to change:</b> an update under another id
+        /// installs as a second app and leaves every saved island behind with the first.
+        /// </summary>
+        public const string PackageId = "dev.islandia.app";
+
+        /// <summary>The name under the icon in the headset's library. Free to change.</summary>
+        public const string ProductName = "Islandia";
+
         /// <summary>
         /// Applies everything. Safe to run twice: the second run changes nothing.
         /// </summary>
@@ -164,6 +175,11 @@ namespace Island.Editor
 
         private static void ConfigurePlayer()
         {
+            // ADR-22. Set before anything else so no build can ever be made under Unity's default
+            // id, which would install as a different app from every build after it.
+            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageId);
+            PlayerSettings.productName = ProductName;
+
             // Vulkan only. The Quest 2 runs it, and carrying GLES as a fallback means every shader
             // is compiled twice and the one nobody tests is the one that ships.
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);

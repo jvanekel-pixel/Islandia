@@ -9,7 +9,7 @@
 | **In flight** | Nothing from the driver. `RC-01b` is open as PR #42 from the planning conversation |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | **Running** on a schedule, a new session each run. Its first run (2026-11-11) was **not** on the `islandia` environment: no .NET, no setup script, unrestricted network. Point the routine at that environment at <https://claude.ai/code/routines> |
-| **Last updated** | 2026-11-12 — `F-07` done: the APK builds in CI, the Library is cached, and no editor run may leave the project changed |
+| **Last updated** | 2026-11-12 — `F-14` done: the APK is `dev.islandia.app`, checked from the APK itself; auto-merge now starts the main build |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## The plan changed on 2026-11-11
@@ -81,13 +81,13 @@ link `kenney.nl/assets/mini-forest` but no archive for it was uploaded.
 ## Next up
 
 Take the first `todo` package in `BACKLOG.yaml` whose dependencies are `done` — `make next` prints
-them. As of this writing: **`F-14`** (the package id, before anything goes on the headset) and **`F-09`** (release workflow and gate templates) — the last M1 steps — then **`C-02b`** (the Blender
+them. As of this writing: **`F-09`** (release workflow and gate templates) — the last M1 step before the M1 report and HG-1 — then **`C-02b`** (the Blender
 normalisation pipeline), **`V-07b`**, and the engine-free starts of the new features — **`RC-01b`** (coaster validation — PR #42 is already open for it, so skip it), **`RC-01`** (coasters saved, with undo), **`RC-02`** (ride physics), **`PNT-01`** (paint segmentation) — plus
 `I-04` and `I-05`. Prefer the current milestone; take an engine-free package when it is waiting
 on CI.
 
-**27 of 138 live packages are done** (7 more were cut on 2026-11-11; `RC-01` was split in three on 2026-11-12). `F-01`–`F-06`,
-`F-07`, `F-07a`–`F-07c`, `F-08`, `F-13`, `V-02`, `V-06`, `V-07a`, `V-08`, `SB-01a`–`SB-01d`, `C-01a`,
+**28 of 138 live packages are done** (7 more were cut on 2026-11-11; `RC-01` was split in three on 2026-11-12). `F-01`–`F-06`,
+`F-07`, `F-07a`–`F-07c`, `F-14`, `F-08`, `F-13`, `V-02`, `V-06`, `V-07a`, `V-08`, `SB-01a`–`SB-01d`, `C-01a`,
 `C-01b`, `C-02a`, `I-01`, `TR-01a`, `TR-01`, `RC-01a`.
 
 ### What exists now
@@ -105,7 +105,7 @@ on CI.
   count, and a pinned headless Blender proven to script, measure, export GLB and render a thumbnail
   with no GPU.
 
-### Four things a new session should know
+### Five things a new session should know
 
 1. **Label last.** `awaiting-merge` means *land this now*; do not push to a branch after labelling
    its pull request. Auto-merge has squashed a PR mid-push and stranded the rest.
@@ -121,6 +121,9 @@ on CI.
    test runs, dispatch `unity-configure`, then dispatch `unity-tests` (F-06 did this).
    `unity-configure`'s dispatch also *settles* (F-07): it runs the tests and one Android build and
    commits what packages wrote, because `unity-tests` and `android-build` fail on any change.
+5. **Merges by auto-merge start no `push` workflow.** It merges with `GITHUB_TOKEN`. It dispatches
+   `android-build` on `main` itself (F-14); anything else that must run after a merge has to be
+   dispatched the same way.
 
 ### Open, not blocking
 
@@ -132,6 +135,7 @@ on CI.
 
 ## Recently merged
 
+- `F-14` the package id `dev.islandia.app` and the name *Islandia*, set in code and read back from the built APK; auto-merge dispatches the main APK build, which a token-made merge never started (2026-11-12)
 - `F-07` the APK built headlessly in CI and kept as an artefact; Library cached; any editor run that leaves the project changed fails; `unity-configure` settles what packages write (2026-11-12)
 - `F-06` the boot scene and composition root: `Island.Runtime` and `Island.XR`, ADR-07 checked by lint, a generated scene that a rerun leaves alone, and the first PlayMode tests booting it in simulation (2026-11-12)
 - `RC-01a` coaster pieces from the owner's pack: 37 pieces, frames in integer sub-units, a 200-piece circuit that closes exactly (2026-11-12)
@@ -167,7 +171,7 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 | Terrain on disk | ~129 KB before packing; whole island well under 400 KB | V-06 |
 | GitHub REST from a session | runs, check-runs, status, pulls, issues all readable; `actions/secrets` blocked | F-01 |
 | Driver self-merge | **Refused** by the permission classifier unless `.claude/settings.json` allows it. See `05-OPERATIONS.md` §7 step 4 | F-01 |
-| CI: warm test run / Android build | tests ~7 min end to end even cold; Android build ~28 min cold (IL2CPP, ARM64) | F-06, F-07 |
+| CI: warm test run / Android build | tests ~6 min end to end cold (EditMode 3.4, PlayMode 0.6); Android build step 17 min cold, job ~23 min (IL2CPP, ARM64); APK 39.7 MB debug-signed | F-06, F-07 |
 | Runner minutes per Unity package | — | S-05 |
 | Device strings and tier | — | HG-1 |
 | Frame time, empty island | — | HG-1 |
