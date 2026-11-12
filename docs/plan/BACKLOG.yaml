@@ -180,7 +180,22 @@ packages:
     - "CI fails if import leaves uncommitted .meta or settings changes [L2]"
     - "After the Android build, the committed Assets/XR and ProjectSettings/EditorBuildSettings.asset are unchanged — the same check unity-tests runs since F-05 (ADR-06: batchmode builds have reset XR settings) [L4]"
     - "The APK from main is downloadable as an artefact — unless the build holds a private-use pack, when it goes to a draft release instead (ADR-11) [L4]"
+  status: done
+
+- id: F-14
+  title: The app's identity in code — package id and name under the icon
+  ms: M1
+  risk: low
+  deps: [F-04]
+  refs: [adr ADR-22]
+  accept:
+    - "ProjectConfigurator sets the Android package id to dev.islandia.app and the product name to Islandia; EditMode tests assert both from the committed ProjectSettings [L2]"
+    - "The android-build APK's manifest carries dev.islandia.app, checked in CI with aapt from the image's Android SDK [L4]"
   status: todo
+  note: >-
+    Found by F-07: ProjectSettings still has applicationIdentifier {}, so the first APK installs
+    under Unity's default id. Any island saved under that id would be left behind by the first
+    correctly-identified build, so this lands before HG-1 puts a build on the headset.
 
 - id: F-09
   title: Release workflow, milestone report and human-gate templates

@@ -1,0 +1,186 @@
+# Builds the Quest APK — verification level L4.
+#
+# Work package F-07. Runs on every merge to main that touches the project, by hand, and on a pull
+# request that changes this workflow or the builder (so a change to how the APK is made is proven
+# before it lands, not after).
+#
+# What it proves, beyond "it compiles for Android":
+#   * the build leaves every committed file as it was — settings, .meta files, and the XR assets
+#     ADR-06 warns batchmode builds have reset before;
+#   * the APK exists and is downloadable as an artefact (ADR-11's exception for private-use packs
+#     is guarded below; C-02d builds the draft-release route).
+#
+# Signing with the owner's key is R-01's. Until then the APK carries Unity's debug key.
+
+name: android-build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Assets/**'
+      - 'Packages/**'
+      - 'ProjectSettings/**'
+      - '.github/workflows/android-build.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/android-build.yml'
+      - 'Assets/Island/Editor/AndroidBuilder.cs'
+  workflow_dispatch:
+
+# A newer build of the same ref makes an older one pointless.
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Android APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    # The one Personal seat is shared with every Unity workflow; wait for it, never cancel for it.
+    concurrency:
+      group: unity-licence
+      cancel-in-progress: false
+    container:
+      image: unityci/editor:ubuntu-6000.3.28f1-android-3
+      options: --user root
+      # The runner's own preinstalled SDKs, mounted so the job can delete them: a container job
+      # cannot otherwise touch the host's disk, and an IL2CPP Android build with Gradle's caches
+      # is the largest thing this repository asks of a runner.
+      volumes:
+        - /usr/share/dotnet:/host/dotnet
+        - /usr/local/lib/android:/host/android
+        - /opt/ghc:/host/ghc
+        - /usr/local/share/boost:/host/boost
+
+    env:
+      LICENSING_CLIENT: /opt/unity/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client
+      APK: Builds/Android/Islandia.apk
+
+    steps:
+      - name: Free disk space
+        run: |
+          echo "Before:"; df -h / | tail -1
+          rm -rf /host/dotnet/* /host/android/* /host/ghc/* /host/boost/* || true
+          echo "After:";  df -h / | tail -1
+
+      - uses: actions/checkout@v4
+
+      - name: Let git use this checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      # Keyed by the lock file and the editor version: either changing means a different import.
+      - name: Restore the Library
+        id: library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: library-android-${{ hashFiles('Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: library-android-
+
+      - name: Take a Personal seat
+        id: activate
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set +e
+          output="$("$LICENSING_CLIENT" --activate-all --include-personal \
+                      --username "$UNITY_EMAIL" --password "$UNITY_PASSWORD" 2>&1)"
+          echo "$output" | grep -viE 'password|token'
+          echo "activated=true" >> "$GITHUB_OUTPUT"
+          echo "$output" | grep -q 'Activation processed successfully' || {
+            echo "::error title=Unity licence failed::no seat. Run the 'Unity licence' workflow for the reason."
+            exit 1
+          }
+
+      - name: Build the APK (L4)
+        id: build
+        run: |
+          set +e
+          start=$(date +%s)
+          unity-editor -batchmode -nographics -projectPath . -buildTarget Android \
+            -executeMethod Island.Editor.AndroidBuilder.BuildAndExit \
+            -islandOutput "$APK" \
+            -logFile /tmp/android-build.log
+          code=$?
+          echo "minutes=$(( ($(date +%s) - start + 59) / 60 ))" >> "$GITHUB_OUTPUT"
+          echo "::group::Editor log (tail)"; tail -200 /tmp/android-build.log || true; echo "::endgroup::"
+          if [ "$code" -ne 0 ] || [ ! -s "$APK" ]; then
+            grep -E 'error CS[0-9]+|\[Island\]|BuildFailedException|FAILURE|What went wrong' /tmp/android-build.log | head -40 || true
+            echo "::error title=Android build failed::editor exit $code; APK present: $([ -s "$APK" ] && echo yes || echo no)"
+            exit 1
+          fi
+          echo "bytes=$(stat -c %s "$APK")" >> "$GITHUB_OUTPUT"
+
+      # ADR-06 and F-07: an editor that imported and built the project must leave every committed
+      # file as it found it. A build that rewrites a setting is building with something other than
+      # what was reviewed.
+      - name: The build changed nothing that is committed
+        if: always() && steps.build.outcome != 'skipped'
+        run: bash tools/unity/assert_unchanged.sh "the Android build"
+
+      # ADR-11: an APK holding private-use assets must never become a workflow artefact. No
+      # admitted licence is private-use today, so every APK may be uploaded; the day one is,
+      # this refuses until C-02d's draft-release route exists.
+      - name: Nothing private-use can be in this APK
+        run: |
+          python3 - <<'PY'
+          import re, sys
+          text = open("content/licences.yaml", encoding="utf-8").read()
+          if re.search(r"^\s*private_use:\s*true\b", text, re.M):
+              print("::error title=Private-use licence admitted::this APK may hold private-use assets; "
+                    "it must go to a draft release (C-02d), not an artefact")
+              sys.exit(1)
+          print("Every admitted licence is redistributable; the APK may be an artefact.")
+          PY
+
+      - name: Keep the APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: islandia-apk
+          path: ${{ env.APK }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Keep the log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-log
+          path: |
+            /tmp/android-build.log
+            /tmp/project-changes.patch
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Report
+        if: always()
+        run: |
+          {
+            echo "## Android build"
+            echo ""
+            echo "| | |"
+            echo "| :-- | :-- |"
+            echo "| Result | ${{ steps.build.outcome }} |"
+            echo "| Build step | ${{ steps.build.outputs.minutes }} min |"
+            echo "| APK | ${{ steps.build.outputs.bytes }} bytes |"
+            echo "| Library restored from cache | ${{ steps.library.outputs.cache-hit == 'true' && 'exact' || 'no (cold or partial)' }} |"
+            echo "| Signed with | Unity debug key (R-01 brings the owner's) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Give the seat back
+        if: always() && steps.activate.outputs.activated == 'true'
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set +e
+          "$LICENSING_CLIENT" --deactivate-all \
+            --username "$UNITY_EMAIL" --password "$UNITY_PASSWORD" 2>&1 \
+            | grep -viE 'password|token' | tail -5
+          echo "Seat returned."

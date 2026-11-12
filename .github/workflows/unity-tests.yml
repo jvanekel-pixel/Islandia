@@ -61,6 +61,16 @@ jobs:
       - name: Let git use this checkout
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
+      # F-07: a warm run skips the import. Keyed by the lock file and the editor version, either of
+      # which changing means a different import; a partial match still saves most of it.
+      - name: Restore the Library
+        id: library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: library-tests-${{ hashFiles('Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: library-tests-
+
       - name: Take a Personal seat
         id: activate
         env:
@@ -133,25 +143,14 @@ jobs:
             exit 1
           fi
 
-      # ADR-06: batchmode runs have historically reset XR settings. Two editor sessions have just
-      # opened this project; if either rewrote the committed XR assets, the settings a build would
-      # use are not the ones the tests read, so the run fails here and shows the change.
-      #
-      # F-06 adds the boot scene to the same check: BootSceneTests runs the builder again, and a
-      # rerun that rewrote the scene would show up here even if the test somehow missed it.
-      - name: The committed XR settings and boot scene survived the editor
+      # ADR-06: batchmode runs have historically reset XR settings, and F-07 widens the same
+      # check to the whole project: two editor sessions have just imported it and run every test
+      # (BootSceneTests runs the scene builder again), and if either left a setting, a .meta, the
+      # XR assets or the boot scene different from what is committed — or wrote a file nobody
+      # committed — the next machine would be building something else. The run fails and shows it.
+      - name: The editor changed nothing that is committed
         if: always() && steps.editmode.outcome != 'skipped'
-        run: |
-          watched="Assets/XR Assets/Island/Generated/Scenes ProjectSettings/EditorBuildSettings.asset"
-          changed="$(git status --porcelain -- $watched)"
-          if [ -n "$changed" ]; then
-            echo "$changed"
-            git --no-pager diff --stat -- $watched || true
-            git --no-pager diff -- $watched | head -200 || true
-            echo "::error title=Generated assets rewritten::an editor run changed the committed XR settings or boot scene"
-            exit 1
-          fi
-          echo "Assets/XR, the boot scene and the build settings are unchanged."
+        run: bash tools/unity/assert_unchanged.sh "the EditMode and PlayMode runs"
 
       - name: Keep the results
         if: always()
@@ -163,6 +162,7 @@ jobs:
             /tmp/playmode.xml
             /tmp/editmode.log
             /tmp/playmode.log
+            /tmp/project-changes.patch
           if-no-files-found: warn
           retention-days: 14
 
