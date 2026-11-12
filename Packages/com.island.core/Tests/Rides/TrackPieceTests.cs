@@ -168,5 +168,53 @@ namespace Island.Core.Tests.Rides
             Assert.That(TrackFrame.Eighths(-5), Is.EqualTo(3));
             Assert.That(TrackFrame.Eighths(4), Is.EqualTo(4));
         }
+
+        private static readonly Placement[] EveryPlacement =
+            { Placement.AsIs, Placement.Reversed, Placement.Mirrored, Placement.MirroredReversed };
+
+        /// <summary>
+        /// Every piece, in every placement, ends where its own measured centreline ends and leaves
+        /// the way that centreline leaves. The exit data and the samples are transformed by separate
+        /// code, so a mistake in mirroring or reversing one shows up against the other — which the
+        /// four-fold circuit cannot see, because four quarter-turned copies of any step cancel.
+        /// </summary>
+        [Test]
+        public void EveryPlacedPieceEndsWhereItsOwnCentrelineEnds()
+        {
+            var checkedCount = 0;
+            foreach (var catalogued in CoasterPieces.All)
+            foreach (var placement in EveryPlacement)
+            {
+                var piece = TrackPiece.Place(catalogued.Shape, "test." + catalogued.Id, catalogued.Name,
+                    placement, catalogued.Role, catalogued.Intensity);
+                var label = $"{catalogued.Shape.Name} {placement}";
+                var samples = piece.Samples;
+                Assert.That(samples.Count, Is.GreaterThanOrEqualTo(2), label);
+                Assert.That(samples[0], Is.EqualTo(P(0, 0, 0)), label + ": starts at its entry");
+                Assert.That(samples[samples.Count - 1], Is.EqualTo(piece.Exit), label + ": ends at its exit");
+
+                // Leaves the way its last stretch of centreline points.
+                var d = samples[samples.Count - 1] - samples[samples.Count - 2];
+                if (d.X != 0 || d.Z != 0)
+                {
+                    var heading = Math.Abs(d.Z) >= Math.Abs(d.X) ? (d.Z > 0 ? 0 : 2) : (d.X > 0 ? 1 : 3);
+                    Assert.That(piece.Turn, Is.EqualTo(heading), label + ": exit heading");
+                    var run = Math.Max(Math.Abs(d.X), Math.Abs(d.Z));
+                    if (piece.ExitPitch == 0) Assert.That(Math.Abs(d.Y) * 4, Is.LessThanOrEqualTo(run), label + ": leaves level");
+                    else Assert.That(Math.Sign(d.Y), Is.EqualTo(Math.Sign(piece.ExitPitch)), label + ": leaves climbing or falling");
+                }
+
+                // And sets off along +Z, the entry frame's own heading.
+                var e = samples[1] - samples[0];
+                if (e.X != 0 || e.Z != 0)
+                {
+                    Assert.That(Math.Abs(e.Z), Is.GreaterThanOrEqualTo(Math.Abs(e.X)), label + ": sets off straight ahead");
+                    Assert.That(e.Z, Is.GreaterThan(0), label + ": sets off forwards");
+                    if (piece.EntryPitch != 0) Assert.That(Math.Sign(e.Y), Is.EqualTo(Math.Sign(piece.EntryPitch)), label + ": sets off climbing or falling");
+                }
+                checkedCount++;
+            }
+            Assert.That(checkedCount, Is.EqualTo(37 * 4));
+        }
     }
 }

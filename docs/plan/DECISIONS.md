@@ -1076,7 +1076,7 @@ lands on a half-unit grid. Between the ends the centreline is a line, a bump, a 
 Bézier — Kenney's curves are Béziers whose handles run half the forward distance (a 45° end's
 handle is one unit), which the spine's vertices show: a quarter turn bulges 2.7% inside a circle.
 Each fit is checked rather than trusted: the facts record how far the furthest vertex of any style
-lies from it, and every shape comes out within 0.02 units of a straight's.
+lies from it, and every shape comes out within 0.03 units of a straight's (the loop is the widest).
 
 **What it found.** The grid unit is the pack's unit, held in Core as 64 sub-units. A straight is
 4 long and the station's one-unit track tile 1; quarter turns have radius 2 or 4 and the climbing

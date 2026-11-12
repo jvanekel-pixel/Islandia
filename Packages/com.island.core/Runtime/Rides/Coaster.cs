@@ -53,7 +53,19 @@ namespace Island.Core.Rides
         /// <summary>Where the first piece begins, in the coaster's own grid.</summary>
         public TrackFrame Start { get; }
 
-        public TrackStyle Style { get; set; }
+        /// <summary>The skin every piece is drawn in. Changing it is an edit, so <see cref="Changed"/> fires.</summary>
+        public TrackStyle Style
+        {
+            get => _style;
+            set
+            {
+                if (_style == value) return;
+                _style = value;
+                Changed?.Invoke();
+            }
+        }
+
+        private TrackStyle _style;
 
         public int Count => _pieces.Count;
 
@@ -113,7 +125,7 @@ namespace Island.Core.Rides
         {
             if (index < 0 || index >= _pieces.Count) throw new ArgumentOutOfRangeException(nameof(index));
             var frames = Compose(-1, null, skip: index)
-                ?? throw new InvalidOperationException($"Removing piece {index} would leave {_pieces[index + 1].Name} with nothing it fits on.");
+                ?? throw new InvalidOperationException($"Removing piece {index} would leave a piece after it with nothing it fits on.");
             var removed = _pieces[index];
             _pieces.RemoveAt(index);
             Commit(frames);
