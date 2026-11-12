@@ -77,7 +77,49 @@ namespace Island.Core.World
 
         public void Rename(long id, string name) => Require(id).Name = CheckName(name);
 
-        public void SetThumbnail(long id, string relativePath) => Require(id).Thumbnail = relativePath;
+        /// <summary>Where thumbnails live, relative to the world. Nothing outside it is ever named here.</summary>
+        public const string ThumbnailFolder = "thumbnails/";
+
+        /// <summary>
+        /// Sets an island's thumbnail. It must be a plain relative path under <see cref="ThumbnailFolder"/>,
+        /// because deleting the island deletes it: anything else could name another island or any file.
+        /// </summary>
+        public void SetThumbnail(long id, string relativePath)
+        {
+            if (relativePath != null && !IsSafeThumbnail(relativePath))
+                throw new ArgumentException($"A thumbnail must be a file under '{ThumbnailFolder}'.", nameof(relativePath));
+            Require(id).Thumbnail = relativePath;
+        }
+
+        public static bool IsSafeThumbnail(string path) =>
+            !string.IsNullOrEmpty(path)
+            && path.StartsWith(ThumbnailFolder, StringComparison.Ordinal)
+            && path.Length > ThumbnailFolder.Length
+            && path.IndexOf("..", StringComparison.Ordinal) < 0
+            && path.IndexOf('\\') < 0
+            && path.IndexOf(':') < 0
+            && path.IndexOf('/', ThumbnailFolder.Length) < 0;
+
+        /// <summary>Makes sure no island made from now on is given <paramref name="id"/> or anything below it.</summary>
+        internal void ReserveIdsThrough(long id)
+        {
+            if (id >= NextIslandId) NextIslandId = id + 1;
+        }
+
+        /// <summary>
+        /// Lists an island found on disk that the index had lost track of, under its own id, so it is
+        /// shown again rather than left invisible — and so its id can never be issued twice.
+        /// </summary>
+        internal IslandEntry Adopt(long id, string name, ulong seed, string theme, long createdAtUnixMs)
+        {
+            if (id < 1) throw new ArgumentOutOfRangeException(nameof(id));
+            if (Find(id) != null) throw new ArgumentException($"Island {id} is already listed.", nameof(id));
+            var entry = new IslandEntry(id, CheckName(name), seed, theme ?? "", createdAtUnixMs, null);
+            var at = _islands.FindIndex(e => e.Id > id);
+            if (at < 0) _islands.Add(entry); else _islands.Insert(at, entry);
+            ReserveIdsThrough(id);
+            return entry;
+        }
 
         private IslandEntry Require(long id) =>
             Find(id) ?? throw new ArgumentException($"There is no island {id} in this world.", nameof(id));
@@ -86,7 +128,11 @@ namespace Island.Core.World
         {
             var trimmed = (name ?? "").Trim();
             if (trimmed.Length == 0) throw new ArgumentException("An island needs a name.", nameof(name));
-            return trimmed.Length > MaxNameLength ? trimmed.Substring(0, MaxNameLength) : trimmed;
+            if (trimmed.Length <= MaxNameLength) return trimmed;
+            // Never cut between the two halves of a surrogate pair (an emoji, say): the half left
+            // behind would be written as a replacement character and come back as '\uFFFD'.
+            var length = char.IsHighSurrogate(trimmed[MaxNameLength - 1]) ? MaxNameLength - 1 : MaxNameLength;
+            return trimmed.Substring(0, length);
         }
 
         // ---- bytes -----------------------------------------------------------------------------------
@@ -135,6 +181,9 @@ namespace Island.Core.World
                         var theme = reader.ReadString();
                         var created = reader.ReadInt64();
                         var thumbnail = reader.ReadBoolean() ? reader.ReadString() : null;
+                        // A thumbnail is deleted along with its island, so one that could name
+                        // another file is dropped on the way in, not trusted.
+                        if (thumbnail != null && !IsSafeThumbnail(thumbnail)) thumbnail = null;
                         if (id < 1 || id >= index.NextIslandId || !seen.Add(id))
                             throw new SaveFormatException($"The world index lists island {id}, which cannot be right.");
                         index._islands.Add(new IslandEntry(id, name, seed, theme, created, thumbnail));

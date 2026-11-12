@@ -217,5 +217,129 @@ namespace Island.Core.Tests.World
             Assert.That(again.Opening, Is.EqualTo(WorldOpening.Loaded));
             Assert.That(again.Index.Islands.Count, Is.EqualTo(1));
         }
+
+        // ---- when the index is lost or old -------------------------------------------------------
+
+        [Test]
+        public void AnIndexRecoveredFromAnOldBackupNeverReissuesAnIdOrOverwritesAnIsland()
+        {
+            var world = Open();
+            world.CreateIsland("One", Monday);
+            world.CreateIsland("Two", Monday);
+            var three = world.CreateIsland("Three", Monday);
+            var threeBytes = _store.Read(world.IslandPath(three.Id));
+            _store.Corrupt(world.IndexPath); // its backup lists only One and Two
+
+            var recovered = Open();
+            Assert.That(recovered.Opening, Is.EqualTo(WorldOpening.RecoveredFromBackup));
+            Assert.That(recovered.Index.Islands.Select(i => i.Id), Is.EqualTo(new[] { 1L, 2L, 3L }),
+                "the island the backup did not know is listed again");
+
+            var four = recovered.CreateIsland("Four", Tuesday);
+            Assert.That(four.Id, Is.EqualTo(4L));
+            Assert.That(_store.Read(recovered.IslandPath(3)), Is.EqualTo(threeBytes), "island 3 untouched");
+        }
+
+        [Test]
+        public void ARecoveredIndexDropsAnIslandWhoseFileIsGone()
+        {
+            var world = Open();
+            world.CreateIsland("One", Monday);
+            world.CreateIsland("Two", Monday);
+            world.CreateIsland("Three", Monday);
+            world.DeleteIsland(3, Tuesday); // the index's backup still lists 3
+            _store.Corrupt(world.IndexPath);
+
+            var recovered = Open();
+            Assert.That(recovered.Opening, Is.EqualTo(WorldOpening.RecoveredFromBackup));
+            Assert.That(recovered.Index.Islands.Select(i => i.Id), Is.EqualTo(new[] { 1L, 2L }));
+            Assert.That(recovered.CreateIsland("Next", Tuesday).Id, Is.EqualTo(4L), "3 is still never reissued");
+        }
+
+        [Test]
+        public void AMissingIndexIsRebuiltFromTheIslandFilesAndOverwritesNothing()
+        {
+            var world = Open();
+            world.CreateIsland("One", Monday);
+            world.CreateIsland("Two", Monday);
+            var oneBytes = _store.Read(world.IslandPath(1));
+            _store.Delete(world.IndexPath);
+            _store.Delete(SaveFile.BackupPathFor(world.IndexPath));
+
+            var rebuilt = Open();
+            Assert.That(rebuilt.Opening, Is.EqualTo(WorldOpening.Rebuilt));
+            Assert.That(rebuilt.Detail, Is.Not.Null, "the player is told");
+            Assert.That(rebuilt.Index.Islands.Select(i => i.Id), Is.EqualTo(new[] { 1L, 2L }));
+            Assert.That(rebuilt.LoadIsland(1).Terrain, Is.Not.Null);
+            Assert.That(rebuilt.CreateIsland("Three", Tuesday).Id, Is.EqualTo(3L));
+            Assert.That(_store.Read(rebuilt.IslandPath(1)), Is.EqualTo(oneBytes));
+        }
+
+        [Test]
+        public void ANewIslandSkipsAnIdWhoseFileIsAlreadyOnDisk()
+        {
+            var world = Open();
+            _store.Put(world.IslandPath(1), new byte[] { 9, 9, 9 }); // a stray file the index never knew
+
+            var entry = world.CreateIsland("Fresh", Monday);
+            Assert.That(entry.Id, Is.EqualTo(2L));
+            Assert.That(_store.Read(world.IslandPath(1)), Is.EqualTo(new byte[] { 9, 9, 9 }));
+        }
+
+        [Test]
+        public void AnUnreadableOldSaveIsKeptAsideAndANewWorldOpens()
+        {
+            var legacyPath = Root + "/" + IslandWorld.SingleIslandFileName;
+            _store.Put(legacyPath, new byte[] { 1, 2, 3, 4 });
+
+            var world = Open();
+            Assert.That(world.Opening, Is.EqualTo(WorldOpening.Created));
+            Assert.That(world.Detail, Is.Not.Null, "the player is told");
+            Assert.That(_store.Exists(legacyPath), Is.False);
+            Assert.That(_store.Read(legacyPath + IslandWorld.UnreadableSuffix), Is.EqualTo(new byte[] { 1, 2, 3, 4 }));
+            Assert.That(Open().Opening, Is.EqualTo(WorldOpening.Loaded), "and it opens normally from then on");
+        }
+
+        // ---- thumbnails and names ----------------------------------------------------------------
+
+        [TestCase("../outside.png")]
+        [TestCase("/sdcard/anything")]
+        [TestCase("islands/island-2.island")]
+        [TestCase("thumbnails/../islands/island-2.island")]
+        [TestCase("thumbnails/deeper/one.png")]
+        [TestCase("thumbnails\\one.png")]
+        [TestCase("C:thumbnails/one.png")]
+        public void AThumbnailMustStayInsideTheThumbnailFolder(string path)
+        {
+            var world = Open();
+            world.CreateIsland("One", Monday);
+            Assert.Throws<System.ArgumentException>(() => world.Index.SetThumbnail(1, path));
+        }
+
+        [Test]
+        public void DeletingAnIslandCannotBeAimedAtAnotherIslandThroughItsThumbnail()
+        {
+            var world = Open();
+            world.CreateIsland("One", Monday);
+            world.CreateIsland("Two", Monday);
+            world.Index.SetThumbnail(1, "thumbnails/island-1.png");
+            world.SaveIndex(Monday);
+            _store.Put(Root + "/thumbnails/island-1.png", new byte[] { 7 });
+
+            world.DeleteIsland(1, Tuesday);
+            Assert.That(_store.Exists(Root + "/thumbnails/island-1.png"), Is.False);
+            Assert.That(_store.Exists(world.IslandPath(2)), Is.True);
+        }
+
+        [Test]
+        public void ALongNameIsNeverCutThroughTheMiddleOfAnEmoji()
+        {
+            var world = Open();
+            var name = new string('a', WorldIndex.MaxNameLength - 1) + "\U0001F682" + "tail"; // a steam train
+            world.CreateIsland(name, Monday);
+            var saved = Open().Index.Islands[0].Name;
+            Assert.That(saved, Is.EqualTo(new string('a', WorldIndex.MaxNameLength - 1)));
+            Assert.That(saved, Does.Not.Contain("�"));
+        }
     }
 }

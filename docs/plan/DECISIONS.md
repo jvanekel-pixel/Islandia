@@ -1031,6 +1031,27 @@ planned file layout.
   admits pack items per theme; the index will store the id, so the list can grow without moving
   any island's.
 
+## 2026-11-12 — The world index is checked against the island files, not trusted
+
+`TR-01`, after an independent review of the world index. The index is rewritten when islands
+are made or deleted, not when one is saved, so its backup can be many sessions old. Trusting a
+recovered index would have issued a used id again and overwritten that island, then its backup.
+
+So the island files on disk are the truth about which islands exist, and the index is the truth
+about what they are called:
+
+- When the index comes back from its backup, or is missing while island files exist, it is
+  **reconciled by file name only** (no island is read): islands it lost are listed again as
+  "Island <id>", entries whose file is gone are dropped, and every id on disk is reserved.
+- A new island **never takes an id whose file is on disk**, whatever the index says.
+- A **thumbnail must be a plain file under `thumbnails/`**, checked when set and when read,
+  because deleting an island deletes its thumbnail.
+- An **unreadable single-island save is renamed `.unreadable` and the world opens new**, instead
+  of failing at every launch. The file is kept.
+- Names are cut at 40 characters without splitting an emoji.
+
+Each has a test in `IslandWorldTests`.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

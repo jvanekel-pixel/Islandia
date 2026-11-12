@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using Island.Core.Save;
 using Island.Core.Terrain;
 
@@ -16,6 +18,8 @@ namespace Island.Core.World
         Created,
         /// <summary>A save from before the world of islands became its first island.</summary>
         MigratedSingleIsland,
+        /// <summary>The index was missing but island files were found; it was rebuilt from them. Tell the player.</summary>
+        Rebuilt,
     }
 
     /// <summary>One island read from its own file, with its station reserved again.</summary>
@@ -69,6 +73,12 @@ namespace Island.Core.World
         /// <summary>The name a migrated island is given; the player can rename it.</summary>
         public const string MigratedIslandName = "Home";
 
+        /// <summary>What an unreadable single-island save is renamed to, so it is kept but not retried forever.</summary>
+        public const string UnreadableSuffix = ".unreadable";
+
+        private static readonly Regex IslandFileName =
+            new Regex(@"^island-([0-9]{1,18})\.island(\.backup)?$", RegexOptions.CultureInvariant);
+
         private readonly IFileStore _store;
         private readonly SaveFile _files;
         private readonly string _root;
@@ -95,6 +105,12 @@ namespace Island.Core.World
         /// Opens the world at <paramref name="root"/>, reading the index and nothing else. With no
         /// index, a single-island save is migrated if there is one, and otherwise the world is new.
         /// </summary>
+        /// <remarks>
+        /// When the index came back from its backup, or is missing while island files exist, it is
+        /// reconciled with the island files on disk: islands it had lost are listed again, entries
+        /// whose file is gone are dropped, and no id already used on disk can be issued again. That
+        /// looks at file names only; no island is read.
+        /// </remarks>
         /// <exception cref="SaveFormatException">The index and its backup are both unreadable.</exception>
         public static IslandWorld Open(IFileStore store, string root, ulong newWorldSeed, long nowUnixMs)
         {
@@ -108,14 +124,25 @@ namespace Island.Core.World
                     world.Index = WorldIndex.FromSection(result.Container.Find(WorldIndex.SectionId));
                     world.Opening = result.Outcome == LoadOutcome.Loaded ? WorldOpening.Loaded : WorldOpening.RecoveredFromBackup;
                     world.Detail = result.Detail;
+                    if (world.Opening == WorldOpening.RecoveredFromBackup) world.Reconcile(nowUnixMs);
                     break;
                 case LoadOutcome.NotFound:
                     world.Index = new WorldIndex(newWorldSeed);
                     world._indexContainer = new SaveContainer(nowUnixMs);
-                    if (world._files.Exists(world.SingleIslandPath))
+                    if (world._files.Exists(world.SingleIslandPath) && world.MigrateSingleIsland(nowUnixMs))
                     {
-                        world.MigrateSingleIsland(nowUnixMs);
                         world.Opening = WorldOpening.MigratedSingleIsland;
+                    }
+                    else if (world.IslandIdsOnDisk().Count > 0)
+                    {
+                        world.Reconcile(nowUnixMs);
+                        world.Opening = WorldOpening.Rebuilt;
+                        world.Detail = world.Detail ?? "The list of islands was missing, so it was made again from the islands found.";
+                    }
+                    else if (world.Opening == WorldOpening.Created && world.Detail != null)
+                    {
+                        // The single-island save could not be read and was set aside: start fresh.
+                        world.SaveIndex(nowUnixMs);
                     }
                     else
                     {
@@ -132,6 +159,9 @@ namespace Island.Core.World
         /// <summary>Makes a new island from a seed — the world's next one unless given — and lists it.</summary>
         public IslandEntry CreateIsland(string name, long nowUnixMs, ulong? seed = null)
         {
+            // An id whose file is still on disk is never issued, whatever the index says: issuing it
+            // would overwrite that island and then its backup.
+            while (_files.Exists(IslandPath(Index.NextIslandId))) Index.ReserveIdsThrough(Index.NextIslandId);
             var chosen = seed ?? Index.SeedFor(Index.NextIslandId);
             var island = IslandGenesis.Generate(chosen);
             var entry = Index.Add(name, chosen, island.Theme, nowUnixMs);
@@ -193,7 +223,7 @@ namespace Island.Core.World
             _store.Delete(path);
             _store.Delete(SaveFile.BackupPathFor(path));
             _store.Delete(SaveFile.TempPathFor(path));
-            if (!string.IsNullOrEmpty(entry.Thumbnail)) _store.Delete(Path.Combine(_root, entry.Thumbnail));
+            if (WorldIndex.IsSafeThumbnail(entry.Thumbnail)) _store.Delete(Path.Combine(_root, entry.Thumbnail));
             return true;
         }
 
@@ -210,11 +240,22 @@ namespace Island.Core.World
         /// Turns a single-island save into island 1 of a new world: its sections kept, a station
         /// surveyed onto its ground, the index written, and the old file renamed rather than deleted.
         /// </summary>
-        private void MigrateSingleIsland(long nowUnixMs)
+        /// <returns>
+        /// False when the old save cannot be read at all. It is then renamed with
+        /// <see cref="UnreadableSuffix"/> — kept, never deleted — and the world opens new, so one bad
+        /// file cannot stop the game from ever starting.
+        /// </returns>
+        private bool MigrateSingleIsland(long nowUnixMs)
         {
             var legacy = _files.Load(SingleIslandPath);
             if (!legacy.HasIsland)
-                throw new SaveFormatException("The island from before could not be read: " + legacy.Detail);
+            {
+                foreach (var old in new[] { SingleIslandPath, SaveFile.BackupPathFor(SingleIslandPath) })
+                    if (_store.Exists(old)) _store.Move(old, old + UnreadableSuffix, overwrite: true);
+                Opening = WorldOpening.Created;
+                Detail = "The island from before could not be read, so a new world was started. The old file was kept.";
+                return false;
+            }
 
             var terrain = new Heightfield();
             legacy.Container.ReadInto(new TerrainSaveSection(terrain));
@@ -233,6 +274,43 @@ namespace Island.Core.World
 
             foreach (var old in new[] { SingleIslandPath, SaveFile.BackupPathFor(SingleIslandPath) })
                 if (_store.Exists(old)) _store.Move(old, old + MigratedSuffix, overwrite: true);
+            return true;
+        }
+
+        /// <summary>Ids of every island with a file (or a backup) on disk. Names only; nothing is read.</summary>
+        private SortedSet<long> IslandIdsOnDisk()
+        {
+            var ids = new SortedSet<long>();
+            foreach (var path in _store.List(Path.Combine(_root, IslandsFolder), "island-*"))
+            {
+                var match = IslandFileName.Match(Path.GetFileName(path) ?? "");
+                if (match.Success && long.TryParse(match.Groups[1].Value, out var id) && id > 0) ids.Add(id);
+            }
+            return ids;
+        }
+
+        /// <summary>
+        /// Brings the index into line with the island files on disk after it was recovered or lost:
+        /// lost islands listed again, entries pointing at nothing dropped, used ids never reissued.
+        /// </summary>
+        private void Reconcile(long nowUnixMs)
+        {
+            var onDisk = IslandIdsOnDisk();
+            var changed = false;
+
+            foreach (var entry in new List<IslandEntry>(Index.Islands))
+                if (!onDisk.Contains(entry.Id)) { Index.Remove(entry.Id); changed = true; }
+
+            foreach (var id in onDisk)
+            {
+                Index.ReserveIdsThrough(id);
+                if (Index.Find(id) != null) continue;
+                var seed = Index.SeedFor(id);
+                Index.Adopt(id, $"Island {id}", seed, IslandGenesis.ThemeFor(seed), nowUnixMs);
+                changed = true;
+            }
+
+            if (changed || Opening != WorldOpening.Loaded) SaveIndex(nowUnixMs);
         }
     }
 }

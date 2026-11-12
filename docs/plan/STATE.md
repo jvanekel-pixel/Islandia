@@ -144,7 +144,7 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 
 | Fact | Value | Source |
 | :-- | :-- | :-- |
-| Local gate `make check` | 7 lint checks, 134 tooling tests, 343 core tests, 30 contract tests, 11 end-to-end — about 60 s | everything merged to 2026-11-12 |
+| Local gate `make check` | 7 lint checks, 134 tooling tests, 357 core tests, 30 contract tests, 11 end-to-end — about 60 s | everything merged to 2026-11-12 |
 | Unity EditMode tests in CI | **349** — the 312 `Island.Core` ones, 22 asserting ADR-03, 15 asserting the XR setup | F-04, F-05, F-07b |
 | Unity image for configure and tests | `ubuntu-6000.3.28f1-android-3` — OpenXR needs the Android module to write Android settings. Pulled and ran without disk trouble | F-05 |
 | .NET SDK in a cloud session | not present; installs to `~/.dotnet` in ~40 s | F-08 |
