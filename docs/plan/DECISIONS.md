@@ -1052,6 +1052,76 @@ about what they are called:
 
 Each has a test in `IslandWorldTests`.
 
+## 2026-11-12 — The coaster pieces come from the pack, and their frames are integers
+
+**Decided by:** the build session for `RC-01a`, inside ADR-25. **`RC-01` is split** (05-OPERATIONS.md
+§5): the measuring tool, the generator and the frame model alone came to about 1,100 hand-written
+lines before tests, so `RC-01a` ships the pieces and their frames, `RC-01b` the validation and `RC-01` keeps the save
+section and the undo commands.
+
+**What the pack is.** Kenney's Coaster Kit 1.0 (CC0), 183 models. 138 are track: six styles
+(steel, wood, mouse, hanging, monorail, flume) of the same 23 shapes. The styles share their
+centrelines exactly — the same ends, and every vertex of all six within 0.58–0.61 units of one
+centreline — so a style is a skin chosen per coaster, not a different set of pieces. The rest are
+seven cars (1.3 units long, 0.7 wide), twelve support parts, the station's platform, gate and
+fence, and park dressing.
+
+**How it was measured** (`tools/content/measure_coaster_kit.py`, re-runnable on the pack, never
+committing it). The rails' cross-section at the open end of the steel straight is a ring of 24
+vertices; every other model is searched for that ring at each quarter turn of heading and eighth
+turn of pitch and bank, and a match is an open end only when the track within a unit of it lies
+wholly to one side. The frame's point is **the underside of the spine, one unit below each
+model's origin**: it is the axis the lean pieces roll about, and with it every end of every piece
+lands on a half-unit grid. Between the ends the centreline is a line, a bump, a loop, or a cubic
+Bézier — Kenney's curves are Béziers whose handles run half the forward distance (a 45° end's
+handle is one unit), which the spine's vertices show: a quarter turn bulges 2.7% inside a circle.
+Each fit is checked rather than trusted: the facts record how far the furthest vertex of any style
+lies from it, and every shape comes out within 0.03 units of a straight's (the loop is the widest).
+
+**What it found.** The grid unit is the pack's unit, held in Core as 64 sub-units. A straight is
+4 long and the station's one-unit track tile 1; quarter turns have radius 2 or 4 and the climbing
+ones rise 1; the S-bend shifts 2 sideways over 4; hills rise 1 or ½ over 4, level to level; the
+steep pieces rise 1 over 4 into or out of 45°; bumps rise or dip ½; the loop is 4 tall and comes
+out one unit to the right of where it went in; the leans roll 45° or 90°; the vertical bends rise
+2 or 4 to vertical. Every heading change is a quarter turn and every pitch and bank an eighth.
+Facts are bound to the models by CRC-32 per style, as the catalogue binds facts to assets.
+
+**The set: 37 pieces** (`content/rides/coaster-track.yaml`), each a model as-is, reversed (ridden
+backwards: a right turn becomes a left, a climb a descent), mirrored, or both. A station; straight
+and short straight; tight and wide turns each way; climbing and falling turns in both sizes and
+hands; S-bends each way; hills and low hills up and down; steep climb and drop, start and end;
+bump and dip; a loop each way; a lean each way; and six lifts. **A lift is ours, not the pack's**
+— it has no chain — so it is a role on the climbing shapes (hill, low hill, steep climb, tight
+climbing turn). The pack has no brake; if `RC-02` needs one it is a role on a straight, a data
+change.
+
+**Left out,** because they do not belong with the rest: the vertical bends (they end pointing
+straight up and nothing in the pack continues from there but a loop's own top), the 90° leans
+(track on its side with no banked turn to use it), and the end caps and single sleeper, which are
+`RC-03`'s dressing, not track. Supports are not pieces: `RC-03` stacks the one-unit columns, feet,
+braces and cross-beams under the samples each piece lists as standing.
+
+**Integers, not floats.** A frame is a position in sub-units, a heading in quarter turns and a
+pitch and bank in eighths. A piece's exit is stored relative to its entry turned by heading only,
+as the models are built, and a piece fits only where the pitch and bank are the ones its entry
+expects — except a piece whose whole centreline lies on its roll axis (straights and leans), which
+fits at any bank and carries it. Composing is then a quarter-turn swap and an integer add: no
+rounding, nothing to drift, identical under CoreCLR, Mono and IL2CPP. General rotation
+composition was not an option: with 45° pitches and banks in the set, composing them freely
+escapes every exact representation (and builds twisted turns on slopes that nobody wants). A test composes
+the same 200-piece circuit as rigid transforms in doubles and agrees with the integer frames at
+every piece; the integer circuit closes with an error of exactly zero.
+
+**Scale: two metres to the unit,** a planning figure from the pack's proportions — a two-seat car
+1.4 m wide, a tight turn of 4 m radius, an 8 m loop. Track is stored in units, so `RC-03` can
+change it against the avatar without touching a saved coaster.
+
+**For comfort** (2026-11-11, "The player thinks VR is dumb"), each piece carries an intensity
+class from its geometry alone: wide turns, shallow hills and lifts are *gentle*; tight turns, 45°
+slopes, the S-bend and the airtime bumps *lively*; the loop and the leans *thrilling*. It is for
+the builder's palette and the gentle setting, which can offer only gentle pieces by default, until
+`RC-02` rates whole coasters from their forces. Nothing else was added for rides.
+
 ## Open questions for the owner
 
 - Does the "Remediation Plan" cited by the blueprint still exist? Five of its items are referenced

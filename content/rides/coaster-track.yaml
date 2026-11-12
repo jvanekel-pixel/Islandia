@@ -1,0 +1,74 @@
+# The coaster track pieces a player can build with (RC-01a, ADR-25).
+#
+# Every piece is one of the owner's Coaster Kit models, placed as it is, reversed (ridden from its
+# exit to its entry), mirrored (left for right), or both. What a model measures — the frame at
+# each end and the centreline between them — is in facts/rides/coaster-kit.json, written by
+# tools/content/measure_coaster_kit.py from the pack. This file only says which placements are
+# pieces, what they are called, and what they are for. DECISIONS.md, 2026-11-12, "The coaster
+# pieces come from the pack", says why the set is what it is and what was left out.
+#
+# id         permanent, like a catalogue id: a saved coaster stores CRC-32 of it. Renaming one is a
+#            migration, not an edit.
+# shape      a key of facts/rides/coaster-kit.json `shapes`
+# placed     as-is | reversed | mirrored | mirrored-reversed
+# role       track | station | lift (a lift piece carries the chain that pulls the train up)
+# intensity  gentle | lively | thrilling — a planning class from the geometry alone, for the
+#            builder's palette and the gentle setting, until RC-02 rates whole coasters from
+#            their forces. Gentle: wide turns and shallow hills. Lively: tight turns, 45°
+#            slopes, airtime bumps, the S-bend. Thrilling: the loop and the twists.
+#
+# `make content` writes Packages/com.island.core/Runtime/Rides/CoasterPieces.g.cs from this file
+# and the facts; CI fails if it is stale.
+
+pack: kenney-coaster-kit
+url: https://kenney.nl/assets/coaster-kit
+licence: CC0-1.0
+
+pieces:
+  - { id: coaster.station, name: Station, shape: straight, placed: as-is, role: station, intensity: gentle }
+
+  - { id: coaster.straight, name: Straight, shape: straight, placed: as-is, role: track, intensity: gentle }
+  - { id: coaster.straight.short, name: Short straight, shape: straight-short, placed: as-is, role: track, intensity: gentle }
+
+  - { id: coaster.turn.small.right, name: Tight turn right, shape: corner-small, placed: as-is, role: track, intensity: lively }
+  - { id: coaster.turn.small.left, name: Tight turn left, shape: corner-small, placed: reversed, role: track, intensity: lively }
+  - { id: coaster.turn.large.right, name: Wide turn right, shape: corner-large, placed: as-is, role: track, intensity: gentle }
+  - { id: coaster.turn.large.left, name: Wide turn left, shape: corner-large, placed: reversed, role: track, intensity: gentle }
+
+  - { id: coaster.helix.small.right.up, name: Tight climbing turn right, shape: corner-small-ramp, placed: as-is, role: track, intensity: lively }
+  - { id: coaster.helix.small.left.up, name: Tight climbing turn left, shape: corner-small-ramp, placed: mirrored, role: track, intensity: lively }
+  - { id: coaster.helix.small.left.down, name: Tight falling turn left, shape: corner-small-ramp, placed: reversed, role: track, intensity: lively }
+  - { id: coaster.helix.small.right.down, name: Tight falling turn right, shape: corner-small-ramp, placed: mirrored-reversed, role: track, intensity: lively }
+  - { id: coaster.helix.large.right.up, name: Wide climbing turn right, shape: corner-large-ramp, placed: as-is, role: track, intensity: gentle }
+  - { id: coaster.helix.large.left.up, name: Wide climbing turn left, shape: corner-large-ramp, placed: mirrored, role: track, intensity: gentle }
+  - { id: coaster.helix.large.left.down, name: Wide falling turn left, shape: corner-large-ramp, placed: reversed, role: track, intensity: gentle }
+  - { id: coaster.helix.large.right.down, name: Wide falling turn right, shape: corner-large-ramp, placed: mirrored-reversed, role: track, intensity: gentle }
+
+  - { id: coaster.shift.right, name: S-bend right, shape: curve, placed: as-is, role: track, intensity: lively }
+  - { id: coaster.shift.left, name: S-bend left, shape: curve, placed: mirrored, role: track, intensity: lively }
+
+  - { id: coaster.hill.up, name: Hill up, shape: hill, placed: as-is, role: track, intensity: gentle }
+  - { id: coaster.hill.down, name: Hill down, shape: hill, placed: reversed, role: track, intensity: gentle }
+  - { id: coaster.hill.half.up, name: Low hill up, shape: hill-half, placed: as-is, role: track, intensity: gentle }
+  - { id: coaster.hill.half.down, name: Low hill down, shape: hill-half, placed: reversed, role: track, intensity: gentle }
+
+  - { id: coaster.climb.start, name: Steep climb start, shape: hill-beginning, placed: as-is, role: track, intensity: lively }
+  - { id: coaster.climb.end, name: Steep climb end, shape: hill-end, placed: as-is, role: track, intensity: lively }
+  - { id: coaster.drop.start, name: Steep drop start, shape: hill-end, placed: reversed, role: track, intensity: lively }
+  - { id: coaster.drop.end, name: Steep drop end, shape: hill-beginning, placed: reversed, role: track, intensity: lively }
+
+  - { id: coaster.bump.up, name: Bump, shape: bump-up, placed: as-is, role: track, intensity: lively }
+  - { id: coaster.bump.down, name: Dip, shape: bump-down, placed: as-is, role: track, intensity: lively }
+
+  - { id: coaster.loop.right, name: Right loop, shape: looping, placed: as-is, role: track, intensity: thrilling }
+  - { id: coaster.loop.left, name: Left loop, shape: looping, placed: mirrored, role: track, intensity: thrilling }
+
+  - { id: coaster.twist.left, name: Lean left, shape: skew-left, placed: as-is, role: track, intensity: thrilling }
+  - { id: coaster.twist.right, name: Lean right, shape: skew-right, placed: as-is, role: track, intensity: thrilling }
+
+  - { id: coaster.lift.hill, name: Lift hill, shape: hill, placed: as-is, role: lift, intensity: gentle }
+  - { id: coaster.lift.hill.half, name: Low lift hill, shape: hill-half, placed: as-is, role: lift, intensity: gentle }
+  - { id: coaster.lift.climb.start, name: Steep lift start, shape: hill-beginning, placed: as-is, role: lift, intensity: gentle }
+  - { id: coaster.lift.climb.end, name: Steep lift end, shape: hill-end, placed: as-is, role: lift, intensity: gentle }
+  - { id: coaster.lift.helix.right, name: Climbing lift turn right, shape: corner-small-ramp, placed: as-is, role: lift, intensity: gentle }
+  - { id: coaster.lift.helix.left, name: Climbing lift turn left, shape: corner-small-ramp, placed: mirrored, role: lift, intensity: gentle }
