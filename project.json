@@ -14,7 +14,7 @@
   "routing": {
     "profile": "balanced",
     "planner": "opus",
-    "codeWriter": "sonnet",
+    "codeWriter": "opus",
     "subagentWorker": "haiku",
     "auditor": "argon",
     "localTracker": "ollama",
@@ -32,7 +32,7 @@
   "status": "active",
   "nextAction": "F-09: Release workflow, milestone report and human-gate templates",
   "blockedOnHuman": null,
-  "lastSessionAt": "2026-11-15T18:33:32Z",
+  "lastSessionAt": "2026-11-15T18:48:49Z",
   "health": {
     "tests": "passing",
     "build": "passing",
