@@ -56,3 +56,14 @@ tools/mock-streambox/.media/
 
 # Worktrees made by Claude Code subagents; never part of the project
 .claude/worktrees/
+
+# Command Center ("iammachine") project standard
+build/
+.env.local
+!.env.example
+.data/
+.mcp.json
+*.db
+*.log
+_logs/*.log
+!_logs/.gitkeep
