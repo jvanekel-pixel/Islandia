@@ -58,4 +58,6 @@ three-attempt stop-the-line rule. Nothing checks the mirror automatically yet (`
 | Merging | Finished work is labelled `awaiting-merge` and landed by the auto-merge workflow; sessions never self-merge | Log 2026-11-10 |
 | Distribution | Signed APK installed over USB with `adb`; package id `dev.islandia.app` is final | ADR-20, ADR-22 |
 | Privacy | No accounts, analytics or telemetry; a privacy lint runs on every change | ADR-21 |
+| Models | Opus plans and writes the code; Haiku for sub-agent work (`routing` in `project.json`) | Owner, 2026-11-11 and 2026-11-15 |
+| `.env.example` | Names and empty placeholders only; the project reads no `.env` file. Sessions cannot read or write `.env*` files, so it is changed through the GitHub API or by the owner | Owner, 2026-11-15 |
 | Lifecycle | Risk-first stage-gate (M0 to M14) with continuous flow and a work-in-progress limit of one | `03-ROADMAP.md` §1 |

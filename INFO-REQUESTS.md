@@ -7,8 +7,6 @@ owner's full list of gates is in `00-START-HERE.md`.
 ## Open now (none blocks the next work package)
 
 - [ ] Switch the scheduled driver back on when ready — it is off by the owner's choice (2026-11-15). Put it on the `islandia` cloud environment, not Default (closes `F-10`)
-- [ ] Decide the code-writer model: `project.json` routing says Sonnet; the driver was set to Opus on 2026-11-11
-- [ ] Create `.env.example` by hand, or narrow the `.env*` rule in `.claude/settings.json`: that rule stops a session writing or reading the file. The six secret names it would list are under "Already supplied" below
 - [ ] Generate `.mcp.json` from Command Center's Setup tab on the local machine (git-ignored; cloud sessions cannot reach the server)
 - [ ] A rigged cat model in a later asset wave — no pack in wave 1 has one (`CAT-01`)
 - [ ] Does the "Remediation Plan" the blueprint cites still exist? If so, add it to `docs/blueprint/`
@@ -32,3 +30,5 @@ owner's full list of gates is in `00-START-HERE.md`.
 - [x] Decision: Unity credentials stay out of the cloud environment; Unity runs in CI only (2026-11-12)
 - [x] Decision: the Command Center onboarding is merged (pull request 46, 2026-11-15)
 - [x] Decision: pull request 42 (`RC-01b`) is brought up to date and landed (2026-11-15)
+- [x] Decision: Opus plans and writes the code; `project.json` routing now says so (2026-11-15)
+- [x] `.env.example` added through the GitHub API with the owner's say-so, names and empty placeholders only (2026-11-15)

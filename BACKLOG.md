@@ -10,7 +10,6 @@ line means adding a work package there, with acceptance criteria.
 - [ ] Add a lint that fails when `HANDOFF.md` exceeds 25 non-empty lines or `project.json` is not valid against schema version 1
 - [ ] Add a `make quiet-check` target that writes to `_logs/check.log` and prints at most 30 lines
 - [ ] Name `AGENTS.md` beside `CLAUDE.md` in `README.md`, `make help` and the three prompts in `docs/plan/prompts/`
-- [ ] Narrow the `.env*` read-deny rule in `.claude/settings.json` so `.env.example` is readable (owner-only change)
 - [ ] Teach the driver loop in `05-OPERATIONS.md` the session stop contract, so the two trails are written in one step
 
 ## Tech debt noticed during the audit
