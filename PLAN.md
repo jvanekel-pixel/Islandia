@@ -83,7 +83,7 @@ Why it matters: Arriving by train and making new islands is half the heart of th
 Why it matters: Building and riding coasters is the other half of the heart of the gift and carries the biggest comfort risk.
 > Verify: `make check` | Done when: `M5-RETRO` is merged: a coaster is built and ridden in simulation, and the HG-R ride-comfort issue is open.
 - [x] RC-01a: Coaster track pieces and frames in Core — derived from the pack, composed exactly
-- [ ] RC-01b: Coaster validation in Core — closed, one station, lift, clearance, supports, reservation
+- [x] RC-01b: Coaster validation in Core — closed, one station, lift, clearance, supports, reservation
 - [ ] RC-01: Coasters saved and edited with undo
 - [ ] RC-02: Ride physics in Core — speed, forces and intensity
 - [ ] RC-03: Track, supports and cars in Unity
