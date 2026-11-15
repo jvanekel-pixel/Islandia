@@ -6,10 +6,10 @@
 | :-- | :-- |
 | **Stage** | 2 — Construction |
 | **Current milestone** | M1 Factory online · engine-free work ahead of it on M2, M4, M5 and M10 |
-| **In flight** | `RC-01b` (coaster validation, per piece) |
+| **In flight** | Nothing |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
-| **Driver** | **Running** on a schedule, a new session each run. Its first run (2026-11-11) was **not** on the `islandia` environment: no .NET, no setup script, unrestricted network. Point the routine at that environment at <https://claude.ai/code/routines> |
-| **Last updated** | 2026-11-12 — `RC-01b` done: coaster validation per piece — closed, one station, lift, clearance, supports, reservation |
+| **Driver** | **Off for now** (owner, 2026-11-15): sessions are started by hand. No scheduled task was listed on the account that day. When it is switched back on it belongs on the `islandia` environment, not Default — its first run (2026-11-11) was on an unrestricted one with no .NET and no setup script. Routines are at <https://claude.ai/code/routines> |
+| **Last updated** | 2026-11-15 — `RC-01b` landed: coaster validation per piece — closed, one station, lift, clearance, supports, reservation. The Command Center files were added the same day (PR #46) |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## The plan changed on 2026-11-11
@@ -31,7 +31,8 @@ finished M14. Older documents and log entries use the old numbers.
 
 ## With the owner now
 
-Nothing — the owner's setup list is complete.
+Nothing that blocks a package — the owner's setup list is complete. The scheduled driver is off
+by the owner's choice (2026-11-15); the open asks are listed in the root `INFO-REQUESTS.md`.
 
 ## Settled with the owner on 2026-11-11
 
@@ -86,13 +87,13 @@ link `kenney.nl/assets/mini-forest` but no archive for it was uploaded.
 ## Next up
 
 Take the first `todo` package in `BACKLOG.yaml` whose dependencies are `done` — `make next` prints
-them. As of this writing: **`F-06`** (assemblies, composition root, boot scene — the next M1 step), **`C-02b`** (the Blender
+them. As of this writing: **`F-09`** (release workflow and gate templates) — the last M1 step before the M1 report and HG-1 — then **`C-02b`** (the Blender
 normalisation pipeline), **`V-07b`**, and the engine-free starts of the new features — **`RC-01`** (coasters saved, with undo), **`RC-02`** (ride physics), **`PNT-01`** (paint segmentation) — plus
 `I-04` and `I-05`. Prefer the current milestone; take an engine-free package when it is waiting
 on CI.
 
-**26 of 137 live packages are done** (7 more were cut on 2026-11-11; `RC-01` was split in three on 2026-11-12). `F-01`–`F-05`,
-`F-07a`–`F-07c`, `F-08`, `F-13`, `V-02`, `V-06`, `V-07a`, `V-08`, `SB-01a`–`SB-01d`, `C-01a`,
+**29 of 138 live packages are done** (7 more were cut on 2026-11-11; `RC-01` was split in three on 2026-11-12). `F-01`–`F-06`,
+`F-07`, `F-07a`–`F-07c`, `F-14`, `F-08`, `F-13`, `V-02`, `V-06`, `V-07a`, `V-08`, `SB-01a`–`SB-01d`, `C-01a`,
 `C-01b`, `C-02a`, `I-01`, `TR-01a`, `TR-01`, `RC-01a`, `RC-01b`.
 
 ### What exists now
@@ -100,8 +101,8 @@ on CI.
 - **The Unity project**, generated and committed by its own workflow: editor `6000.3.28f1`, 67
   packages locked, a second import that changes nothing, and every ADR-03 rendering decision set in
   code and asserted from the committed assets (`F-04`).
-- **Five CI workflows.** `checks` (L0/L1, every push), `content` (Blender, path-filtered),
-  `unity-tests` (EditMode and PlayMode), `unity-package-sources` and `unity-configure` (both
+- **Six CI workflows.** `checks` (L0/L1, every push), `content` (Blender, path-filtered),
+  `unity-tests` (EditMode and PlayMode), `android-build` (the APK, on merge to main and by hand), `unity-package-sources` and `unity-configure` (both
   generate; both commit only on dispatch). `auto-merge` lands anything labelled `awaiting-merge`
   once its checks pass.
 - **StreamBox reachable end to end** from `Island.Core`: pairing, browsing, playing, progress, music
@@ -110,7 +111,7 @@ on CI.
   count, and a pinned headless Blender proven to script, measure, export GLB and render a thumbnail
   with no GPU.
 
-### Four things a new session should know
+### Five things a new session should know
 
 1. **Label last.** `awaiting-merge` means *land this now*; do not push to a branch after labelling
    its pull request. Auto-merge has squashed a PR mid-push and stranded the rest.
@@ -119,6 +120,16 @@ on CI.
 3. **A workflow's own commit triggers nothing.** After dispatching `unity-configure` or
    `unity-create-project`, dispatch `unity-tests` by hand — pushes made with `GITHUB_TOKEN` do not
    start workflow runs.
+4. **The Unity workflows share one queue slot.** They all use the `unity-licence` concurrency
+   group, which keeps one run going and *one* waiting; a newer waiting run cancels the older. A
+   push to a pull request's branch queues `unity-tests` twice (push and pull_request), which can
+   cancel a queued `unity-configure`. When a package needs generated assets, cancel the doomed
+   test runs, dispatch `unity-configure`, then dispatch `unity-tests` (F-06 did this).
+   `unity-configure`'s dispatch also *settles* (F-07): it runs the tests and one Android build and
+   commits what packages wrote, because `unity-tests` and `android-build` fail on any change.
+5. **Merges by auto-merge start no `push` workflow.** It merges with `GITHUB_TOKEN`. It dispatches
+   `android-build` on `main` itself (F-14); anything else that must run after a merge has to be
+   dispatched the same way.
 
 ### Open, not blocking
 
@@ -130,7 +141,11 @@ on CI.
 
 ## Recently merged
 
+- The Command Center files — `AGENTS.md`, `PLAN.md`, `project.json`, `HANDOFF.md` and the rest — as a view of this plan, never a second one (2026-11-15, PR #46)
 - `RC-01b` coaster validation: each problem named on the piece it is on, in integers; ground read from the heightfield exactly (2026-11-12)
+- `F-14` the package id `dev.islandia.app` and the name *Islandia*, set in code and read back from the built APK; auto-merge dispatches the main APK build, which a token-made merge never started (2026-11-12)
+- `F-07` the APK built headlessly in CI and kept as an artefact; Library cached; any editor run that leaves the project changed fails; `unity-configure` settles what packages write (2026-11-12)
+- `F-06` the boot scene and composition root: `Island.Runtime` and `Island.XR`, ADR-07 checked by lint, a generated scene that a rerun leaves alone, and the first PlayMode tests booting it in simulation (2026-11-12)
 - `RC-01a` coaster pieces from the owner's pack: 37 pieces, frames in integer sub-units, a 200-piece circuit that closes exactly (2026-11-12)
 - `TR-01` the world of islands: an index that never loads islands, one save file each, deletion, and migration of an old single-island save (2026-11-12)
 - `TR-01a` an island from its seed: terrain, station on the shore, reserved ground (2026-11-12, PR #39)
@@ -151,9 +166,10 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 
 | Fact | Value | Source |
 | :-- | :-- | :-- |
-| Local gate `make check` | 7 lint checks, 143 tooling tests, 395 core tests, 30 contract tests, 11 end-to-end — about 60 s | everything merged to 2026-11-12 |
+| Local gate `make check` | 7 lint checks, 159 tooling tests, 404 core tests, 30 contract tests, 11 end-to-end — about 45 s | everything merged to 2026-11-15 |
 | Coaster pack geometry | grid unit = pack unit (64 sub-units, planned at 2 m); straight 4, turns radius 2 and 4, loop 4 tall; all six styles within 0.58–0.61 units of one centreline | `RC-01a`, `content/facts/rides/coaster-kit.json` |
-| Unity EditMode tests in CI | **349** — the 312 `Island.Core` ones, 22 asserting ADR-03, 15 asserting the XR setup | F-04, F-05, F-07b |
+| Unity EditMode tests in CI | **406** — `Island.Core`, ADR-03, the XR setup, the boot scene and the XR platform | F-06 |
+| Unity PlayMode tests in CI | **11** — the boot scene in simulation on scripted input and clock, and the simulation parts; ~0.5 s | F-06 |
 | Unity image for configure and tests | `ubuntu-6000.3.28f1-android-3` — OpenXR needs the Android module to write Android settings. Pulled and ran without disk trouble | F-05 |
 | .NET SDK in a cloud session | not present; installs to `~/.dotnet` in ~40 s | F-08 |
 | Unity editor pinned | `6000.3.28f1` — the newest 6000.3 tag with an Android module | F-02 |
@@ -163,8 +179,7 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 | Terrain on disk | ~129 KB before packing; whole island well under 400 KB | V-06 |
 | GitHub REST from a session | runs, check-runs, status, pulls, issues all readable; `actions/secrets` blocked | F-01 |
 | Driver self-merge | **Refused** by the permission classifier unless `.claude/settings.json` allows it. See `05-OPERATIONS.md` §7 step 4 | F-01 |
-| Unity editor version pinned | — | F-03 |
-| CI: warm test run / Android build | — | S-05 |
+| CI: warm test run / Android build | tests ~6 min end to end cold (EditMode 3.4, PlayMode 0.6); Android build step 17 min cold, job ~23 min (IL2CPP, ARM64); APK 39.7 MB debug-signed | F-06, F-07 |
 | Runner minutes per Unity package | — | S-05 |
 | Device strings and tier | — | HG-1 |
 | Frame time, empty island | — | HG-1 |

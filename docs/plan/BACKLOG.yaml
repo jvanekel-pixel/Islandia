@@ -151,10 +151,10 @@ packages:
   refs: [adr ADR-06, adr ADR-07]
   accept:
     - "asmdefs exist for Core, Runtime, XR, Editor and their test assemblies with the ADR-07 reference rules enforced by an L0 check [L0]"
-    - "`BootSceneBuilder.Build` generates Assets/Island/Scenes/Boot.unity with XR rig and CompositionRoot; rerun is a no-op [L2]"
+    - "`BootSceneBuilder.Build` generates Assets/Island/Generated/Scenes/Boot.unity with XR rig and CompositionRoot; rerun is a no-op [L2]"
     - "BootTests: boot scene loads in simulation mode with scripted IInputSource and IClock, log is clean [L3]"
     - "Decision recorded: which generated asset types are committed versus rebuilt in CI [L0]"
-  status: todo
+  status: done
 
 - id: F-07a
   title: Run the non-Unity checks in CI on every push
@@ -180,7 +180,22 @@ packages:
     - "CI fails if import leaves uncommitted .meta or settings changes [L2]"
     - "After the Android build, the committed Assets/XR and ProjectSettings/EditorBuildSettings.asset are unchanged — the same check unity-tests runs since F-05 (ADR-06: batchmode builds have reset XR settings) [L4]"
     - "The APK from main is downloadable as an artefact — unless the build holds a private-use pack, when it goes to a draft release instead (ADR-11) [L4]"
-  status: todo
+  status: done
+
+- id: F-14
+  title: The app's identity in code — package id and name under the icon
+  ms: M1
+  risk: low
+  deps: [F-04]
+  refs: [adr ADR-22]
+  accept:
+    - "ProjectConfigurator sets the Android package id to dev.islandia.app and the product name to Islandia; EditMode tests assert both from the committed ProjectSettings [L2]"
+    - "The android-build APK's manifest carries dev.islandia.app, checked in CI with aapt from the image's Android SDK [L4]"
+  status: done
+  note: >-
+    Found by F-07: ProjectSettings still has applicationIdentifier {}, so the first APK installs
+    under Unity's default id. Any island saved under that id would be left behind by the first
+    correctly-identified build, so this lands before HG-1 puts a build on the headset.
 
 - id: F-09
   title: Release workflow, milestone report and human-gate templates
@@ -672,6 +687,10 @@ packages:
     - "Seated mode and height reset exist in settings and are saved [L3]"
     - "Comfortable for ten minutes of continuous use [L7]"
   status: todo
+  note: >-
+    The project's active input handler is still the legacy Input Manager (F-06 found
+    activeInputHandler 0). XR Interaction Toolkit needs the Input System, so this package switches
+    it in ProjectConfigurator and adds XROrigin to the rig in BootSceneBuilder.
 
 - id: W-03
   title: Water, ponds and submerged rules

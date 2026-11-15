@@ -236,6 +236,141 @@ class LayeringCheckTests(unittest.TestCase):
             probe.unlink()
 
 
+class AssemblyRulesTests(unittest.TestCase):
+    """ADR-07's reference table, enforced over the assembly definitions (F-06)."""
+
+    def setUp(self) -> None:
+        import check_layering
+        self.layering = check_layering
+        self._dir = tempfile.TemporaryDirectory()
+        self.repo = Path(self._dir.name)
+        # A copy of the real assembly definitions, which pass, for each test to break one way.
+        for rule in check_layering.ASSEMBLIES.values():
+            source = REPO / rule["path"]
+            target = self.repo / rule["path"]
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+
+    def tearDown(self) -> None:
+        self._dir.cleanup()
+
+    def _edit(self, name: str, change) -> None:
+        import json
+        path = self.repo / self.layering.ASSEMBLIES[name]["path"]
+        data = json.loads(path.read_text(encoding="utf-8"))
+        change(data)
+        path.write_text(json.dumps(data), encoding="utf-8")
+
+    def _problems(self) -> list[str]:
+        return self.layering.check_assemblies(self.repo)[0]
+
+    def test_the_real_definitions_pass(self):
+        self.assertEqual(self._problems(), [])
+
+    def test_runtime_may_not_reference_xr(self):
+        self._edit("Island.Runtime", lambda d: d["references"].append("Island.XR"))
+        self.assertTrue(any("references Island.XR" in p for p in self._problems()))
+
+    def test_runtime_may_not_reference_an_xr_package(self):
+        self._edit("Island.Runtime", lambda d: d["references"].append("Unity.XR.Management"))
+        self.assertTrue(any("Unity.XR.Management" in p for p in self._problems()))
+
+    def test_xr_may_not_reference_the_editor(self):
+        self._edit("Island.XR", lambda d: d["references"].append("Island.Editor"))
+        self.assertTrue(any("Island.Editor" in p for p in self._problems()))
+
+    def test_core_may_not_reference_anything(self):
+        self._edit("Island.Core", lambda d: d.__setitem__("references", ["Island.Runtime"]))
+        self.assertTrue(any("Island.Core" in p for p in self._problems()))
+
+    def test_a_test_assembly_must_reference_its_subject(self):
+        self._edit("Island.Runtime.Tests", lambda d: d["references"].remove("Island.Runtime"))
+        self.assertTrue(any("the assembly it tests" in p for p in self._problems()))
+
+    def test_a_runtime_test_may_not_reach_into_xr(self):
+        self._edit("Island.Runtime.Tests", lambda d: d["references"].append("Island.XR"))
+        self.assertTrue(any("Island.XR" in p for p in self._problems()))
+
+    def test_the_editor_assembly_must_be_editor_only(self):
+        self._edit("Island.Editor", lambda d: d.__setitem__("includePlatforms", []))
+        self.assertTrue(any("editor-only" in p for p in self._problems()))
+
+    def test_a_missing_assembly_is_reported(self):
+        (self.repo / self.layering.ASSEMBLIES["Island.XR"]["path"]).unlink()
+        self.assertTrue(any("ADR-07 requires Island.XR" in p for p in self._problems()))
+
+    def test_an_assembly_the_table_does_not_name_is_reported(self):
+        stray = self.repo / "Assets" / "Island" / "Stray" / "Island.Stray.asmdef"
+        stray.parent.mkdir(parents=True)
+        stray.write_text('{"name": "Island.Stray", "references": []}', encoding="utf-8")
+        self.assertTrue(any("not an assembly ADR-07 names" in p for p in self._problems()))
+
+    def test_runtime_sources_may_not_use_xr_types(self):
+        for text in ("using UnityEngine.XR;\n", "class A { UnityEngine.XR.InputDevice d; }\n",
+                     "using UnityEditor;\n", "using UnityEngine.InputSystem;\n"):
+            with self.subTest(text=text):
+                probe = self.repo / "Assets" / "Island" / "Runtime" / "Probe.cs"
+                probe.write_text(text, encoding="utf-8")
+                self.assertTrue(any("Probe.cs" in p for p in self._problems()), text)
+
+    def test_runtime_sources_may_use_the_engine(self):
+        probe = self.repo / "Assets" / "Island" / "Runtime" / "Probe.cs"
+        probe.write_text("using UnityEngine;\nclass A { UnityEngine.Pose p; }\n", encoding="utf-8")
+        self.assertEqual(self._problems(), [])
+
+
+class AssertUnchangedTests(unittest.TestCase):
+    """tools/unity/assert_unchanged.sh: an editor run may leave nothing changed or new (F-07)."""
+
+    SCRIPT = REPO / "tools" / "unity" / "assert_unchanged.sh"
+
+    def setUp(self) -> None:
+        self._dir = tempfile.TemporaryDirectory()
+        self.repo = Path(self._dir.name)
+        git = ["git", "-C", str(self.repo)]
+        subprocess.run([*git, "init", "-q"], check=True)
+        for name in ("Assets/a.cs", "Assets/a.cs.meta", "ProjectSettings/ProjectSettings.asset",
+                     "Packages/packages-lock.json"):
+            path = self.repo / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("committed\n", encoding="utf-8")
+        (self.repo / ".gitignore").write_text("/Library/\n/Builds/\n", encoding="utf-8")
+        subprocess.run([*git, "add", "-A"], check=True)
+        subprocess.run([*git, "-c", "user.name=t", "-c", "user.email=t@example.invalid",
+                        "commit", "-q", "-m", "base"], check=True)
+
+    def tearDown(self) -> None:
+        self._dir.cleanup()
+
+    def _run(self) -> subprocess.CompletedProcess:
+        return subprocess.run(["bash", str(self.SCRIPT), "the test"], cwd=self.repo,
+                              capture_output=True, text=True)
+
+    def test_a_clean_tree_passes(self):
+        (self.repo / "Library").mkdir()
+        (self.repo / "Library" / "junk").write_text("x", encoding="utf-8")
+        (self.repo / "Builds").mkdir()
+        (self.repo / "Builds" / "Islandia.apk").write_text("x", encoding="utf-8")
+        result = self._run()
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_a_changed_setting_fails(self):
+        (self.repo / "ProjectSettings" / "ProjectSettings.asset").write_text("rewritten\n", encoding="utf-8")
+        result = self._run()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("ProjectSettings/ProjectSettings.asset", result.stdout)
+
+    def test_a_new_meta_fails(self):
+        (self.repo / "Assets" / "Generated.meta").write_text("guid: x\n", encoding="utf-8")
+        result = self._run()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Assets/Generated.meta", result.stdout)
+
+    def test_a_rewritten_lock_file_fails(self):
+        (self.repo / "Packages" / "packages-lock.json").write_text("{}\n", encoding="utf-8")
+        self.assertEqual(self._run().returncode, 1)
+
+
 class ScriptsRunCleanTests(unittest.TestCase):
     """Each check passes on the repository as it stands right now."""
 

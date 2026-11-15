@@ -203,6 +203,23 @@ namespace Island.Editor.Tests
             Assert.That(PlayerSettings.colorSpace, Is.EqualTo(ColorSpace.Linear));
 
         [Test]
+        public void TheAppIsDevIslandiaAppNamedIslandia()
+        {
+            Assert.That(PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android),
+                Is.EqualTo("dev.islandia.app"), "ADR-22: the package id is final and must never change");
+            Assert.That(PlayerSettings.productName, Is.EqualTo("Islandia"));
+        }
+
+        [Test]
+        public void TheIdentityIsInTheCommittedSettingsFile()
+        {
+            // The same, read from the file a fresh checkout builds from, not the editor's memory.
+            var text = File.ReadAllText("ProjectSettings/ProjectSettings.asset");
+            StringAssert.Contains("productName: Islandia\n", text);
+            StringAssert.Contains("Android: dev.islandia.app\n", text);
+        }
+
+        [Test]
         public void TheScriptingBackendIsIl2cppOnArm64()
         {
             Assert.That(PlayerSettings.GetScriptingBackend(NamedBuildTarget.Android),

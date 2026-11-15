@@ -4,7 +4,10 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Island/Generated/Scenes/Boot.unity
+    guid: f11c209b7f81f345d83a76d82a076b87
   m_configObjects:
     com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 9e2bfc1b7635ce0a2bd7752660e711b4, type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: e91779da5837e38d0b559c958151b328, type: 2}

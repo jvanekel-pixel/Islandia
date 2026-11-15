@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "slug": "islandia",
+  "name": "Islandia",
+  "archetype": "custom",
+  "audience": "personal",
+  "tier": "subscription",
+  "containsPII": false,
+  "parent": null,
+  "platforms": ["GitHub", "GitHub Actions", "Unity", "Meta Quest 2 (Android)", "Claude Code cloud"],
+  "builders": {
+    "codeWriter": "claude"
+  },
+  "routing": {
+    "profile": "balanced",
+    "planner": "opus",
+    "codeWriter": "sonnet",
+    "subagentWorker": "haiku",
+    "auditor": "argon",
+    "localTracker": "ollama",
+    "appRuntime": "hydrogen",
+    "diffOnly": true,
+    "quietTests": true,
+    "maxOutputLines": 30,
+    "autoHandoff": true
+  },
+  "budget": {
+    "monthlyCapUsd": 0,
+    "spentThisMonthUsd": 0
+  },
+  "phase": 1,
+  "status": "active",
+  "nextAction": "F-09: Release workflow, milestone report and human-gate templates",
+  "blockedOnHuman": null,
+  "lastSessionAt": "2026-11-15T18:33:32Z",
+  "health": {
+    "tests": "passing",
+    "build": "passing",
+    "lastAuditedPhase": 0
+  },
+  "deploy": {
+    "target": "local",
+    "url": null
+  }
+}
