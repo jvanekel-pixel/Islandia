@@ -9,7 +9,7 @@
 | **In flight** | Nothing |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
 | **Driver** | **Off for now** (owner, 2026-11-15): sessions are started by hand. No scheduled task was listed on the account that day. When it is switched back on it belongs on the `islandia` environment, not Default — its first run (2026-11-11) was on an unrestricted one with no .NET and no setup script. Routines are at <https://claude.ai/code/routines> |
-| **Last updated** | 2026-11-15 — `RC-01b` landed: coaster validation per piece — closed, one station, lift, clearance, supports, reservation. The Command Center files were added the same day (PR #46) |
+| **Last updated** | 2026-11-24 — `F-09`: milestone releases from `releases/M<n>.yaml`, rehearsed for real on its pull request; issue templates for every gate, `blocked` and `infra` |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
 
 ## The plan changed on 2026-11-11
@@ -87,24 +87,24 @@ link `kenney.nl/assets/mini-forest` but no archive for it was uploaded.
 ## Next up
 
 Take the first `todo` package in `BACKLOG.yaml` whose dependencies are `done` — `make next` prints
-them. As of this writing: **`F-09`** (release workflow and gate templates) — the last M1 step before the M1 report and HG-1 — then **`C-02b`** (the Blender
+them. As of this writing: the M1 spikes **`S-01`**–**`S-05`** and `F-11` stand between M1 and its report (`M1-RETRO`), then **`C-02b`** (the Blender
 normalisation pipeline), **`V-07b`**, and the engine-free starts of the new features — **`RC-01`** (coasters saved, with undo), **`RC-02`** (ride physics), **`PNT-01`** (paint segmentation) — plus
 `I-04` and `I-05`. Prefer the current milestone; take an engine-free package when it is waiting
 on CI.
 
-**29 of 138 live packages are done** (7 more were cut on 2026-11-11; `RC-01` was split in three on 2026-11-12). `F-01`–`F-06`,
+**30 of 138 live packages are done** (7 more were cut on 2026-11-11; `RC-01` was split in three on 2026-11-12). `F-01`–`F-06`,
 `F-07`, `F-07a`–`F-07c`, `F-14`, `F-08`, `F-13`, `V-02`, `V-06`, `V-07a`, `V-08`, `SB-01a`–`SB-01d`, `C-01a`,
-`C-01b`, `C-02a`, `I-01`, `TR-01a`, `TR-01`, `RC-01a`, `RC-01b`.
+`C-01b`, `C-02a`, `I-01`, `TR-01a`, `TR-01`, `RC-01a`, `RC-01b`, `F-09`.
 
 ### What exists now
 
 - **The Unity project**, generated and committed by its own workflow: editor `6000.3.28f1`, 67
   packages locked, a second import that changes nothing, and every ADR-03 rendering decision set in
   code and asserted from the committed assets (`F-04`).
-- **Six CI workflows.** `checks` (L0/L1, every push), `content` (Blender, path-filtered),
+- **CI workflows.** `checks` (L0/L1, every push), `content` (Blender, path-filtered),
   `unity-tests` (EditMode and PlayMode), `android-build` (the APK, on merge to main and by hand), `unity-package-sources` and `unity-configure` (both
   generate; both commit only on dispatch). `auto-merge` lands anything labelled `awaiting-merge`
-  once its checks pass.
+  once its checks pass, and dispatches `release` when a merge touched `releases/` (F-09).
 - **StreamBox reachable end to end** from `Island.Core`: pairing, browsing, playing, progress, music
   and remote control, all proven against the mock gateway in CI.
 - **The content pipeline**, less its input: catalogue, schema, validator, licence ledger, honest
@@ -141,6 +141,7 @@ on CI.
 
 ## Recently merged
 
+- `F-09` milestone releases: `releases/M<n>.yaml` → tag and GitHub Release with the APK and report, dispatched by auto-merge; a rehearsal on any pull request that changes it; issue templates for HG-1, HG-R, HG-2, HG-3, HG-4, `blocked`, `infra` (2026-11-24)
 - The Command Center files — `AGENTS.md`, `PLAN.md`, `project.json`, `HANDOFF.md` and the rest — as a view of this plan, never a second one (2026-11-15, PR #46)
 - `RC-01b` coaster validation: each problem named on the piece it is on, in integers; ground read from the heightfield exactly (2026-11-12)
 - `F-14` the package id `dev.islandia.app` and the name *Islandia*, set in code and read back from the built APK; auto-merge dispatches the main APK build, which a token-made merge never started (2026-11-12)
@@ -166,7 +167,7 @@ Filled in as they are measured; planning numbers elsewhere are hypotheses until 
 
 | Fact | Value | Source |
 | :-- | :-- | :-- |
-| Local gate `make check` | 7 lint checks, 159 tooling tests, 404 core tests, 30 contract tests, 11 end-to-end — about 45 s | everything merged to 2026-11-15 |
+| Local gate `make check` | 8 lint checks, 183 tooling tests, 404 core tests, 30 contract tests, 11 end-to-end — about 45 s | everything merged to 2026-11-24 |
 | Coaster pack geometry | grid unit = pack unit (64 sub-units, planned at 2 m); straight 4, turns radius 2 and 4, loop 4 tall; all six styles within 0.58–0.61 units of one centreline | `RC-01a`, `content/facts/rides/coaster-kit.json` |
 | Unity EditMode tests in CI | **406** — `Island.Core`, ADR-03, the XR setup, the boot scene and the XR platform | F-06 |
 | Unity PlayMode tests in CI | **11** — the boot scene in simulation on scripted input and clock, and the simulation parts; ~0.5 s | F-06 |

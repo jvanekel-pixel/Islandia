@@ -18,7 +18,7 @@ Why it matters: Proves Unity can be driven headlessly and CI can build an APK, s
 - [x] F-07a: Run the non-Unity checks in CI on every push
 - [x] F-07: The rest of the Unity CI pipeline — caching, path filters, package-source artefact
 - [x] F-14: The app's identity in code — package id and name under the icon
-- [ ] F-09: Release workflow, milestone report and human-gate templates
+- [x] F-09: Release workflow, milestone report and human-gate templates
 - [ ] F-10: Cloud environment for this repository (needs-human)
 - [x] F-13: Auto-merge finished work
 - [ ] F-11: Driver scheduled task and end-to-end loop rehearsal

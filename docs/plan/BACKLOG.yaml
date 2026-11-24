@@ -206,7 +206,14 @@ packages:
   accept:
     - "Adding releases/M<n>.yaml on main creates a tag and a GitHub Release (a draft, visible only to the owner, whenever the build holds a private-use pack — ADR-11) with the APK and docs/reports/M<n>-*.md attached [L4]"
     - "Issue templates exist for HG-1, HG-R, HG-2, HG-3, HG-4, blocked and infra (HG-R is the ride comfort check, HG-2 the StreamBox in-world check) [L0]"
-  status: todo
+  note: >-
+    2026-11-24. `release` workflow, `tools/release/plan.py`, templates in
+    .github/ISSUE_TEMPLATE, `make lint-release`. L4 proven by the rehearsal on this
+    package's pull request: a real tag and published release with the APK and a
+    report, read back and deleted. The draft branch is planned and tested at L0;
+    with a private-use pack admitted, android-build still refuses the artefact
+    until C-02d. Auto-merge dispatches `release` after merging a change to releases/.
+  status: done
 
 - id: F-10
   title: Cloud environment for this repository

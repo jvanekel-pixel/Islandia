@@ -152,8 +152,11 @@ When the last package of a milestone merges:
    known defects, and what changed in the plan.
 2. Run the milestone retro package (`*-RETRO`): update `06-RISKS.md`, re-order the backlog, and
    delete or rewrite anything in the plan the milestone proved wrong.
-3. Cut the release by adding `releases/M<n>.yaml` in that PR. The `release` workflow tags the
-   commit and publishes a GitHub Release with the APK and the report. (Sessions cannot push tags.)
+3. Cut the release by adding `releases/M<n>.yaml` in that PR (format in `releases/README.md`).
+   Auto-merge dispatches the `release` workflow after merging it, which tags the commit and
+   publishes a GitHub Release with the APK and the report — a draft whenever a private-use pack is
+   admitted (ADR-11). (Sessions cannot push tags.) The APK is main's latest build of an identical
+   project, or built in that run. Check the run's summary for the release link.
 4. If the milestone has a human gate, open its issue from the template in `00-START-HERE.md`,
    assign the owner, and keep working on anything that does not depend on the answer.
 

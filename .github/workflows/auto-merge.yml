@@ -38,7 +38,7 @@ on:
     # the omission is silent: adding a workflow gives no hint that a different one needs editing.
     # It has already cost two hours of pull requests sitting green — once for relying on
     # `check_suite` at all, then again when `unity-tests` was added and not listed.
-    workflows: ["checks", "content", "unity-tests", "android-build", "unity-package-sources", "unity-configure", "Unity licence", "Signing key"]
+    workflows: ["checks", "content", "unity-tests", "android-build", "unity-package-sources", "unity-configure", "Unity licence", "Signing key", "release"]
     types: [completed]
   check_suite:
     types: [completed]
@@ -51,8 +51,8 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  # Only to dispatch android-build after a merge (F-14 fixing F-07): a merge made with this token
-  # starts no push-triggered workflow, but a workflow_dispatch it sends does.
+  # Only to dispatch android-build (F-14 fixing F-07) and release (F-09) after a merge: a merge
+  # made with this token starts no push-triggered workflow, but a workflow_dispatch it sends does.
   actions: write
 
 concurrency:
@@ -194,6 +194,18 @@ jobs:
                   echo "Dispatched android-build on main."
                 else
                   echo "::warning::could not dispatch android-build on main after merging #$number"
+                fi
+              fi
+
+              # F-09: likewise the release workflow, when the merge added or changed a release
+              # file. It decides for itself whether anything is left to release.
+              if gh api "repos/$REPO/pulls/$number/files?per_page=100" --paginate --jq '.[].filename' \
+                   | grep -qE '^releases/'; then
+                if gh api -X POST "repos/$REPO/actions/workflows/release.yml/dispatches" \
+                     -f ref=main >/dev/null 2>&1; then
+                  echo "Dispatched release on main."
+                else
+                  echo "::warning::could not dispatch release on main after merging #$number"
                 fi
               fi
             else

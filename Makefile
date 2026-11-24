@@ -35,7 +35,7 @@ check: lint tools-test core-test mock-test streambox-e2e companion-test  ## Ever
 	@echo "check: all local gates passed"
 
 .PHONY: lint
-lint: lint-plan lint-privacy lint-markdown lint-meta lint-layering lint-content lint-workflows  ## Static checks (verification level L0)
+lint: lint-plan lint-privacy lint-markdown lint-meta lint-layering lint-content lint-workflows lint-release  ## Static checks (verification level L0)
 
 .PHONY: lint-plan
 lint-plan:  ## The backlog and plan are internally consistent
@@ -61,6 +61,10 @@ lint-layering:  ## Island.Core stays engine-free, so the fast tests keep working
 .PHONY: lint-workflows
 lint-workflows:  ## Auto-merge can be woken by every workflow that reports a check
 	@$(PY) tools/lint/check_workflows.py
+
+.PHONY: lint-release
+lint-release:  ## Release files are valid and every gate issue template exists, labelled (F-09)
+	@$(PY) tools/lint/check_release.py
 
 .PHONY: lint-content
 lint-content:  ## The catalogue is valid, within budget, licensed, and its generated files current
