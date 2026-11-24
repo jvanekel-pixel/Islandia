@@ -1,0 +1,3 @@
+# Islandia's issue templates (F-09). Sessions open these through the API by copying the template's
+# body and labels; the owner may also pick one on GitHub. Blank issues stay allowed.
+blank_issues_enabled: true

@@ -30,9 +30,9 @@
   },
   "phase": 1,
   "status": "active",
-  "nextAction": "F-09: Release workflow, milestone report and human-gate templates",
+  "nextAction": "S-01: Spike — Unity inside a cloud session (then S-02–S-05, F-11, M1-RETRO)",
   "blockedOnHuman": null,
-  "lastSessionAt": "2026-11-15T18:48:49Z",
+  "lastSessionAt": "2026-11-24T00:18:04Z",
   "health": {
     "tests": "passing",
     "build": "passing",

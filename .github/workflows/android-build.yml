@@ -2,7 +2,8 @@
 #
 # Work package F-07. Runs on every merge to main that touches the project, by hand, and on a pull
 # request that changes this workflow or the builder (so a change to how the APK is made is proven
-# before it lands, not after).
+# before it lands, not after). The `release` workflow (F-09) also calls it, when no APK of the
+# exact project being released is left on main.
 #
 # What it proves, beyond "it compiles for Android":
 #   * the build leaves every committed file as it was — settings, .meta files, and the XR assets
@@ -27,10 +28,12 @@ on:
       - '.github/workflows/android-build.yml'
       - 'Assets/Island/Editor/AndroidBuilder.cs'
   workflow_dispatch:
+  workflow_call:
 
-# A newer build of the same ref makes an older one pointless.
+# A newer build of the same ref makes an older one pointless. `github.workflow` is the caller's
+# name when `release` calls this, so a release's build is never cancelled by an ordinary one.
 concurrency:
-  group: android-build-${{ github.ref }}
+  group: android-build-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:

@@ -1,0 +1,278 @@
+# Cuts a milestone release — work package F-09, 05-OPERATIONS.md §9.
+#
+# Adding `releases/M<n>.yaml` on main tags that commit `M<n>` and publishes a GitHub Release with
+# the APK and the milestone report `docs/reports/M<n>-<slug>.md` attached. Sessions cannot push
+# tags; this workflow can.
+#
+# How it starts:
+#   * auto-merge dispatches it after merging a pull request that touches `releases/`. A squash made
+#     with GITHUB_TOKEN starts no `push` workflow, so without that dispatch nothing would run;
+#   * a push to main that touches `releases/` (a merge made by a person);
+#   * by hand. Every run is idempotent: a milestone that already has a release is left alone;
+#   * a pull request that changes this workflow or tools/release/ runs a REHEARSAL: the whole route,
+#     for real, under a throwaway tag `rehearsal-<run id>`, checked by reading it back and then
+#     deleted. A change to how releases are made is proven before it lands, not at the next
+#     milestone.
+#
+# The APK: the newest successful `android-build` on main whose project (Assets, Packages,
+# ProjectSettings) is identical to this commit's, if its artefact has not expired. Otherwise it is
+# built here, by calling android-build itself.
+#
+# ADR-11: whenever a private-use pack is admitted the release is a draft, visible only to the
+# owner. Today android-build refuses to make an artefact of such a build at all, so that case stops
+# there with its own error until C-02d builds the route that keeps that APK out of artefacts.
+
+name: release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'releases/**'
+  pull_request:
+    paths:
+      - '.github/workflows/release.yml'
+      - 'tools/release/**'
+  workflow_dispatch:
+
+# Two releases at once could both decide the same milestone is unreleased.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  plan:
+    name: Plan the release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # A fork's pull request gets a read-only token; a rehearsal could not publish, so it is not
+    # attempted.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    outputs:
+      any: ${{ steps.plan.outputs.any }}
+      tag: ${{ steps.plan.outputs.tag }}
+      title: ${{ steps.plan.outputs.title }}
+      report: ${{ steps.plan.outputs.report }}
+      draft: ${{ steps.plan.outputs.draft }}
+      rehearsal: ${{ steps.plan.outputs.rehearsal }}
+      target: ${{ steps.target.outputs.sha }}
+      apk_run: ${{ steps.apk.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the tooling's packages
+        run: python3 -m pip install -r tools/requirements.txt
+
+      # The commit the tag goes on. For a rehearsal, the pull request's own head — the merge
+      # commit GitHub builds for a pull request is on no branch.
+      - name: The commit to tag
+        id: target
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Draft releases make no tag until published, so their names come from the releases list.
+      - name: What is already released
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          {
+            git tag -l
+            gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" --paginate --jq '.[].tag_name'
+          } | sort -u > /tmp/tags.txt
+          echo "Known tags and releases:"; sed 's/^/  /' /tmp/tags.txt
+
+      - name: Plan
+        id: plan
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            python3 tools/release/plan.py --rehearsal "$GITHUB_RUN_ID"
+          else
+            python3 tools/release/plan.py --plan --tags /tmp/tags.txt
+          fi
+
+      # An APK from main whose project is byte-identical to the commit being tagged is that
+      # commit's APK. A milestone pull request normally adds only a report and a release file.
+      - name: Find an APK of this project
+        id: apk
+        if: steps.plan.outputs.any == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET: ${{ steps.target.outputs.sha }}
+        run: |
+          set -euo pipefail
+          runs="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/android-build.yml/runs?branch=main&status=success&per_page=30" \
+                   --jq '.workflow_runs[] | "\(.id) \(.head_sha)"')"
+          while read -r run sha; do
+            [ -n "$run" ] || continue
+            git cat-file -e "$sha^{commit}" 2>/dev/null || continue
+            if ! git diff --quiet "$sha" "$TARGET" -- Assets Packages ProjectSettings; then
+              continue
+            fi
+            live="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/artifacts" \
+                      --jq '[.artifacts[] | select(.name == "islandia-apk" and (.expired | not))] | length')"
+            if [ "$live" -gt 0 ]; then
+              echo "Using the APK from android-build run $run, built from ${sha:0:8}: same project as ${TARGET:0:8}."
+              echo "run=$run" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done <<< "$runs"
+          echo "No live APK of this exact project on main; it will be built in this run."
+          echo "run=" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build the APK
+    needs: plan
+    if: needs.plan.outputs.any == 'true' && needs.plan.outputs.apk_run == ''
+    uses: ./.github/workflows/android-build.yml
+    secrets: inherit
+
+  publish:
+    name: Publish the release
+    needs: [plan, build]
+    # `build` is skipped whenever an APK was found, and a skipped need fails the default check.
+    if: >-
+      always() && needs.plan.result == 'success' && needs.plan.outputs.any == 'true' &&
+      (needs.build.result == 'success' || needs.build.result == 'skipped')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ needs.plan.outputs.tag }}
+      TITLE: ${{ needs.plan.outputs.title }}
+      REPORT: ${{ needs.plan.outputs.report }}
+      DRAFT: ${{ needs.plan.outputs.draft }}
+      REHEARSAL: ${{ needs.plan.outputs.rehearsal }}
+      TARGET: ${{ needs.plan.outputs.target }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.target }}
+
+      - name: Fetch the APK from main's build
+        if: needs.plan.outputs.apk_run != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: islandia-apk
+          path: /tmp/apk
+          run-id: ${{ needs.plan.outputs.apk_run }}
+          github-token: ${{ github.token }}
+
+      - name: Fetch the APK built in this run
+        if: needs.plan.outputs.apk_run == ''
+        uses: actions/download-artifact@v4
+        with:
+          name: islandia-apk
+          path: /tmp/apk
+
+      - name: Stage the files
+        run: |
+          set -euo pipefail
+          apk="$(find /tmp/apk -name '*.apk' -type f | head -1)"
+          if [ -z "$apk" ] || [ ! -s "$apk" ]; then
+            echo "::error title=No APK::the islandia-apk artefact held no APK"; exit 1
+          fi
+          if [ ! -s "$REPORT" ]; then
+            echo "::error title=No report::$REPORT is missing at ${TARGET:0:8}"; exit 1
+          fi
+          mkdir -p /tmp/release
+          cp "$apk" "/tmp/release/Islandia-$TAG.apk"
+          cp "$REPORT" "/tmp/release/$(basename "$REPORT")"
+          ls -l /tmp/release
+
+      - name: Tag and publish
+        run: |
+          set -euo pipefail
+          flags=()
+          [ "$DRAFT" = "true" ] && flags+=(--draft)
+          [ "$REHEARSAL" = "true" ] && flags+=(--prerelease)
+          gh release create "$TAG" /tmp/release/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$TARGET" \
+            --title "$TITLE" \
+            --notes-file "$REPORT" \
+            "${flags[@]}"
+
+      # Read back what was made rather than trusting the command's exit code.
+      - name: The release is there, with both files
+        id: verify
+        run: |
+          set -euo pipefail
+          release="$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" --paginate \
+                       --jq ".[] | select(.tag_name == \"$TAG\")")"
+          if [ -z "$release" ]; then
+            echo "::error title=No release::nothing is tagged $TAG after publishing"; exit 1
+          fi
+          echo "id=$(echo "$release" | jq -r '.id')" >> "$GITHUB_OUTPUT"
+          echo "url=$(echo "$release" | jq -r '.html_url')" >> "$GITHUB_OUTPUT"
+          assets="$(echo "$release" | jq -r '.assets[].name' | sort | tr '\n' ' ')"
+          echo "Assets: $assets"
+          for want in "Islandia-$TAG.apk" "$(basename "$REPORT")"; do
+            echo "$assets" | grep -qw -- "$want" || { echo "::error title=Missing asset::$want is not on $TAG"; exit 1; }
+          done
+          draft="$(echo "$release" | jq -r '.draft')"
+          if [ "$draft" != "$DRAFT" ]; then
+            echo "::error title=Wrong visibility::draft is $draft, the plan said $DRAFT"; exit 1
+          fi
+          # A published release has a real tag on the target commit; a draft has none until then.
+          if [ "$DRAFT" != "true" ]; then
+            tagged="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" --jq '.object.sha')"
+            object_type="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" --jq '.object.type')"
+            if [ "$object_type" = "tag" ]; then
+              tagged="$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tagged" --jq '.object.sha')"
+            fi
+            if [ "$tagged" != "$TARGET" ]; then
+              echo "::error title=Tag on the wrong commit::$TAG is ${tagged:0:8}, expected ${TARGET:0:8}"; exit 1
+            fi
+            echo "Tag $TAG is on ${TARGET:0:8}."
+          fi
+
+      - name: Remove the rehearsal
+        if: always() && env.REHEARSAL == 'true'
+        run: |
+          set +e
+          id="$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" --paginate \
+                  --jq ".[] | select(.tag_name == \"$TAG\") | .id")"
+          for each in $id; do
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$each" && echo "Deleted release $each."
+          done
+          gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/$TAG" >/dev/null 2>&1 \
+            && echo "Deleted tag $TAG." || echo "No tag $TAG to delete."
+          left="$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" --paginate \
+                    --jq "[.[] | select(.tag_name == \"$TAG\")] | length")"
+          if [ "$left" != "0" ]; then
+            echo "::error title=Rehearsal left behind::$TAG still has a release"; exit 1
+          fi
+
+      - name: Report
+        if: always()
+        run: |
+          {
+            echo "## Release"
+            echo ""
+            echo "| | |"
+            echo "| :-- | :-- |"
+            echo "| Tag | \`$TAG\` on \`${TARGET:0:8}\` |"
+            echo "| Title | $TITLE |"
+            echo "| Draft | $DRAFT |"
+            echo "| Rehearsal (deleted after checking) | $REHEARSAL |"
+            echo "| APK from | ${{ needs.plan.outputs.apk_run != '' && format('android-build run {0}', needs.plan.outputs.apk_run) || 'this run' }} |"
+            echo "| Read back | ${{ steps.verify.outcome }} |"
+            echo "| URL | ${{ steps.verify.outputs.url }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
