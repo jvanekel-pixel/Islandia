@@ -8,9 +8,18 @@
 | **Current milestone** | M1 Factory online · engine-free work ahead of it on M2, M4, M5 and M10 |
 | **In flight** | Nothing |
 | **Repository** | https://github.com/jvanekel-pixel/Islandia (public) |
-| **Driver** | **Off for now** (owner, 2026-11-15): sessions are started by hand. No scheduled task was listed on the account that day. When it is switched back on it belongs on the `islandia` environment, not Default — its first run (2026-11-11) was on an unrestricted one with no .NET and no setup script. Routines are at <https://claude.ai/code/routines> |
-| **Last updated** | 2026-11-24 — `F-09`: milestone releases from `releases/M<n>.yaml`, rehearsed for real on its pull request; issue templates for every gate, `blocked` and `infra` |
+| **Driver** | **A Claude Code session on the owner's PC**, started by hand with `docs/plan/prompts/driver.md` (owner, 2026-11-24). The cloud environment `islandia` and the routine at <https://claude.ai/code/routines> remain a fallback and are off |
+| **Last updated** | 2026-11-24 — the project moves to the owner's PC: `F-10`, `F-11` and `S-01` re-scoped for local sessions; Unity may run locally in batchmode once `S-01` proves it safe |
 | **Target** | Quest 2 · public repository · StreamBox native in-world · **a gift, never published** |
+
+## The project moved to the owner's PC on 2026-11-24
+
+Cloud sessions were a stopgap. Work now runs in Claude Code on the owner's PC
+(`DECISIONS.md`, 2026-11-24). What that changes: `gh` works in full, Command Center and Ollama are
+reachable, the headset is a USB cable away, and Unity may run locally in batchmode once `S-01`
+shows the owner's Personal licence can be shared with CI. What it does not change: headless only,
+CI on the merge commit proves done, never merge your own pull request, nothing private committed.
+The first local session does `F-10` (`docs/plan/LOCAL-SETUP.md`), then `S-01`.
 
 ## The plan changed on 2026-11-11
 
@@ -52,7 +61,7 @@ by the owner's choice (2026-11-15); the open asks are listed in the root `INFO-R
   can sit out of the wearer's line of sight; a charge-only cable shows as a connect chime every
   ~30 s.
 - **Environment:** the routine now runs on `islandia`.
-- **Unity stays in CI only** (2026-11-12): no Unity credentials in the cloud environment, so
+- **Unity stays in CI only** (2026-11-12; *reopened 2026-11-24 for the owner's PC, see above*): no Unity credentials in the cloud environment, so
   sessions never run the editor themselves. `S-01` records its findings and offers nothing. See
   `DECISIONS.md`.
 - **Who plays it:** the owner's own Quest 2, played by their partner, who thinks VR is dumb and
@@ -87,7 +96,7 @@ link `kenney.nl/assets/mini-forest` but no archive for it was uploaded.
 ## Next up
 
 Take the first `todo` package in `BACKLOG.yaml` whose dependencies are `done` — `make next` prints
-them. As of this writing: the M1 spikes **`S-01`**–**`S-05`** and `F-11` stand between M1 and its report (`M1-RETRO`), then **`C-02b`** (the Blender
+them. As of this writing: **`F-10`** (the PC as workstation) first, then the M1 spikes **`S-01`**–**`S-05`** and `F-11` stand between M1 and its report (`M1-RETRO`), then **`C-02b`** (the Blender
 normalisation pipeline), **`V-07b`**, and the engine-free starts of the new features — **`RC-01`** (coasters saved, with undo), **`RC-02`** (ride physics), **`PNT-01`** (paint segmentation) — plus
 `I-04` and `I-05`. Prefer the current milestone; take an engine-free package when it is waiting
 on CI.

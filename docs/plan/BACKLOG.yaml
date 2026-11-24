@@ -216,28 +216,22 @@ packages:
   status: done
 
 - id: F-10
-  title: Cloud environment for this repository
+  title: The owner's PC as the workstation for this repository
   ms: M1
   risk: low
   deps: [F-08]
-  refs: [01-AUDIT.md §5]
+  refs: [01-AUDIT.md §5, 05-OPERATIONS.md §1]
   accept:
-    - "A dedicated cloud environment is proposed to the owner with a setup script that installs the .NET SDK and companion toolchain in under five minutes [L0]"
-    - "A fresh session can run `make core-test` and `make companion-test` with no manual installation [L1]"
-    - "Allowed hosts are the minimum the measured needs show; each is listed with its reason in DECISIONS.md [L0]"
+    - "`docs/plan/LOCAL-SETUP.md` lists every tool a local session needs (git, make, Python 3, Node, .NET 9 SDK, gh, and optionally Unity 6000.3.28f1 with the Android module, adb, Ollama), the version found on the owner's PC, and how each was installed [L0]"
+    - "A local session on the owner's PC runs `make deps`, `make mock-install` and `make check` green, and the timing is recorded in STATE.md's measured facts [L1]"
+    - "`.mcp.json` for Command Center exists on the PC (git-ignored) and `get_project_context` answers, or the reason it does not is recorded [L0]"
   note: >-
-    Environment `islandia` created and approved by the owner on 2026-11-11, from a
-    session with only this repository attached; hosts and timings are in
-    DECISIONS.md. What remains is the second criterion: the first fresh session on
-    that environment runs `make check` with no installs and records the result
-    here. The scheduled driver's first run is that session.
-    2026-11-11, first scheduled run: NOT on that environment. It had no .NET SDK,
-    no Python requirements and no npm packages, and its network reached
-    example.com, so it ran on an unrestricted environment without the setup
-    script. It installed by hand and `make check` passed. The routine has to be
-    pointed at the `islandia` environment (owner, at claude.ai/code/routines);
-    the next run on it closes this.
-  status: needs-human
+    Re-scoped on 2026-11-24 when the owner moved the project from cloud sessions to
+    their own PC (DECISIONS.md, "The driver moves to the owner's PC"). The cloud
+    environment `islandia` created on 2026-11-11 still exists and stays a fallback;
+    its unfinished criterion (a fresh cloud session runs `make check` with no
+    installs) is dropped. The first local session does this package.
+  status: todo
 
 - id: F-13
   title: Auto-merge finished work
@@ -257,30 +251,36 @@ packages:
   status: done
 
 - id: F-11
-  title: Driver scheduled task and end-to-end loop rehearsal
+  title: Driver loop rehearsal from a local session
   ms: M1
   risk: med
   deps: [F-09, F-10]
   refs: [05-OPERATIONS.md, prompts/driver.md]
   accept:
-    - "The scheduled task exists (created by the session, or a human-gate issue explains how the owner creates it) [L0]"
-    - "A rehearsal package is taken through lease, PR, CI, merge and STATE update by a fresh session with no help [L0]"
+    - "A rehearsal package is taken through lease, PR, CI, merge and STATE update by a fresh local session started with `docs/plan/prompts/driver.md`, with no help [L0]"
     - "Stale-lease adoption is rehearsed once [L0]"
+    - "Whether the driver also runs on a schedule (a local scheduled task on the owner's PC, or the cloud routine) is the owner's choice, recorded in STATE.md; the loop does not depend on one [L0]"
+  note: >-
+    Re-scoped on 2026-11-24: sessions now start by hand on the owner's PC, so a
+    scheduled task is optional, not an acceptance criterion.
   status: todo
-
 - id: S-01
-  title: "Spike: Unity inside a cloud session"
+  title: "Spike: Unity in batchmode on the owner's PC"
   ms: M1
   risk: med
-  deps: [F-07]
-  refs: [01-AUDIT.md §5]
+  deps: [F-07, F-10]
+  refs: [01-AUDIT.md §5, 05-OPERATIONS.md §5]
   accept:
-    - "Time-boxed to one session. Answer recorded: can the editor image be pulled via the registry mirror, which hosts must be allowed, how long does a cold compile take [L0]"
-    - "If viable, a human-gate issue offers it to the owner as an optional accelerator, stating that it needs their licence in the environment. Not adopted without their yes [L0]"
+    - "Time-boxed to one session. Answer recorded: is editor 6000.3.28f1 with the Android module installed and activated on the PC, does `-batchmode -executeMethod` run the boot-scene builder and the EditMode tests there, how long a cold and a warm import take [L0]"
+    - "Whether a local activation and CI's per-run activation can share the owner's Personal licence without CI failing to activate is tested once and recorded [L0]"
+    - "If viable, `make unity-test` and `make build` run locally when `UNITY_PATH` is set, and still only print where CI runs them when it is not. CI stays the proof a package is done [L1]"
   note: >-
-    The owner has already declined the accelerator (2026-11-12, DECISIONS.md
-    "Unity runs in CI only"), so the second line is answered: the spike records
-    its findings and timings only and opens no human-gate issue.
+    Re-scoped on 2026-11-24. The 2026-11-12 decision kept Unity out of the cloud
+    environment because a login would sit there in plain text; on the owner's own
+    PC Unity Hub holds the licence, so that reason is gone. The owner installs
+    and activates Unity themselves; a session never handles their Unity login.
+    If Unity is not installed, the spike records that and the project carries on
+    with Unity in CI only.
   status: todo
 
 - id: S-02

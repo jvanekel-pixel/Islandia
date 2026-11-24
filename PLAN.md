@@ -19,10 +19,10 @@ Why it matters: Proves Unity can be driven headlessly and CI can build an APK, s
 - [x] F-07: The rest of the Unity CI pipeline — caching, path filters, package-source artefact
 - [x] F-14: The app's identity in code — package id and name under the icon
 - [x] F-09: Release workflow, milestone report and human-gate templates
-- [ ] F-10: Cloud environment for this repository (needs-human)
+- [ ] F-10: The owner's PC as the workstation for this repository
 - [x] F-13: Auto-merge finished work
-- [ ] F-11: Driver scheduled task and end-to-end loop rehearsal
-- [ ] S-01: Spike: Unity inside a cloud session
+- [ ] F-11: Driver loop rehearsal from a local session
+- [ ] S-01: Spike: Unity in batchmode on the owner's PC
 - [ ] S-02: Spike: software-rendered screenshots in CI
 - [ ] S-03: Spike: shader compile gate
 - [ ] S-04: Spike: frame-synthesis and refresh-rate APIs present in the resolved packages

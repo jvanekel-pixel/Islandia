@@ -67,9 +67,9 @@ service or dependency, ever. The codebase holds no PII, so local-only AI is not 
 | Static checks only | `make lint` | Plan, privacy, markdown, meta, layering, content, workflows |
 | Typecheck / compile | `make core-build` | Compiles `Island.Core` as Unity will (netstandard2.1) |
 | Core tests only | `make core-test` | Engine-free C#, seconds |
-| Unity EditMode and PlayMode tests | CI only — workflow `unity-tests` | `make unity-test` only prints where it runs |
-| Android build (IL2CPP, ARM64 APK) | CI only — workflow `android-build` | `make build` only prints where it runs |
-| First-time setup in a session | `make deps` and `make mock-install` | Needs Python 3, Node and a .NET 9 SDK |
+| Unity EditMode and PlayMode tests | CI — workflow `unity-tests` | Locally too once `S-01` wires `UNITY_PATH`; CI on the merge commit stays the proof |
+| Android build (IL2CPP, ARM64 APK) | CI — workflow `android-build` | Locally too once `S-01` wires `UNITY_PATH` |
+| First-time setup in a session | `make deps` and `make mock-install` | Needs Python 3, Node and a .NET 9 SDK — the full list is `docs/plan/LOCAL-SETUP.md` |
 | What to take next | `make next` | First unblocked work packages |
 
 ## Islandia Operating Contract
@@ -123,11 +123,13 @@ the same PR and log why in `docs/plan/DECISIONS.md`.
 - **Do not weaken a gate to get green.** If a test or threshold is wrong, fix it in its own commit
   and record the reason in `DECISIONS.md`. Deleting or skipping a failing test is never the fix.
 - **One work package per pull request.** Branch `claude/wp-<ID>-<slug>`. Small, reviewable,
-  squash-merged. Use the session's GitHub tools or `gh api`; `gh pr` and `gh issue` do not work here.
+  squash-merged. Use `gh` or the session's GitHub tools. In a cloud session `gh pr` and `gh issue` do not
+  work (GraphQL is blocked); use `gh api` REST calls there.
 - **Never merge your own pull request.** Label it `work-package` and `awaiting-merge`; the
   repository's auto-merge workflow lands it once the checks are green. The permission classifier
   refuses a self-merge and that refusal is not to be worked around.
-- **Secrets** live in GitHub Actions secrets or the cloud environment only. Never print, commit or
+- **Secrets** live in GitHub Actions secrets, the cloud environment, or the owner's own tools on their
+  PC (Unity Hub, the keystore) only. Never print, commit or
   echo them. Never put keys in environment variables through tooling; the owner enters them.
 - **Nothing may cost money.** No paid asset, service or dependency. Account-bound things (hosting)
   are gated behind feature flags and the project builds and passes CI without them.

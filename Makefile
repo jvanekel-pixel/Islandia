@@ -173,7 +173,7 @@ next:  ## The next unblocked work packages
 
 .PHONY: unity-test
 unity-test:  ## (CI only) EditMode and PlayMode tests — levels L2 and L3
-	@echo "unity-test: runs in GitHub Actions; there is no Unity in a cloud session."
+	@echo "unity-test: runs in GitHub Actions. Local batchmode runs arrive with S-01."
 	@echo "            See docs/plan/04-VERIFICATION.md and the unity-tests workflow."
 
 .PHONY: build

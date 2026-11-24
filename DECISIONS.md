@@ -33,6 +33,16 @@ plan (would not map onto the backlog, so the two would drift).
 three-attempt stop-the-line rule. Nothing checks the mirror automatically yet (`BACKLOG.md`).
 **Evidence:** `make check` passes with the new files in place.
 
+## 2026-11-24 — Sessions run on the owner's PC; Unity may run locally in batchmode
+
+**Decided by:** owner.
+**Context:** Cloud sessions were a stopgap while local tokens ran out.
+**Decision:** A local Claude Code session is the driver. Unity may run locally for speed once
+`S-01` shows the licence is shared safely with CI; CI on the merge commit still proves done.
+**Alternatives rejected:** Staying cloud-only (slower, no Unity, no headset, no Command Center).
+**Consequences:** `F-10`, `F-11`, `S-01` re-scoped. The cloud environment stays as a fallback.
+**Evidence:** `docs/plan/DECISIONS.md`, 2026-11-24.
+
 ## Standing decisions
 
 | Area | Decision | Where |

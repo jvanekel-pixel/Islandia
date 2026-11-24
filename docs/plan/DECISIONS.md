@@ -1243,6 +1243,8 @@ a person makes.
 
 ## 2026-11-12 — Unity runs in CI only
 
+*Reopened on 2026-11-24 for the owner's PC — see "The driver moves to the owner's PC".*
+
 **Decided by:** the owner. Unity credentials do not go into the cloud environment, so sessions
 never run the editor themselves; Unity work is done by the `unity-*` workflows.
 
@@ -1316,6 +1318,30 @@ human-gate issue, since the accelerator it would offer has been declined.
   wandering 1,024-piece coaster 3.2 → 1.7 ms (the clearance part about 2.2 → 0.7 ms); the
   stacked 1,024 turns 135 → 3.4 ms, with 5,121 issues instead of 784,385. No timing is asserted
   in the suite.
+
+## 2026-11-24 — The driver moves to the owner's PC
+
+**Decided by:** the owner. They began in cloud sessions only because they were out of local
+tokens; from now on sessions run in Claude Code on their own PC, started by hand.
+
+- **Where work runs.** A local Claude Code session is the driver (`05-OPERATIONS.md` §1). The
+  loop, the lease, one package per pull request, auto-merge and "never merge your own pull
+  request" are unchanged. The cloud environment `islandia` and the cloud routine stay as a
+  fallback; nothing depends on them.
+- **What gets easier locally.** `gh pr` and `gh issue` work (GraphQL is not blocked); the Command
+  Center MCP server and Ollama are reachable; the headset is on the same desk over USB, so a
+  session may `adb install` a CI-built APK for the owner to try. It still never records a device
+  result the owner did not report (`needs-device` is unchanged).
+- **Unity may run locally** (reopens "Unity runs in CI only", 2026-11-12). That decision's first two
+  reasons were about the cloud: a Unity login would have sat in the environment in plain text. On
+  the PC, Unity Hub holds the licence and no session ever handles the login. The third reason — a
+  held Personal seat stopping CI from activating — is tested by `S-01` before local Unity is
+  relied on. Local Unity runs are for speed only: **CI on the merge commit stays the proof that a
+  package is done**, and everything stays headless (`-batchmode`), as the contract requires.
+- **Packages re-scoped:** `F-10` becomes the local workstation (`LOCAL-SETUP.md`), `F-11` the loop
+  rehearsal from a local session with any schedule optional, `S-01` Unity in batchmode on the PC.
+- **Unchanged:** the repository is public and holds no personal data; secrets stay in GitHub
+  Actions secrets or the owner's own tools, never in the repository or a session's output.
 
 ## Open questions for the owner
 

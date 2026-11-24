@@ -7,8 +7,8 @@ any moment and the next one can continue from the repository alone.**
 
 | Actor | What it is | What it does |
 | :-- | :-- | :-- |
-| **Driver** | A Claude Code cloud session on Opus, started by the scheduled task *Island build driver* (or by the owner) | Picks the next work package, builds it, proves it, merges it, records it |
-| **CI** | GitHub Actions in this repository | The only place Unity runs by default. Compiles, tests, builds the APK, runs the companion test suites |
+| **Driver** | A Claude Code session on Opus **on the owner's PC**, started by the owner with `prompts/driver.md` (since 2026-11-24). A cloud session or the cloud routine is the fallback | Picks the next work package, builds it, proves it, merges it, records it |
+| **CI** | GitHub Actions in this repository | The proof. Compiles, tests, builds the APK, runs the companion test suites. Unity may also run on the owner's PC for speed once `S-01` allows it, but a package is done only when CI is green on the merge commit |
 | **Owner** | The human | Orientation once, then only the human gates in `00-START-HERE.md` |
 
 There is one driver at a time (work-in-progress limit of 1) until `STATE.md` says otherwise.
@@ -77,8 +77,9 @@ and finish the first slice.
 
 ## 6. Working with CI
 
-- Open PRs and read check results with the session's built-in GitHub tools, or `gh api` REST calls.
-  `gh pr …` and `gh issue …` do not work in cloud sessions (GraphQL is blocked). Measured on
+- On the owner's PC, `gh` works in full (`gh pr create`, `gh pr checks --watch`, `gh issue create`).
+  In a cloud session, open PRs and read check results with the built-in GitHub tools, or `gh api` REST calls:
+  `gh pr …` and `gh issue …` do not work there (GraphQL is blocked). Measured on
   2026-11-10, these REST paths work from a session and are what the loop runs on:
 
   | Path | For |

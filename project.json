@@ -7,7 +7,7 @@
   "tier": "subscription",
   "containsPII": false,
   "parent": null,
-  "platforms": ["GitHub", "GitHub Actions", "Unity", "Meta Quest 2 (Android)", "Claude Code cloud"],
+  "platforms": ["GitHub", "GitHub Actions", "Unity", "Meta Quest 2 (Android)", "Claude Code on the owner's PC"],
   "builders": {
     "codeWriter": "claude"
   },
@@ -30,9 +30,9 @@
   },
   "phase": 1,
   "status": "active",
-  "nextAction": "S-01: Spike — Unity inside a cloud session (then S-02–S-05, F-11, M1-RETRO)",
+  "nextAction": "F-10: the owner's PC as workstation (docs/plan/LOCAL-SETUP.md), then S-01 Unity in batchmode locally, S-02–S-05, F-11, M1-RETRO",
   "blockedOnHuman": null,
-  "lastSessionAt": "2026-11-24T00:18:04Z",
+  "lastSessionAt": "2026-11-24T12:00:00Z",
   "health": {
     "tests": "passing",
     "build": "passing",
